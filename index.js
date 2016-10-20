@@ -130,6 +130,98 @@ function find_token_sequence(s, reps){
     return res
 }
 
+function generate_position(s, k){
+    // heres a note we should probably add token interruption
+    var result = [new CPos(k), new CPos(-(s.length - k))]
+    var rr1 = [], rr2 = [];
+    for(var i = 0; i < k; i++){
+        rr1.push(find_token_sequence(substring(s, i, k-1)))
+    }
+    for(var i = k + 1; i < s.length + 1; i++){
+        rr2.push(find_token_sequence(substring(s, k, i)))
+    }
+    for(var i = 0; i < rr1.length; i++){
+        var r1 = rr1[i];
+        for(var j = 0; j < rr2.length; j++){
+            var r2 = rr2[j];
+            var r12 = r1.concat(r2);
+            var matches = matchall(r12)
+            var c = matches.findIndex(x => x == k)
+            // console.log(r1, r2)
+            result.push(new Pos(
+                generate_regex(r1, s),
+                generate_regex(r2, s),
+                [c, -(matches.length - c + 1)]
+            ))
+        }
+    }
+    return result;
+}
+
+
+function generate_regex(re, s){
+    var parts = IParts(s)
+    return re.map(k => parts[k])
+}
+
+function token_sequence_to_regex(tokenSeq){
+    return new RegExp(tokenSeq.map(k => tokenStrings[k]).join(''), 'g')
+}
+
+function matchall(tokenSeq, str){
+    var re = token_sequence_to_regex(tokenSeq),
+        m,
+        indices = [];
+    while(m = re.exec(str)){
+        indices.push(m.index + m.length)
+    }
+    return indices
+}
+
+function generate_substring(sigma, s){
+    var result = []
+    for(var i = 0; i < sigma.length; i++){
+        var indices = is_substr_at(sigma[i], s)
+        for(var k = 0; k < indices.length; k++){
+            var y1 = generate_position(sigma[i], k),
+                y2 = generate_position(sigma[i], k + s.length);
+            result.push(new SubStr(sigma[i], y1, y2))
+        }
+    }
+    return result
+
+
+    // result = []
+    // for i, column in enumerate(sigma):
+    //     for k in is_substr_at(column, s):
+    //         y1 = generate_position(column, k)
+    //         y2 = generate_position(column, k + len(s))
+    //         result.append(SubStr(column, y1, y2))
+    // return list(set(result))
+}
+
+RegExp.escape = function(s) {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
+function is_substr_at(str, substr){
+    var re = new RegExp(RegExp.escape(substr), 'g'),
+        m,
+        indices = [];
+    while(m = re.exec(str)){
+        indices.push(m.index)
+    }
+    return indices
+}
+
+// def match(reg, s):
+//     matches = []
+//     for i in range(0, len(s)):
+//         for j in range(i+1, len(s)+1):
+//             matches += re.findall(regex(reg), s[i:j])
+//     return matches
+
+
 // function generate_position(s, k):
 //     var result = [CPos(k), CPos(-(s.length - k))]
    
