@@ -18,7 +18,7 @@ class Switch:
     def apply(self, sigma, bindings={}):
         for (b, e) in self.clauses:
             if b.apply(sigma, bindings) is True:
-                print "matched predicate", sigma, b
+                # print "matched predicate", sigma, b
                 return e.apply(sigma, bindings)
 
     def __repr__(self): 
@@ -263,8 +263,8 @@ TokenStrings = {
     'AlphNumWsTok': '[a-zA-Z0-9 ]+',
     'NonAlphNumWsTok': '[^a-zA-Z0-9 ]+',
     'WsTok': ' ',
-    'StartTok': '^.',
-    'EndTok': '.$',
+    'StartTok': '^',
+    'EndTok': '$',
     'DotTok': '\\.',
     'SlashTok': "[\\\/]",
     'BckSlashTok': "/",
