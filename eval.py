@@ -249,6 +249,33 @@ def unbind_integer(c, bindings):
     if isinstance(c, BoundVar): return c.unbind(bindings)
     return c
 
+
+
+# We use the following collection of character classes 𝐶: 
+# - Numeric Digits (0-9), 
+# - Alphabets (a-zA-Z), 
+# - Lowercase alphabets (a-z), 
+# - Uppercase alphabets (A-Z), 
+# - Accented alphabets, 
+# - Alphanumeric characters, 
+# - Whitespace characters, 
+# - All characters. 
+# We use the following SpecialTokens:
+# - StartTok: Matches the beginning of a string. 
+# - EndTok: Matches the end of a string.
+# - A token for each special character, 
+#   such as hyphen, dot, semicolon, colon, 
+#   comma, backslash, forwardslash, 
+#   left/right parenthesis/bracket etc.
+
+
+# For better readability, we reference tokens by representative names. 
+# For example, AlphTok refers to a sequence of alphabetic characters,
+# NumTok refers to a sequence of numeric digits, NonDigitTok refers to 
+# a sequence of characters that are not numeric digits, HyphenTok matches 
+# with the hyphen character.
+
+
 TokenStrings = {
     'NumTok': '\\d+',
     'NonNumTok': '[^\\d]+',
@@ -271,6 +298,13 @@ TokenStrings = {
     'BckSlashTok': "\\",
     'DashTok': '-',
     'LoDashTok': '_',
+    'ColonTok': ':',
+    'CommaTok': ',',
+    'SemicolonTok': ';',
+    'LeftAngleTok': '<',
+    'RightAngleTok': '>',
+    'LeftSquareTok': '<',
+    'RightSquareTok': '>',
     'LeftParenTok': '\\(',
     'RightParenTok': '\\)',
     'HyphenTok': '\\-',
@@ -350,3 +384,47 @@ fftest(prog, {
     "22.02.2002": "02",
     "2003-23-03": "03"
 })
+
+
+
+
+class IParts:
+    def __init__(self, s, t):
+        self.s = s
+        self.t = t
+
+    def __repr__(self):
+        return 'IParts(%s, %s)' % (self.s, self.t)
+
+
+def generate_regex(r, s):
+    return [IParts(s, t) for t in r]
+
+
+
+# A regular expression r = TokenSeq(T1 , ⋅⋅, T𝑛 ) is a sequence of tokens 
+# T1,⋅⋅,T𝑛. We often refer to singleton token sequences TokenSeq(T1) simply 
+# as T1. We use the notation 𝜖 to denote an empty sequence of tokens.
+# 𝜖 matches an empty string.
+
+
+def intersect(a, b):
+    # Intersect(Dag(𝜂 ̃1,𝜂1,𝜂1,𝜉1,𝑊1),Dag(𝜂 ̃2,𝜂2,𝜂2,𝜉2,𝑊2)) = 
+    #    Dag(𝜂 ̃1 ×𝜂 ̃2,(𝜂1,𝜂2),(𝜂1,𝜂2),𝜉12,𝑊12)
+    #  where  𝜉12 = {⟨(𝜂1, 𝜂2), (𝜂1, 𝜂2)⟩ ∣ ⟨𝜂1, 𝜂1⟩ ∈ 𝜉1, ⟨𝜂2, 𝜂2⟩ ∈ 𝜉2}
+    #  and 𝑊12(⟨(𝜂1,𝜂2),(𝜂1,𝜂2)⟩)={Intersect( ̃f, ̃f)∣ ̃f∈𝑊1(⟨𝜂1,𝜂1⟩), ̃f ∈𝑊2(⟨𝜂2,𝜂2⟩)}
+    if isinstance(a, Dag) and isinstance(b, Dag):
+        pass
+
+    # Intersect(SubStr(𝑣𝑖 , { ̃p𝑗 }𝑗 , { ̃p𝑘 }𝑘 ), SubStr(𝑣𝑖′ , { ̃p′l }l , { ̃p𝑚 }𝑚 )) =
+    # SubStr(𝑣𝑖 , {IntersectPos( ̃p𝑗 ,  ̃pl )}𝑗,l , {IntersectPos( ̃p𝑘, ̃p𝑚)}𝑘,𝑚) if 𝑣𝑖 = 𝑣𝑖′
+
+    if isinstance(a, SubStr) and isinstance(b, SubStr):
+        if a.vi == b.vi:
+            return SubStr(a.vi, )
+
+    # Intersect(ConstStr(𝑠1 ), ConstStr(𝑠2 )) = ConstStr(𝑠1 ) if 𝑠1 = 𝑠2
+    if isinstance(a, ConstStr) and isinstance(b, ConstStr):
+        if a.s == b.s: return a
+
+
