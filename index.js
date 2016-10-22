@@ -45,7 +45,7 @@ class DAG {
 
 // Utility Functions
 function substring(s, i, j){
-    return s.substr(i, j)
+    return s.substring(i, j + 1)
 }
 
 var tokenStrings = {
@@ -61,7 +61,7 @@ var tokenStrings = {
     NonAlphNumTok: '[^a-zA-Z0-9]+',
     AlphNumWsTok: '[a-zA-Z0-9 ]+',
     NonAlphNumWsTok: '[^a-zA-Z0-9 ]+',
-    WsTok: ' ',
+    WsTok: '\s',
     // StartTok: '^.', // these are not supported to make generate_position easier to implement
     // EndTok: '.$',
     DotTok: '\\.',
@@ -133,26 +133,27 @@ function find_token_sequence(s, reps){
 function generate_position(s, k){
     // heres a note we should probably add token interruption
     var result = [new CPos(k), new CPos(-(s.length - k))]
+
     var rr1 = [], rr2 = [];
     for(var i = 0; i < k; i++){
-        rr1.push(find_token_sequence(substring(s, i, k-1)))
+        rr1 = rr1.concat(find_token_sequence(substring(s, i, k-1)))
     }
     for(var i = k + 1; i < s.length + 1; i++){
-        rr2.push(find_token_sequence(substring(s, k, i)))
+        rr2 = rr2.concat(find_token_sequence(substring(s, k, i)))
     }
     for(var i = 0; i < rr1.length; i++){
         var r1 = rr1[i];
         for(var j = 0; j < rr2.length; j++){
             var r2 = rr2[j];
             var r12 = r1.concat(r2);
-            var matches = matchall(r12)
-            var c = matches.findIndex(x => x == k)
-            // console.log(r1, r2)
+            var matches = matchall(r12, s)
+            var c = matches.findIndex(x => x > k)
             result.push(new Pos(
                 generate_regex(r1, s),
                 generate_regex(r2, s),
-                [c, -(matches.length - c + 1)]
+                [c, -(matches.length - c)]
             ))
+            // return result
         }
     }
     return result;
@@ -172,9 +173,11 @@ function matchall(tokenSeq, str){
     var re = token_sequence_to_regex(tokenSeq),
         m,
         indices = [];
+        // console.log(re, str)
     while(m = re.exec(str)){
-        indices.push(m.index + m.length)
+        indices.push(m.index + m[0].length)
     }
+    // console.log(indices)
     return indices
 }
 
@@ -183,21 +186,12 @@ function generate_substring(sigma, s){
     for(var i = 0; i < sigma.length; i++){
         var indices = is_substr_at(sigma[i], s)
         for(var k = 0; k < indices.length; k++){
-            var y1 = generate_position(sigma[i], k),
-                y2 = generate_position(sigma[i], k + s.length);
-            result.push(new SubStr(sigma[i], y1, y2))
+            var y1 = generate_position(sigma[i], indices[k]),
+                y2 = generate_position(sigma[i], indices[k] + s.length);
+            result.push(new SubStr(i, y1, y2))
         }
     }
     return result
-
-
-    // result = []
-    // for i, column in enumerate(sigma):
-    //     for k in is_substr_at(column, s):
-    //         y1 = generate_position(column, k)
-    //         y2 = generate_position(column, k + len(s))
-    //         result.append(SubStr(column, y1, y2))
-    // return list(set(result))
 }
 
 RegExp.escape = function(s) {
@@ -214,49 +208,34 @@ function is_substr_at(str, substr){
     return indices
 }
 
-// def match(reg, s):
-//     matches = []
-//     for i in range(0, len(s)):
-//         for j in range(i+1, len(s)+1):
-//             matches += re.findall(regex(reg), s[i:j])
-//     return matches
-
-
-// function generate_position(s, k):
-//     var result = [CPos(k), CPos(-(s.length - k))]
-   
-//     // r1 : Set of all regexes that match s[k1:k-1] for some k1
-//     // r2 : Set of all regexes that match s[k:k2] for some k2
-//     rr1 = [find_token_sequence(substring(s, k1, k-1)) for k1 in range(0, k)]
-//     rr2 = [find_token_sequence(substring(s, k, k2)) for k2 in range(k+1, len(s)+1)]
+function generate_loop(sigma, s, W){
+    var edge_expressions = W
     
-//     for r1, r2 in itertools.product(rr1, rr2):
-//         r12 = r1 + r2
-        
-//         matches = match(r12, s)
-//         substr = substring(s, rr1.index(r1), k+rr2.index(r2)+1)
-//         c = matches.index(substr)
-//         cc = len(matches)
-        
-//         R1 = generate_regex(r1, s)
-//         R2 = generate_regex(r2, s)        
-        
-//         result.append(Pos(R1, R2, [c, -(cc - c + 1)]))
- 
-//     return list(set(result))
+    for k3 in range(0, len(s)):
+        for k2 in range(0, len(s)):
+            for k1 in range(0, len(s)):
+                if k1<= k2-1 and k2<=k3:
+                    E1 = generate_str(sigma, substring(s, k1, k2-1))
+                    E2 = generate_str(sigma, substring(s, k2, k3))
+                    unify(E1, E2)
+                    
+    return edge_expressions    
+}
 
-// function regex(s):
-//     s = re.sub('U', '[A-Z]+', s)
-//     s = re.sub('L', '[a-z]+', s)
-//     s = re.sub('S', '\ +', s)
-//     return s
+// function generate_str(sigma, s):
+//     nodes = [i for i in range(0, len(s)+1)]
+//     source_node, target_node = 0, len(s)
+//     edges = [(i, j) for j in range(1, len(s)+1) for i in range(0, j)]
+    
+//     W = {}
+//     for edge in edges:
+//         substr = substring(s, edge[0], edge[1] - 1)
+//         W[edge] = [ConstStr(substr)] + generate_substring(sigma, substr)
+    
+//     edge_expressions = generate_loop(sigma, s, W)
+//     return DAG(nodes, source_node, target_node, edges, edge_expressions)
 
-// function match(reg, s):
-//     matches = []
-//     for i in range(0, len(s)):
-//         for j in range(i+1, len(s)+1):
-//             matches += re.findall(regex(reg), s[i:j])
-//     return matches
+
 
 // function unify_positions(positions1, positions2):
 //     result = list()
@@ -312,37 +291,13 @@ function is_substr_at(str, substr){
     
 
 
-// function generate_substring(sigma, s):
-//     result = []
-//     for i, column in enumerate(sigma):
-//         for k in is_substr_at(column, s):
-//             y1 = generate_position(column, k)
-//             y2 = generate_position(column, k + len(s))
-//             result.append(SubStr(column, y1, y2))
-//     return list(set(result))
 
-// function generate_loop(sigma, s, W):
-//     edge_expressions = W
-    
-//     for k3 in range(0, len(s)):
-//         for k2 in range(0, len(s)):
-//             for k1 in range(0, len(s)):
-//                 if k1<= k2-1 and k2<=k3:
-//                     E1 = generate_str(sigma, substring(s, k1, k2-1))
-//                     E2 = generate_str(sigma, substring(s, k2, k3))
-//                     unify(E1, E2)
-                    
-//     return edge_expressions
 
-// function generate_str(sigma, s):
-//     nodes = [i for i in range(0, len(s)+1)]
-//     source_node, target_node = 0, len(s)
-//     edges = [(i, j) for j in range(1, len(s)+1) for i in range(0, j)]
-    
-//     W = {}
-//     for edge in edges:
-//         substr = substring(s, edge[0], edge[1] - 1)
-//         W[edge] = [ConstStr(substr)] + generate_substring(sigma, substr)
-    
-//     edge_expressions = generate_loop(sigma, s, W)
-//     return DAG(nodes, source_node, target_node, edges, edge_expressions)
+
+
+
+
+
+
+
+var test = '01234 is cool'
