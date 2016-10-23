@@ -18,11 +18,12 @@ class Switch {
     }
 
     apply(sigma, bindings={}){
-        for(var [b, e] of this.clauses){
-            if(b.apply(sigma, bindings)){
+        for(var [b, e] of this.clauses) {
+            var res = b.apply(sigma, bindings)
+            if(res){
                 // print "matched predicate", sigma, b
-                return e.apply(sigma, bindings)                
-            }
+                return e.apply(sigma, bindings)
+            }   
         }
     }
 
@@ -99,7 +100,11 @@ class Match {
         // Match(𝑣𝑖, r, 𝑘) evaluates to true iff 𝑣𝑖 contains at least 𝑘 
         // matches of regular expression r. 
         // print regex(this.r)
-        return sigma[this.vi].match( regex(this.r) ).length >= this.k
+        var s = sigma[this.vi]
+        var r = regex(this.r)
+
+        var matches = all_matches(s, r)
+        return matches && matches.length >= this.k
     }
 
     toString(){
@@ -157,7 +162,7 @@ function LoopR(w, fn, k, sigma, bindings){
     return t + LoopR(w, fn, k + 1, sigma, bindings)
 }
 
-class BoundVar{
+class BoundVar {
     constructor(w, k1 = 1, k2 = 0){
         this.w = w
         this.k1 = k1
@@ -282,7 +287,10 @@ class Pos{
 
     apply_str(s, bindings){
         var c = unbind_integer(this.c, bindings)
-        var matches = all_matches(s, regex(this.r1.concat(this.r2)))
+        
+        var r = regex(this.r1.concat(this.r2))
+
+        var matches = all_matches(s, r)
         var match = array_index(matches, c)
 
         if(!match) throw new Error('Match Not Found')
@@ -299,7 +307,11 @@ class Pos{
 
 function all_matches(s, re) {
     var m, matches = [];
-    while (m = re.exec(s)) matches.push(m);
+    var lastI;
+    while (m = re.exec(s) && m.index === lastI){
+        lastI = m.index
+        matches.push(m);
+    }
     return matches;
 }
 
@@ -378,12 +390,12 @@ TokenStrings = {
 }
 
 
-function regex(tokseq){
+function regex(tokseq) {
     return new RegExp(tokseq.map(t => '(' + TokenStrings[t] + ')').join(''), 'g')
 }
     
 
-function fftest(prog, data){
+function fftest(prog, data) {
     console.log(prog.toString())
     Object.getOwnPropertyNames(data).forEach(key => {
         var val = data[key]
@@ -442,17 +454,17 @@ fftest(prog, {
 
 console.log("Mixed Date Parsing")
 
-// prog = new Switch(
-//     [new Match(v1, ['SlashTok']), new SubStr(v1, new Pos(['StartTok'], [], 0), new Pos([], ['SlashTok'], 0))],
-//     [new Match(v1, ['DotTok']), new SubStr(v1, new Pos(['DotTok'], [], 0), new Pos([], ['DotTok'], 1))],
-//     [new Match(v1, ['HyphenTok']), new SubStr(v1, new Pos(['HyphenTok'], [], 1), new Pos(['EndTok'], [], 0))]
-// )
+prog = new Switch(
+    [new Match(v1, ['SlashTok']), new SubStr(v1, new Pos(['StartTok'], [], 0), new Pos([], ['SlashTok'], 0))],
+    [new Match(v1, ['DotTok']), new SubStr(v1, new Pos(['DotTok'], [], 0), new Pos([], ['DotTok'], 1))],
+    [new Match(v1, ['HyphenTok']), new SubStr(v1, new Pos(['HyphenTok'], [], 1), new Pos(['EndTok'], [], 0))]
+)
 
-// fftest(prog, {
-//     "01/21/2001": "01",
-//     "22.02.2002": "02",
-//     "2003-23-03": "03"
-// })
+fftest(prog, {
+    "01/21/2001": "01",
+    "22.02.2002": "02",
+    "2003-23-03": "03"
+})
 
 
 
