@@ -101,7 +101,7 @@ class Match {
 }
 
 // [Concatenate(f1, ⋅⋅ fn)] = Concatenate([f1] 𝜎, ⋅⋅, [f𝑛] 𝜎)
-class Concatenate{
+class Concatenate {
     constructor(...exprs){
         // assert isinstance(exprs, tuple)
         this.exprs = exprs
@@ -176,7 +176,7 @@ class BoundVar {
 // If either of p1 or p2 refer to an index that is outside the range of 
 // string 𝑣𝑖, then the SubStr constructor returns ⊥.
 
-class SubStr{
+class SubStr {
     constructor(vi, p1, p2){
         // assert isinstance(vi, int)
         // assert isinstance(p1, (Pos, CPos))
@@ -209,7 +209,7 @@ function SubStr2(vi, r, c){
 
 
 
-class ConstStr{
+class ConstStr {
     constructor(s){
         // assert isinstance(s, str)
 
@@ -232,7 +232,7 @@ class ConstStr{
 // from the left side (or right side), if the integer constant 𝑘 is 
 // non-negative (or negative).
 
-class CPos{
+class CPos {
     constructor(k){
         // assert isinstance(k, int)
 
@@ -263,7 +263,7 @@ class CPos{
 
 // import re
 
-class Pos{
+class Pos {
     constructor(r1, r2, c){
         // regular expressions
         this.r1 = r1

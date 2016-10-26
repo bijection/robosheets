@@ -156,6 +156,51 @@ function generate_str(sigma, s, shouldloop=true){
     return new Dag(nodes, 0, s.length, edges, W)
 }
 
+// The Concatenate constructor used in our string language is generalized to the
+// Dag constructor
+
+// Dag(~η, ηs, ηt, ~ξ, W)
+// ~η is a set of nodes containing two distinctly marked source and target nodes ηs, ηt
+// ηs source node
+// ηt target node
+// ~ξ is a set of edges over nodes in ~η that induces a DAG
+// W maps each edge in ~ξ to a set of atomic expressions
+
+function generate_str_kevin(sigma, s){
+    if(!Array.isArray(sigma)) throw 'sigma should be an array of strings!';
+
+    var nodes = _.range(1 + s.length);
+    var source = 0;
+    var target = s.length; // TODO: watch out for 1-indexing
+    var edges = []
+
+    // ~ξ = { <i, j> | 0 <= i < j <= Length(s) }
+    for(let j = 0; j <= s.length; j++){
+        for(let i = 0; i < j; i++){
+            edges.push([i, j])
+        }
+    }
+
+    // Let W be the mapping that maps edge <i, j> in ~ξ to the set
+    // { ConstStr(s[i:j-1]) U GenerateSubstring(sigma, s[i:j-1]) }
+
+    var map = {};
+    edges.forEach(edge => {
+        var sij = substring(s, edge[0], edge[1])
+        var key = JSON.stringify(edge)
+        map[key] = generate_substring(sigma, sij)
+            .concat([new ConstStrSet(sij)])
+    })
+
+    // note that while here the edges are tuples of numbers
+    // in full generality they may be arbitrarily nested
+    // tuples of tuples of tuples of numbers
+
+    return new DAG(nodes, source, target, edges, map);
+}
+
+
+
 function generate_loop(sigma, s, W){
     let edge_expressions = W
     
@@ -167,7 +212,7 @@ function generate_loop(sigma, s, W){
         let e2 = generate_str(sigma, substring(s, k2, k3), false)
 
         let e = unify(e1, e2)
-        if(new Loop)
+        if(new Loop()) //;
 
     }
                    
@@ -183,7 +228,7 @@ function unify_dags(d1, d2){
         let edge = [[e1[0], e2[0]], [e1[1], e2[1]]]
         W[JSON.stringify(edge)] = unify(d1.W[JSON.stringify(e1)], d2.W[JSON.stringify(e2)])
     })
-    return new Dag(nodes, [d1.source_node, d2.source_node], [d1.target_node, d2.target_node], edges, )
+    return new Dag(nodes, [d1.source_node, d2.source_node], [d1.target_node, d2.target_node], edges, W)
 }
 
 function unify_substrsets(s1, s2){
