@@ -24,7 +24,9 @@ function generate_posSet_set(s, k){
     let eprog = []
 
     let parts = IParts(s)
-    let reps = Reps(parts)
+
+    // remove the special tokens 
+    let reps = Reps(parts).filter(k => k != 'StartTok' && k != 'EndTok')
 
     reps.forEach(t => {
         let tok = TokenRegexesStart[t]
@@ -51,7 +53,7 @@ function generate_posSet_set(s, k){
         if(match && match.index == k){
             let tseq = [t]
             let end = match.index + match[0].length
-
+            
             if(end == s.length) {
                 eseq.push(tseq)
                 eseq.push([...tseq, 'EndTok'])

@@ -13,15 +13,16 @@ console.log('  =', cand.toString())
 console.log('f(', sig, ') =', cand.apply(sig))
 
 
+generate_substring(['hello'], 'hello')
 
 Array.from(generate_str(['hello'], 'world').all()).map(k => {
 	try{
 		if(k.apply(['hello']) === 'world'){
-			console.log('yay!')
+			// console.log('yay!')
 		}else{
 			console.log('boo!')
 		}
 	} catch (e){
-		console.log(k+'')
+		console.error(k + '')
 	} 
 })
