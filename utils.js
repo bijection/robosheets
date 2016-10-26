@@ -49,3 +49,13 @@ function is_substr_at(str, substr){
     }
     return indices
 }
+
+function cross(as, bs){
+    let res = []
+    as.forEach(a => {
+        bs.forEach(b => {
+            res.push([a, b])
+        })
+    })
+    return res
+}
