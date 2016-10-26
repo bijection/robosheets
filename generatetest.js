@@ -16,7 +16,11 @@ console.log('f(', sig, ') =', cand.apply(sig))
 
 Array.from(generate_str(['hello'], 'world').all()).map(k => {
 	try{
-		k.apply(['hello'])
+		if(k.apply(['hello']) === 'world'){
+			console.log('yay!')
+		}else{
+			console.log('boo!')
+		}
 	} catch (e){
 		console.log(k+'')
 	} 

@@ -147,13 +147,14 @@ function generate_str(sigma, s, shouldloop=true){
     for(let i = 0; i <= s.length; i++){
         nodes.push(i)
         for(let j = i+1; j <= s.length; j++) {
-            let edge = [i,j], part = substring(s,i,j)
+            let edge = [i,j], 
+                part = substring(s,i,j)
             edges.push(edge)
-            W[JSON.stringify(edge)] = [new ConstStr(part), ...generate_substring(sigma, part)]
-        }        
+            W[JSON.stringify(edge)] = [new ConstStrSet(part), ...generate_substring(sigma, part)]
+        }
     }
-    if(shouldloop) W = generate_loop(sigma, s, W)
-    return new Dag(nodes, 0, s.length, edges, W)
+    // if(shouldloop) W = generate_loop(sigma, s, W)
+    return new DAG(nodes, 0, s.length, edges, W)
 }
 
 // The Concatenate constructor used in our string language is generalized to the
@@ -212,7 +213,7 @@ function generate_loop(sigma, s, W){
         let e2 = generate_str(sigma, substring(s, k2, k3), false)
 
         let e = unify(e1, e2)
-        if(new Loop()) //;
+        // if(new Loop()) //;
 
     }
                    
@@ -228,7 +229,7 @@ function unify_dags(d1, d2){
         let edge = [[e1[0], e2[0]], [e1[1], e2[1]]]
         W[JSON.stringify(edge)] = unify(d1.W[JSON.stringify(e1)], d2.W[JSON.stringify(e2)])
     })
-    return new Dag(nodes, [d1.source_node, d2.source_node], [d1.target_node, d2.target_node], edges, W)
+    return new DAG(nodes, [d1.source_node, d2.source_node], [d1.target_node, d2.target_node], edges, W)
 }
 
 function unify_substrsets(s1, s2){
