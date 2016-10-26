@@ -142,6 +142,19 @@ function generate_substring(sigma, s){
 }
 
 
+function generate_str(sigma, s, shouldloop=true){
+    let W = {}, edges = [], nodes = []
+    for(let i = 0; i <= s.length; i++){
+        nodes.push(i)
+        for(let j = i+1; j <= s.length; j++) {
+            let edge = [i,j], part = substring(s,i,j)
+            edges.push(edge)
+            W[JSON.stringify(edge)] = [new ConstStr(part), ...generate_substring(sigma, part)]
+        }        
+    }
+    if(shouldloop) W = generate_loop(sigma, s, W)
+    return new Dag(nodes, 0, s.length, edges, W)
+}
 
 // The Concatenate constructor used in our string language is generalized to the
 // Dag constructor
@@ -153,7 +166,7 @@ function generate_substring(sigma, s){
 // ~ξ is a set of edges over nodes in ~η that induces a DAG
 // W maps each edge in ~ξ to a set of atomic expressions
 
-function generate_str(sigma, s){
+function generate_str_kevin(sigma, s){
     if(!Array.isArray(sigma)) throw 'sigma should be an array of strings!';
 
     var nodes = _.range(1 + s.length);
@@ -188,20 +201,36 @@ function generate_str(sigma, s){
 
 
 
-// function generate_loop(sigma, s, W){
-//     let edge_expressions = W
+function generate_loop(sigma, s, W){
+    let edge_expressions = W
     
-//     for(let k1 = 0; k1 < s.length; k1++)
-//     for(let k2 = k1; k2 < s.length; k2++)
-//     for(let k3 = k2; k3 < s.length; k3++) {
+    for(let k1 = 0; k1 < s.length; k1++)
+    for(let k2 = k1; k2 < s.length; k2++)
+    for(let k3 = k2; k3 < s.length; k3++) {
 
-//         let e1 = generate_str(sigma, substring(s, k1, k2))
-//         let e2 = generate_str(sigma, substring(s, k2, k3))
+        let e1 = generate_str(sigma, substring(s, k1, k2), false)
+        let e2 = generate_str(sigma, substring(s, k2, k3), false)
 
-//         let e = unify(e1, e2)
-//         if(new Loop)
+        let e = unify(e1, e2)
+        if(new Loop()) //;
 
-//     }
+    }
                    
-//     return edge_expressions    
-// }
+    return edge_expressions    
+}
+
+
+
+function unify_dags(d1, d2){
+    let nodes = cross(d1.nodes, d2.nodes)
+    let W = {}
+    let edges = cross(d1.edges, d2.edges).map(([e1, e2]) => {
+        let edge = [[e1[0], e2[0]], [e1[1], e2[1]]]
+        W[JSON.stringify(edge)] = unify(d1.W[JSON.stringify(e1)], d2.W[JSON.stringify(e2)])
+    })
+    return new Dag(nodes, [d1.source_node, d2.source_node], [d1.target_node, d2.target_node], edges, W)
+}
+
+function unify_substrsets(s1, s2){
+
+}

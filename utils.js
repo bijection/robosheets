@@ -51,7 +51,6 @@ function is_substr_at(str, substr){
 }
 
 
-
 function* cartesian_product(...arrays) {
     function* doCartesian(i, prod) {
         if (i == arrays.length) {
@@ -63,4 +62,14 @@ function* cartesian_product(...arrays) {
         }
     }
     yield* doCartesian(0, []);
+}
+
+function cross(as, bs){
+    let res = []
+    as.forEach(a => {
+        bs.forEach(b => {
+            res.push([a, b])
+        })
+    })
+    return res
 }

@@ -20,6 +20,18 @@ class PosSet {
         this.places = places
     }
 
+    // render(){
+    //     let res = []
+    //     this.pre_regexes.forEach( pre => {
+    //         this.post_regexes.forEach( post => {
+    //             this.places.forEach(place => {
+    //                 res.push(new Pos(pre, post, place))
+    //             })
+    //         })
+    //     })
+    //     return res
+    // }
+
     sample(){
         return new Pos(
             this.pre_regexes.map(sample),
@@ -44,6 +56,21 @@ class SubStrSet {
         this.start_positions = start_positions
         this.end_positions = end_positions
     }
+    
+    // render(){
+    //     let res = []
+
+    //     let start_positions = this.start_positions.map( p => p.render() )
+
+    //     this.start_positions.forEach( start => {
+    //         this.end_positions.forEach( end => {
+    //             this.places.forEach(place => {
+    //                 res.push(new Pos(pre, post, place))
+    //             })
+    //         })
+    //     })
+    //     return res
+    // }
 
     sample(){
         return new SubStr(this.vi,
@@ -127,17 +154,12 @@ class DAG {
     }
 }
 
+
 class LoopSet {
-    constructor(w, fn){
+    constructor(w, fns){
         this.w = w
-        this.fn = fn
+        this.fns = fns
     }
 
-    apply(sigma, bindings={}){
-        return LoopR(this.w, this.fn, 0, sigma, bindings)
-    }
 
-    toString(){
-        return "Loop(" + this.w + ": " + this.fn + ")"
-    }
 }
