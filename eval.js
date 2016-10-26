@@ -206,7 +206,7 @@ class SubStr{
     }
 
     toString(){
-        return "SubStr(" + [this.vi, this.p1, this.p2].join(', ') +")"
+        return "new SubStr( " + [this.vi, this.p1, this.p2].join(', ') +" )"
     }
 }
 
@@ -288,27 +288,25 @@ class Pos{
     apply_str(s, bindings){
         var c = unbind_integer(this.c, bindings)
         
-        var r = regex(this.r1.concat(this.r2))
+        var r = new RegExp('(' + to_regex_string(this.r1) + ')(' + to_regex_string(this.r2) + ')', 'g')
 
         var matches = all_matches(s, r)
         var match = array_index(matches, c)
 
         if(!match) throw new Error('Match Not Found')
         
-        return this.r1.length > 0 
-        ?   match.index + match.slice(1, 1 + this.r1.length).join('').length
-        :   match.index
+        return match.index + match[1].length
     }
 
     toString(){
-        return "Pos (" + [this.r1, this.r2, this.c].join(', ') +')'
+        return `new Pos( ${JSON.stringify(this.r1)}, ${JSON.stringify(this.r2)}, ${this.c})`
     }
 }
 
 function all_matches(s, re) {
     var m, matches = [];
     var lastI;
-    while (m = re.exec(s) && m.index === lastI){
+    while ((m = re.exec(s)) && m.index != lastI){
         lastI = m.index
         matches.push(m);
     }
@@ -356,37 +354,37 @@ function unbind_integer(c, bindings){
 
 
 TokenStrings = {
-    'NumTok': '\\d+',
-    'NonNumTok': '[^\\d]+',
-    'AlphTok': '[a-zA-Z]+',
-    'NonAlphTok': '[^a-zA-Z]+',
-    'LowerTok': '[a-z]+',
-    'NonLowerTok': '[^a-z]+',
-    'UpperTok': '[A-Z]+',
-    'NonUpperTok': '[^A-Z]+',
     'AlphNumTok': '[a-zA-Z0-9]+',
-    'NonAlphNumTok': '[^a-zA-Z0-9]+',
     'AlphNumWsTok': '[a-zA-Z0-9 ]+',
-    'NonAlphNumWsTok': '[^a-zA-Z0-9 ]+',
-    'WsTok': ' ',
-    'StartTok': '^',
-    'EndTok': '$',
-    'DotTok': '\\.',
-    'SlashTok': "[\\\/]",
-    'BckSlashTok': "/",
-    'BckSlashTok': "\\",
-    'DashTok': '-',
-    'LoDashTok': '_',
+    'AlphTok': '[a-zA-Z]+',
+    'BckSlashTok': "\\\\",
     'ColonTok': ':',
     'CommaTok': ',',
-    'SemicolonTok': ';',
-    'LeftAngleTok': '<',
-    'RightAngleTok': '>',
-    'LeftSquareTok': '<',
-    'RightSquareTok': '>',
-    'LeftParenTok': '\\(',
-    'RightParenTok': '\\)',
+    'DashTok': '-',
+    'DotTok': '\\.',
+    'EndTok': '$',
     'HyphenTok': '\\-',
+    'LeftAngleTok': '<',
+    'LeftParenTok': '\\(',
+    'LeftSquareTok': '<',
+    'LoDashTok': '_',
+    'LowerTok': '[a-z]+',
+    'NonAlphNumTok': '[^a-zA-Z0-9]+',
+    'NonAlphNumWsTok': '[^a-zA-Z0-9 ]+',
+    'NonAlphTok': '[^a-zA-Z]+',
+    'NonLowerTok': '[^a-z]+',
+    'NonNumTok': '[^\\d]+',
+    'NonUpperTok': '[^A-Z]+',
+    'NumTok': '\\d+',
+    'RightAngleTok': '>',
+    'RightParenTok': '\\)',
+    'RightSquareTok': '>',
+    'SemicolonTok': ';',
+    'SlashTok': "[\\\/]",
+    'SlashTok': "\/",
+    'StartTok': '^',
+    'UpperTok': '[A-Z]+',
+    'WsTok': ' ',
 }
 
 
@@ -396,6 +394,7 @@ function regex(tokseq) {
     
 
 function fftest(prog, data) {
+    // return;
     console.log(prog.toString())
     Object.getOwnPropertyNames(data).forEach(key => {
         var val = data[key]
@@ -409,6 +408,8 @@ function fftest(prog, data) {
         // print prog.apply(sigma, bindings)
     })
 }
+
+let to_regex_string = seq => seq.map(t => TokenStrings[t]).join('')
 
 
 var v1 = 0
@@ -466,46 +467,388 @@ fftest(prog, {
     "2003-23-03": "03"
 })
 
+function sample(arr){
+    return arr[Math.floor(Math.random()*(arr.length - 1))]
+}
+
+class CPosSet {
+    constructor(pos){
+        this.pos = pos
+    }
+
+    sample(){
+        return new CPos(this.pos)
+    }
+}
+
+
+class PosSet {
+    constructor(pre_regexes, post_regexes, places){
+        this.pre_regexes = pre_regexes
+        this.post_regexes = post_regexes
+        this.places = places
+    }
+
+    sample(){
+        return new Pos(
+            this.pre_regexes.map(sample),
+            this.post_regexes.map(sample),
+            sample(this.places))
+    }
+}
+
+class SubStrSet {
+    constructor(vi, start_positions, end_positions){
+        this.vi = vi
+        this.start_positions = start_positions
+        this.end_positions = end_positions
+    }
+
+    sample(){
+        return new SubStr(v1,
+            sample(this.start_positions).sample(),
+            sample(this.end_positions).sample())
+    }
+}
+
+class DAG {
+    constructor(nodes, source_node, target_node, edges, edge_expressions){
+        this.nodes = nodes
+        this.edges = edges
+        this.source_node = source_node
+        this.target_node = target_node
+        this.edge_expressions = edge_expressions
+    }
+}
+
+
+var TokenNames = Object.keys(TokenStrings)
+
+var TokenRegexes = {}
+TokenNames.forEach(s => TokenRegexes[s] = new RegExp(TokenStrings[s]))
+
+var TokenRegexesG = {}
+TokenNames.forEach(s => TokenRegexesG[s] = new RegExp(TokenStrings[s], 'g'))
+
+var TokenRegexesStart = {}
+TokenNames.forEach(s => TokenRegexesStart[s] = new RegExp('^' + TokenStrings[s]))
+
+var TokenRegexesSticky = {}
+TokenNames.forEach(s => TokenRegexesSticky[s] = new RegExp(TokenStrings[s], 'y'))
 
 
 
-// class IParts:
-//     constructor(s, t):
-//         this.s = s
-//         this.t = t
+function IParts(str) {
+    var res = {}
+    var seen = {}
+    TokenNames.forEach(name => {
+        var tok = TokenRegexesG[name]
+        var m = tok.exec(str)
+        var match = JSON.stringify([m && m.index, str.match(tok)])
+        seen[match] = seen[match] || {}
+        seen[match][name] = true
+        res[name] = seen[match]
+    })
+    return res
+}
 
-//     toString():
-//         return 'IParts(%s, %s)' % (this.s, this.t)
+function Reps(iparts){
+    return Array.from(new Set(Object.values(iparts)), s=>Object.keys(s)[0])
+}
+
+// function find_token_sequence(s, reps){
+//     var reps = reps || Reps(IParts(s))
+//     var res = []
+
+//     reps.forEach(rep => {
+//         var token = TokenRegexesStart[rep]
+//         var match = token.exec(s)
+//         if(!match) return;
+
+//         if(s === '') return res.push[rep]
+
+//         var seq = find_token_sequence(
+//             s.slice(match[0].length),
+//             reps.filter(r => r != 'StartTok')
+//         )
+//         if(!seq.length) res.push([rep]);
+//         else seq.forEach(subseq => res.push([rep].concat(subseq)));
+//     })
+//     return res
+// }
 
 
-// def generate_regex(r, s):
-//     return [IParts(s, t) for t in r]
+// function find_token_sequences(before, after, reps){
+//     var res = []
+//     var s = before + after
+
+//     var things_to_try = reps.map(t => {
+//         var thing = [t]
+//         let match = TokenRegexesStart[t].exec(s)
+
+//         if(match && match[0].length <= before.length){
+//             thing.index = match.index
+//             return thing
+//         }
+//     }).filter(x => x)
+
+//     let seqs = []
+
+//     let seq;
+//     while(seq = things_to_try.pop()){
+//         reps.forEach(rep => {
+//             var token = TokenRegexesSticky[rep]
+//             token.lastIndex = seq.index
+//             var match = token.exec(s)
+//             if(!match) return;
+
+//             var seqprime = [...seq, rep]
+//             seqprime.index = match.index
+
+//             things_to_try.unshift(seqprime)
+//         })
+//     }
+
+    
+//     return res
+// }
+
+// function token_sequence_to_regex(tokenSeq){
+//     return new RegExp(tokenSeq.map(k => TokenStrings[k]).join(''), 'g')
+// }
+
+// function generate_position(s, k){
+
+//     console.log('generate_position', k)
+
+//     // heres a note we should probably add token interruption
+//     let parts = IParts(s), reps = Reps(parts);
+//     let result = [new CPosSet(k), new CPosSet(-(s.length - k + 1))]
+
+//     let befores = [], afters = [];
+
+//     for(let i = 0; i < k; i++){
+//         let before = substring(s, i, k)
+//         console.log('before', before)
+//         befores = befores.concat(before)
+//     }
+
+//     for(let i = k + 1; i < s.length + 1; i++){
+//         let after = substring(s, k, i)
+//         console.log('after', after)
+//         afters = afters.concat(afters)
+//     }
+
+//     for(let i = 0; i < befores.length; i++){
+//         let r1 = befores[i];
+//         for(let j = 0; j < afters.length; j++){
+//             let r2 = afters[j];
+
+//             // find_token_sequences(r1, r2, reps)
+
+//             let r12 = r1.concat(r2);
+            
+//             let re = token_sequence_to_regex(r12)
+//             let re1 = token_sequence_to_regex(['StartTok'].concat(r1))
+
+//             let m, c = 0, total = 0;
+//             console.log('regex is', re)
+//             while (m = re.exec(s)){
+//                 total++;
+//                 console.log(m[0].match(re1).length, m.index, k)
+//                 if(m[0].match(re1).length + m.index >= k-1) continue;
+//                 c++;
+//             }
+
+//             // console.log(total, c)
+
+//             let pos = new PosSet(
+//                 r1.map(k => Object.keys(parts[k])),
+//                 r2.map(k => Object.keys(parts[k])),
+//                 [c - 1, -(total - c)]
+//             )
+
+//             if(pos.sample().apply_str(s) === k) result.push(pos);
+//             // return result
+//         }
+//     }
+//     return result;
+// }
+
+RegExp.escape= function(s) {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+};
+
+
+function is_substr_at(str, substr){
+    var re = new RegExp(RegExp.escape(substr), 'g'),
+        m,
+        indices = [];
+    while(m = re.exec(str)){
+        indices.push(m.index)
+    }
+    return indices
+}
+
+function generate_substring(sigma, s){
+    if(!Array.isArray(sigma)) throw 'sigma should be an array of strings!'
+    var result = []
+    for(var i = 0; i < sigma.length; i++){
+        var indices = is_substr_at(sigma[i], s)
+        for(var k = 0; k < indices.length; k++){
+            var y1 = generate_posSet_set(sigma[i], indices[k]),
+                y2 = generate_posSet_set(sigma[i], indices[k] + s.length);
+            result.push(new SubStrSet(i, y1, y2))
+        }
+    }
+    return result
+}
+
+// new SubStr(0, new Pos (['AlphNumTok','AlphNumWsTok','NonUpperTok'], ['AlphTok', 'LowerTok', 'NonNumTok'], -1), new CPos(-5))
+// SubStr(0, Pos (AlphNumTok,AlphNumWsTok,NonUpperTok, AlphTok,LowerTok,NonNumTok, -1), CPos(-4)) foo1
 
 
 
-// A regular expression r = TokenSeq(T1 , ⋅⋅, T𝑛 ) is a sequence of tokens 
-// T1,⋅⋅,T𝑛. We often refer to singleton token sequences TokenSeq(T1) simply 
-// as T1. We use the notation 𝜖 to denote an empty sequence of tokens.
-// 𝜖 matches an empty string.
+function generate_posSet_set(s, k){
+
+    let bseq = []
+    let bprog = []
+    let eseq = []
+    let eprog = []
+
+    let parts = IParts(s)
+    let reps = Reps(parts)
+
+    reps.forEach(t => {
+        let tok = TokenRegexesStart[t]
+        let match = tok.exec(s)
 
 
-// def intersect(a, b):
-//     // Intersect(Dag(𝜂 ̃1,𝜂1,𝜂1,𝜉1,𝑊1),Dag(𝜂 ̃2,𝜂2,𝜂2,𝜉2,𝑊2)) = 
-//     //    Dag(𝜂 ̃1 ×𝜂 ̃2,(𝜂1,𝜂2),(𝜂1,𝜂2),𝜉12,𝑊12)
-//     //  where  𝜉12 = {⟨(𝜂1, 𝜂2), (𝜂1, 𝜂2)⟩ ∣ ⟨𝜂1, 𝜂1⟩ ∈ 𝜉1, ⟨𝜂2, 𝜂2⟩ ∈ 𝜉2}
-//     //  and 𝑊12(⟨(𝜂1,𝜂2),(𝜂1,𝜂2)⟩)={Intersect( ̃f, ̃f)∣ ̃f∈𝑊1(⟨𝜂1,𝜂1⟩), ̃f ∈𝑊2(⟨𝜂2,𝜂2⟩)}
-//     if isinstance(a, Dag) and isinstance(b, Dag):
-//         pass
+        if(match) {
+            let tseq = [t]
+            let end = match.index + match[0].length
 
-//     // Intersect(SubStr(𝑣𝑖 , { ̃p𝑗 }𝑗 , { ̃p𝑘 }𝑘 ), SubStr(𝑣𝑖′ , { ̃p′l }l , { ̃p𝑚 }𝑚 )) =
-//     // SubStr(𝑣𝑖 , {IntersectPos( ̃p𝑗 ,  ̃pl )}𝑗,l , {IntersectPos( ̃p𝑘, ̃p𝑚)}𝑘,𝑚) if 𝑣𝑖 = 𝑣𝑖′
+            if(end < k) {
+                tseq.index = end
+                bprog.push(tseq)
+            } else if (end == k){
+                bseq.push(tseq)                
+            }
+        }
 
-//     if isinstance(a, SubStr) and isinstance(b, SubStr):
-//         if a.vi == b.vi:
-//             return SubStr(a.vi, )
+        tok = TokenRegexesG[t]
+        match = null
+        let lastIndex;
+        while( (match = tok.exec(s)) && match.index < k && match.index != lastIndex) lastIndex = match.index;
 
-//     // Intersect(ConstStr(𝑠1 ), ConstStr(𝑠2 )) = ConstStr(𝑠1 ) if 𝑠1 = 𝑠2
-//     if isinstance(a, ConstStr) and isinstance(b, ConstStr):
-//         if a.s == b.s: return a
+        if(match && match.index == k){
+            let tseq = [t]
+            let end = match.index + match[0].length
+
+            if(end == s.length) {
+                eseq.push(tseq)
+                eseq.push([...tseq, 'EndTok'])
+            } else {
+                tseq.index = end
+                eprog.push(tseq)
+            }
+        }
+    })
+
+    // before
+    let seq;
+    while(seq = bprog.pop()){
+        reps.forEach(t => {
+            let tok = TokenRegexesSticky[t]
+            tok.lastIndex = seq.index
+            let match = tok.exec(s)
+            if(match && match.index == seq.index && match[0].length > 0){
+                let end = match.index + match[0].length
+                if(end == k){
+                    bseq.push([...seq, t])
+                } else if (end < k) {
+                    let prog = [...seq, t]
+                    prog.index = end
+                    bprog.unshift(prog)
+                }
+            }
+        })
+    }
+
+    // after
+    while(seq = eprog.pop()){
+        reps.forEach(t => {
+            let tok = TokenRegexesSticky[t]
+            tok.lastIndex = seq.index
+            let match = tok.exec(s)
+            if(match && match.index == seq.index){
+                let end = match.index + match[0].length
+                if(end == s.length){
+                    eseq.push([...seq, t])
+                    eseq.push([...seq, t, 'EndTok'])
+                } else {
+                    let prog = [...seq, t]
+                    prog.index = end
+                    eprog.unshift(prog)
+                }
+            }
+        })
+    }
+
+    let possets = [new CPosSet(k), new CPosSet(k -(s.length + 1))]
+
+    bseq.forEach(bs => {
+        eseq.forEach(es => {
+            let re = new RegExp('(' + to_regex_string(bs) + ')(' + to_regex_string(es) + ')', 'g')
+            let match, c = 0, total = 0;
+            while(match = re.exec(s)){
+                if(match.index + match[1].length < k) c++;
+                // else if(c == total) {
+                //     console.log('c', c, 'k', k, match.index + match[1].length)
+                //     console.assert(match.index + match[1].length === k)
+                // }
+                total++;
+            }
+            possets.push(new PosSet(
+                bs.map(k => Object.keys(parts[k])),
+                es.map(k => Object.keys(parts[k])),
+                [c, -(total - c)]
+            ))
+        })
+    })
+    return possets
+}
 
 
+
+// function generate_loop(sigma, s, W){
+//     let edge_expressions = W
+    
+//     for(let k1 = 0; k1 < s.length; k1++)
+//     for(let k2 = k1; k2 < s.length; k2++)
+//     for(let k3 = k2; k3 < s.length; k3++) {
+
+//         let e1 = generate_str(sigma, substring(s, k1, k2))
+//         let e2 = generate_str(sigma, substring(s, k2, k3))
+
+//         let e = unify(e1, e2)
+
+        
+//     }
+                   
+//     return edge_expressions    
+// }
+
+
+
+
+
+
+
+var sig = ['1234foo1234']
+
+var potentials = generate_substring(sig,  'foo')
+var cand = sample(potentials).sample()
+console.log('f = generate_substring(', sig, ',  "foo")')
+console.log('  =', cand.toString())
+console.log('f(', sig, ') =', cand.apply(sig))
