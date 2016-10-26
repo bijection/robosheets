@@ -10,6 +10,8 @@ class CPosSet {
     *all(){
         yield new CPos(this.pos)
     }
+
+    size(){ return 1 }
 }
 
 
@@ -47,6 +49,10 @@ class PosSet {
                 }
             }
         }
+    }
+
+    size(){ 
+        return this.pre_regexes.length * this.post_regexes.length * this.places.length
     }
 }
 
@@ -90,6 +96,10 @@ class SubStrSet {
             }
         }
     }
+    size(){
+        return _.sumBy(this.start_positions, p => p.size()) 
+            * _.sumBy(this.end_positions, p => p.size())
+    }
 }
 
 class ConstStrSet {
@@ -102,6 +112,7 @@ class ConstStrSet {
     *all(){
         yield new ConstStr(this.s)
     }
+    size(){ return 1 }
 }
 
 class DAG {
@@ -114,6 +125,9 @@ class DAG {
     }
     _all_edges_from(node){
         return this.edges.filter(e => _.isEqual(e[0], node))
+    }
+    _all_edges_to(node){
+        return this.edges.filter(e => _.isEqual(e[1], node))
     }
     sample(){
         var target = this.source;
@@ -151,6 +165,19 @@ class DAG {
                 yield new Concatenate(...trace)
             }
         }
+    }
+
+    _size_of_node(n){
+        if(n === this.source) return 1;
+        return _.sumBy(this._all_edges_to(n), edge => {
+            var np = edge[0];
+            return this._size_of_node(np) 
+                * _.sumBy(this.map[JSON.stringify(edge)], 
+                    k => k.size())
+        })
+    }
+    size(){
+        return this._size_of_node(this.target)
     }
 }
 

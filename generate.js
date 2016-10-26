@@ -53,7 +53,7 @@ function generate_posSet_set(s, k){
         if(match && match.index == k){
             let tseq = [t]
             let end = match.index + match[0].length
-            
+
             if(end == s.length) {
                 eseq.push(tseq)
                 eseq.push([...tseq, 'EndTok'])
@@ -224,13 +224,32 @@ function generate_loop(sigma, s, W){
 
 
 
-function unify_dags(d1, d2){
+function intersect(a, b){
+    if(a instanceof DAG && b instanceof DAG){
+        return intersect_dags(a, b)
+    }
+    console.log(a, b)
+
+}
+
+function intersect_dags(d1, d2){
     let nodes = cross(d1.nodes, d2.nodes)
     let W = {}
-    let edges = cross(d1.edges, d2.edges).map(([e1, e2]) => {
-        let edge = [[e1[0], e2[0]], [e1[1], e2[1]]]
-        W[JSON.stringify(edge)] = unify(d1.W[JSON.stringify(e1)], d2.W[JSON.stringify(e2)])
+    let edges = [];
+
+    cross(d1.edges, d2.edges).forEach(([e1, e2]) => {
+        let edge = [[e1[0], e2[0]], [e1[1], e2[1]]];
+
+        edges.push(edge)
+
+        var intersection = []
+        cross(d1.map[JSON.stringify(e1)], d2.map[JSON.stringify(e2)]).forEach(([f1, f2]) => {
+            var int = intersect(f1, f2)
+            if(int) intersection.push(int);
+        })
+        W[JSON.stringify(edge)] = intersection
     })
+
     return new DAG(nodes, [d1.source_node, d2.source_node], [d1.target_node, d2.target_node], edges, W)
 }
 
