@@ -38,13 +38,39 @@ class SubStrSet {
     }
 }
 
+class ConstStrSet {
+    constructor(s){
+        this.s = s
+    }
+    sample(){
+        return new ConstStr(this.s)
+    }
+}
+
 class DAG {
-    constructor(nodes, source_node, target_node, edges, edge_expressions){
+    constructor(nodes, source, target, edges, map){
         this.nodes = nodes
+        this.source = source
+        this.target = target
         this.edges = edges
-        this.source_node = source_node
-        this.target_node = target_node
-        this.edge_expressions = edge_expressions
+        this.map = map
+    }
+
+    _sample_edge_from(node){
+        return sample(this.edges.filter(e => _.isEqual(e[0], node)));
+    }
+    sample(){
+        var target = this.source;
+        var trace = [];
+
+        // until we've reached the target
+        while(!_.isEqual(target, this.target)){
+            var edge = this._sample_edge_from(target);
+            var val = this.map[JSON.stringify(edge)];
+            trace.push(sample(val).sample())
+            target = edge[1]
+        }
+        return new Concatenate(...trace)
     }
 }
 

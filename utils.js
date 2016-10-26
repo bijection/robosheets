@@ -36,7 +36,7 @@ function sample(arr){
     return arr[Math.floor(Math.random()*(arr.length - 1))]
 }
 
-RegExp.escape= function(s) {
+RegExp.escape = function(s) {
     return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 };
 
