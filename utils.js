@@ -49,3 +49,18 @@ function is_substr_at(str, substr){
     }
     return indices
 }
+
+
+
+function* cartesian_product(...arrays) {
+    function* doCartesian(i, prod) {
+        if (i == arrays.length) {
+            yield prod;
+        } else {
+            for (let j = 0; j < arrays[i].length; j++) {
+                yield* doCartesian(i + 1, prod.concat([arrays[i][j]]));
+            }
+        }
+    }
+    yield* doCartesian(0, []);
+}

@@ -6,6 +6,10 @@ class CPosSet {
     sample(){
         return new CPos(this.pos)
     }
+
+    *all(){
+        yield new CPos(this.pos)
+    }
 }
 
 
@@ -22,6 +26,16 @@ class PosSet {
             this.post_regexes.map(sample),
             sample(this.places))
     }
+
+    *all(){
+        for(let pre of this.pre_regexes){
+            for(let post of this.post_regexes){
+                for(let place of this.places){
+                    yield new Pos(pre, post, place)
+                }
+            }
+        }
+    }
 }
 
 class SubStrSet {
@@ -36,6 +50,19 @@ class SubStrSet {
             sample(this.start_positions).sample(),
             sample(this.end_positions).sample())
     }
+
+    *all(){
+        // haaaidokken
+        for(let start of this.start_positions){
+            for(let end of this.end_positions){
+                for(let s of start.all()){
+                    for(let e of end.all()){
+                        yield new SubStr(this.vi, s, e)
+                    }
+                }
+            }
+        }
+    }
 }
 
 class ConstStrSet {
@@ -44,6 +71,9 @@ class ConstStrSet {
     }
     sample(){
         return new ConstStr(this.s)
+    }
+    *all(){
+        yield new ConstStr(this.s)
     }
 }
 
@@ -55,9 +85,8 @@ class DAG {
         this.edges = edges
         this.map = map
     }
-
-    _sample_edge_from(node){
-        return sample(this.edges.filter(e => _.isEqual(e[0], node)));
+    _all_edges_from(node){
+        return this.edges.filter(e => _.isEqual(e[0], node))
     }
     sample(){
         var target = this.source;
@@ -65,12 +94,36 @@ class DAG {
 
         // until we've reached the target
         while(!_.isEqual(target, this.target)){
-            var edge = this._sample_edge_from(target);
+            var edge = sample(this._all_edges_from(target));
             var val = this.map[JSON.stringify(edge)];
             trace.push(sample(val).sample())
             target = edge[1]
         }
         return new Concatenate(...trace)
+    }
+    
+    *all_paths_after(node){
+        if(_.isEqual(this.target, node)){
+            yield []
+            return;
+        }
+        var next_edges = this._all_edges_from(node);
+
+        for(let edge of next_edges){
+            for(let path of this.all_paths_after(edge[1])){
+                yield [edge].concat(path)
+            }
+        }
+    }
+
+    *all(){
+        for(let path of this.all_paths_after(this.source)){
+            for(let trace of cartesian_product(...path.map(edge => 
+                _.flatten(this.map[JSON.stringify(edge)]
+                .map(s => Array.from(s.all())))))){
+                yield new Concatenate(...trace)
+            }
+        }
     }
 }
 
