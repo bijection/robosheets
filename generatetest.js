@@ -28,6 +28,7 @@ Array.from(generate_str(['hello'], 'world').all()).map(k => {
 })
 
 var Kevin = generate_str(['Kevin'], 'Hello Kevin'),
-	Guillermo = generate_str(['Guillermo'], 'Hello Guillermo')
+	Guillermo = generate_str(['Guillermo'], 'Hello Guillermo'),
+	Union = intersect(Kevin, Guillermo)
 
-console.log(intersect(Kevin, Guillermo))
+console.log(Union)

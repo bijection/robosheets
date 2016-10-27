@@ -128,16 +128,28 @@ class DAG {
         return this.edges.filter(e => _.isEqual(e[1], node))
     }
     sample(){
-        var target = this.source;
+        var target = this.target;
         var trace = [];
-
-        // until we've reached the target
-        while(!_.isEqual(target, this.target)){
-            var edge = sample(this._all_edges_from(target));
+        while(!_.isEqual(target, this.source)){
+            var edge = sample(this._all_edges_to(target));
             var val = this.map[JSON.stringify(edge)];
-            trace.push(sample(val).sample())
-            target = edge[1]
+            trace.unshift(sample(val).sample())
+            target = edge[0]
         }
+
+
+
+
+        // var target = this.source;
+        // var trace = [];
+
+        // // until we've reached the target
+        // while(!_.isEqual(target, this.target)){
+        //     var edge = sample(this._all_edges_from(target));
+        //     var val = this.map[JSON.stringify(edge)];
+        //     trace.push(sample(val).sample())
+        //     target = edge[1]
+        // }
         return new Concatenate(...trace)
     }
     
