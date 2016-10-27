@@ -261,6 +261,92 @@ function intersect_dags(d1, d2){
     return new DAG(nodes, [d1.source, d2.source], [d1.target, d2.target], edges, W)
 }
 
+
+function lazy_intersect_dags(d1, d2){
+
+    var source = [d1.source, d2.source],
+        target = [d1.target, d2.target];
+
+    var W = {}
+    var edges = [];
+
+    function helper(node){
+        if(_.isEqual(node, target)) return true;
+
+        var s1 = d1.edges.filter(k => _.isEqual(k[0], node[0]))
+        var s2 = d2.edges.filter(k => _.isEqual(k[0], node[1]))
+
+        // shuffling seems to make things faster
+        for(var [e1, e2] of _.shuffle(cross(s1, s2))){
+            // e1 and e2 are edges of d1 and d2, respectively
+            // such that they start from node[0] and node[1],
+            // respectively
+
+            var edge = [node, [e1[1], e2[1]]];
+
+            var intersection = []
+            cross(d1.map[JSON.stringify(e1)], d2.map[JSON.stringify(e2)]).forEach(([f1, f2]) => {
+                var int = intersect(f1, f2)
+                if(int) intersection.push(int);
+            })
+
+            if(intersection.length === 0) continue;
+
+            if(helper(edge[1])){
+                W[JSON.stringify(edge)] = intersection;
+                edges.push(edge)
+                
+                return true
+            }
+        }
+    }
+
+    helper(source);
+    var nodes = _.uniq(_.flatten(edges))
+    return new DAG(nodes, source, target, edges, W)
+}
+
+
+
+function lazy_intersect_multidags(...dags){
+    var source = dags.map(k => k.source),
+        target = dags.map(k => k.target)
+
+    var W = {}, edges = [];
+
+    function helper(node){
+        if(_.isEqual(node, target)) return true;
+
+        var sv = dags.map((k, i) => k.edges.filter(e => _.isEqual(e[0], node[i])));
+        for(var ev of cartesian_product2(...sv)){
+            var edge = [node, ev.map(k => k[1])];
+
+            var last = dags[0].map[JSON.stringify(ev[0])]
+            for(var i = 1; last.length > 0 && i < ev.length; i++){
+                var intersection = []
+                cross(last, dags[i].map[JSON.stringify(ev[i])]).forEach(([f1, f2]) => {
+                    var int = intersect(f1, f2)
+                    if(int) intersection.push(int);
+                })
+                last = intersection;
+            }
+
+            if(intersection.length === 0) continue;
+
+            if(helper(edge[1])){
+                W[JSON.stringify(edge)] = intersection;
+                edges.push(edge)
+                
+                return true
+            }
+        }
+    }
+
+    helper(source);
+    var nodes = _.uniq(_.flatten(edges))
+    return new DAG(nodes, source, target, edges, W)
+}
+
 function intersect_substrsets(s1, s2){
     if(s1.vi === s2.vi){
         var start = intersect_pos_set(s1.start_positions, s2.start_positions);

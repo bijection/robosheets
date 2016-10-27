@@ -64,6 +64,22 @@ function* cartesian_product(...arrays) {
     yield* doCartesian(0, []);
 }
 
+function cartesian_product2(...arrays) {
+    function _inner(...args) {
+        if (arguments.length > 1) {
+            let arr2 = args.pop(); // arr of arrs of elems
+            let arr1 = args.pop(); // arr of elems
+            return _inner(...args,
+                arr1.map(e1 => arr2.map(e2 => [e1, ...e2]))
+                    .reduce((arr, e) => arr.concat(e), [])
+            );
+        } else {
+            return args[0];
+        }
+    };
+    return _inner(...arrays, [[]]);
+};
+
 function cross(as, bs){
     let res = []
     as.forEach(a => {
