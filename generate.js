@@ -225,11 +225,19 @@ function generate_loop(sigma, s, W){
 
 
 function intersect(a, b){
+    if(Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)){
+        return null
+    }
+
     if(a instanceof DAG && b instanceof DAG){
         return intersect_dags(a, b)
+    }else if(a instanceof ConstStrSet && b instanceof ConstStrSet){
+        if(a.s === b.s) return a;
+    }else if(a instanceof SubStrSet && b instanceof SubStrSet){
+        return intersect_substrsets(a, b)
+    }else{
+        console.log(a, b)    
     }
-    console.log(a, b)
-
 }
 
 function intersect_dags(d1, d2){
@@ -247,12 +255,42 @@ function intersect_dags(d1, d2){
             var int = intersect(f1, f2)
             if(int) intersection.push(int);
         })
+
         W[JSON.stringify(edge)] = intersection
     })
 
     return new DAG(nodes, [d1.source_node, d2.source_node], [d1.target_node, d2.target_node], edges, W)
 }
 
-function unify_substrsets(s1, s2){
+function intersect_substrsets(s1, s2){
+    if(s1.vi === s2.vi){
+        // console.log(s1, s2)    
 
+        return new SubStrSet(s1.vi, 
+            intersect_pos_set(s1.start_positions, s2.start_positions),
+            intersect_pos_set(s1.end_positions, s2.end_positions))
+    }
+}
+
+
+function intersect_pos_set(a, b){
+    var intersection = []
+    cross(a, b).forEach(([j, k]) => {
+        var int = intersect_pos(j, k)
+        if(int) intersection.push(int)
+    })
+    return intersection;
+}
+
+
+function intersect_pos(a, b){
+    if(Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)){
+        return null
+    }
+    
+    if(a instanceof CPosSet && b instanceof CPosSet){
+        if(a.pos === b.pos) return a;
+    }else{
+        console.log(a, b)    
+    }
 }
