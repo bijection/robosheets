@@ -54,6 +54,19 @@ class PosSet {
     }
 }
 
+
+class BoundVarSet {
+    constructor(w, k1 = 1, k2 = 0){
+        this.w = w
+        this.k1 = k1
+        this.k2 = k2
+    }
+
+    sample(){
+        return new BoundVar(this.w, this.k1, this.k2)
+    }
+}
+
 class SubStrSet {
     constructor(vi, start_positions, end_positions){
         this.vi = vi
