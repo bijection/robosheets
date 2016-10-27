@@ -33,7 +33,7 @@ function regex(tokseq) {
 let to_regex_string = seq => seq.map(t => TokenStrings[t]).join('')
 
 function sample(arr){
-    return arr[Math.floor(Math.random()*(arr.length - 1))]
+    return arr[Math.floor(Math.random()*arr.length)]
 }
 
 RegExp.escape = function(s) {
