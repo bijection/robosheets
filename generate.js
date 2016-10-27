@@ -246,9 +246,6 @@ function intersect_dags(d1, d2){
 
     cross(d1.edges, d2.edges).forEach(([e1, e2]) => {
         let edge = [[e1[0], e2[0]], [e1[1], e2[1]]];
-
-        
-
         var intersection = []
         cross(d1.map[JSON.stringify(e1)], d2.map[JSON.stringify(e2)]).forEach(([f1, f2]) => {
             var int = intersect(f1, f2)
@@ -266,51 +263,88 @@ function intersect_dags(d1, d2){
 
 function intersect_substrsets(s1, s2){
     if(s1.vi === s2.vi){
-        var start = intersect_pos_set(s1.start_positions, s2.start_positions),
-            end = intersect_pos_set(s1.end_positions, s2.end_positions);
-
-        if(start.length == 0 || end.length == 0) return null;
+        var start = intersect_pos_set(s1.start_positions, s2.start_positions);
+        if(start.length == 0) return null;
+        var end = intersect_pos_set(s1.end_positions, s2.end_positions);
+        if(end.length == 0) return null;
         return new SubStrSet(s1.vi, start, end)
     }
 }
 
 
+
+function pos_set_bucket(x){
+    return ((x instanceof CPosSet) ? 'C' : (
+        ('P' + x.pre_regexes.length + ':' + x.post_regexes.length) ))
+}
 function intersect_pos_set(a, b){
+    // use the simple algorithm when one of the lists is short
+    if(Math.min(a.length, b.length) < 5) return intersect_pos_set_simple(a, b);
+
+    var a_groups = _.groupBy(a, pos_set_bucket),
+        b_groups = _.groupBy(b, pos_set_bucket);
+    var keys = _.union(Object.keys(a_groups), Object.keys(b_groups));
     var intersection = []
-    cross(a, b).forEach(([j, k]) => {
-        var int = intersect_pos(j, k)
-        if(int) intersection.push(int)
-    })
+    for (var x = keys.length - 1; x >= 0; x--) {
+        var key = keys[x]
+        var ag = a_groups[key],
+            bg = b_groups[key];
+        if(!ag || !bg) continue;
+        for (var i = ag.length - 1; i >= 0; i--) {
+            for (var j = bg.length - 1; j >= 0; j--) {
+                if(key == 'C'){
+                    if(ag[i].pos === bg[j].pos) intersection.push(ag[i]);
+                }else{
+                    var int = intersect_pos_core(ag[i], bg[j])
+                    if(int) intersection.push(int);    
+                }
+            }
+        }
+    }
+    return intersection
+}
+
+
+function intersect_pos_set_simple(a, b){
+    var intersection = [];
+    for (var i = a.length - 1; i >= 0; i--) {
+        for (var j = b.length - 1; j >= 0; j--) {
+            var int = intersect_pos(a[i], b[j])
+            if(int) intersection.push(int);   
+        }
+    }
     return intersection;
 }
 
 
 function intersect_pos(a, b){
-    if(Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)){
-        return null
-    }
-    
     if(a instanceof CPosSet && b instanceof CPosSet){
         if(a.pos === b.pos) return a;
     }else if(a instanceof PosSet && b instanceof PosSet){
-        var places = _.intersection(a.places, b.places)
-        if(places.length > 0 
-            && a.pre_regexes.length === b.pre_regexes.length
-            && a.post_regexes.length === b.post_regexes.length){
-            
-            var pre_regexes = _.zip(a.pre_regexes, b.pre_regexes)
-                .map(([r1, r2]) => _.intersection(r1, r2))
-            var post_regexes = _.zip(a.post_regexes, b.post_regexes)
-                .map(([r1, r2]) => _.intersection(r1, r2))
-
-            if(_.some(pre_regexes, _.isEmpty) ||
-               _.some(post_regexes, _.isEmpty)) return null;
-
-            // console.log(pre_regexes, post_regexes)
-
-            return new PosSet(pre_regexes, post_regexes, places)
-        }
-    }else{
-        console.log(a, b)    
+        return intersect_pos_core(a, b)
     }
 }
+
+function intersect_pos_core(a, b){
+    if(a.pre_regexes.length !== b.pre_regexes.length) return null;
+    if(a.post_regexes.length !== b.post_regexes.length) return null;
+    var places = list_intersection(a.places, b.places)
+    if(places.length === 0) return null;
+    var pre_regexes = intersect_regex(a.pre_regexes, b.pre_regexes)
+    if(!pre_regexes) return null;
+    var post_regexes = intersect_regex(a.post_regexes, b.post_regexes)
+    if(!post_regexes) return null;
+    return new PosSet(pre_regexes, post_regexes, places)
+}
+
+
+function intersect_regex(a, b){
+    var ints = [];
+    for (var i = a.length - 1; i >= 0; i--) {
+        var int = list_intersection(a[i], b[i]);
+        if(int.length === 0) return null;
+        ints.unshift(int)
+    }
+    return ints
+}
+

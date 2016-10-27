@@ -73,3 +73,20 @@ function cross(as, bs){
     })
     return res
 }
+
+
+// technically O(n*m) but
+// empirically faster than O(n+m) associative array technique
+
+function list_intersection(x, y){
+    var ret = [];
+    for (var i = 0; i < x.length; i++) {
+        for (var z = 0; z < y.length; z++) {
+            if (x[i] == y[z]) {
+                ret.push(x[i]);
+                break;
+            }
+        }
+    }
+    return ret;            
+}
