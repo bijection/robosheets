@@ -127,15 +127,29 @@ class DAG {
     _all_edges_to(node){
         return this.edges.filter(e => _.isEqual(e[1], node))
     }
-    sample(){
-        var target = this.target;
-        var trace = [];
-        while(!_.isEqual(target, this.source)){
-            var edge = sample(this._all_edges_to(target));
+
+    *_sample_from(node){
+        if(_.isEqual(this.target, node)) yield [];
+        for(let edge of _.shuffle(this._all_edges_from(node))){
             var val = this.map[JSON.stringify(edge)];
-            trace.unshift(sample(val).sample())
-            target = edge[0]
+            if(!val) continue;
+            for(let path of this._sample_from(edge[1])){
+                yield [sample(val).sample()].concat(path)
+            }
         }
+    }
+
+
+    sample(){
+        var trace = this._sample_from(this.source).next().value
+        // var target = this.target;
+        // var trace = [];
+        // while(!_.isEqual(target, this.source)){
+        //     var edge = sample(this._all_edges_to(target));
+        //     var val = this.map[JSON.stringify(edge)];
+        //     trace.unshift(sample(val).sample())
+        //     target = edge[0]
+        // }
 
 
 
@@ -151,6 +165,8 @@ class DAG {
         //     target = edge[1]
         // }
         return new Concatenate(...trace)
+        // console.log(trace)
+        // return new Concatenate(...trace)
     }
     
     *all_paths_after(node){
