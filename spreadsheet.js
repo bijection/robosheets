@@ -164,6 +164,27 @@ document.addEventListener('keydown', e=> {
 	col = Math.min(selected_col, col)
 	row = Math.min(selected_row, row)
 
+	let rendered_height = top_margin
+	let cur_row = row
+	while(rendered_height <= canvas.height){
+		let height = row_heights[cur_row] || default_row_height
+
+		rendered_height += height
+		cur_row++
+	}
+
+	let rendered_width = left_margin
+	let cur_col = col
+	while(rendered_width <= canvas.width){
+		let width = col_widths[cur_col] || default_col_width
+
+		rendered_width += width
+		cur_col++
+	}
+
+
+	if(selected_row > cur_row - 2) row++;
+	if(selected_col > cur_col - 2) col++;
 
 })
 
