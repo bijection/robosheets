@@ -147,6 +147,14 @@ document.addEventListener('keydown', e=> {
 	} else if(e.keyCode == 40){
 		selected_row++
 	}
+
+	selected_row = Math.max(selected_row, 0)
+	selected_col = Math.max(selected_col, 0)
+
+	col = Math.min(selected_col, col)
+	row = Math.min(selected_row, row)
+
+
 })
 
 document.addEventListener('click', e => {
