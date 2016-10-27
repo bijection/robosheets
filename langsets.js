@@ -134,7 +134,7 @@ class DAG {
             var val = this.map[JSON.stringify(edge)];
             if(!val) continue;
             for(let path of this._sample_from(edge[1])){
-                yield [sample(val).sample()].concat(path)
+                yield [val].concat(path)
             }
         }
     }
@@ -142,31 +142,19 @@ class DAG {
 
     sample(){
         var trace = this._sample_from(this.source).next().value
-        // var target = this.target;
-        // var trace = [];
-        // while(!_.isEqual(target, this.source)){
-        //     var edge = sample(this._all_edges_to(target));
-        //     var val = this.map[JSON.stringify(edge)];
-        //     trace.unshift(sample(val).sample())
-        //     target = edge[0]
-        // }
-
-
-
-
-        // var target = this.source;
-        // var trace = [];
-
-        // // until we've reached the target
-        // while(!_.isEqual(target, this.target)){
-        //     var edge = sample(this._all_edges_from(target));
-        //     var val = this.map[JSON.stringify(edge)];
-        //     trace.push(sample(val).sample())
-        //     target = edge[1]
-        // }
+            .map(k => sample(k).sample())
         return new Concatenate(...trace)
-        // console.log(trace)
-        // return new Concatenate(...trace)
+    }
+
+    *all2(){
+        for(let path of this._sample_from(this.source)){
+            for(let traces of cartesian_product(...path)){
+                console.log(traces)
+                for(let trace of cartesian_product(...traces.map(k => Array.from(k.all())))){
+                    yield new Concatenate(...trace)
+                }
+            }
+        }
     }
     
     *all_paths_after(node){
