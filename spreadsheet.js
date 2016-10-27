@@ -84,6 +84,10 @@ function render() {
 				ctx.strokeStyle = '#48f'
 				ctx.lineWidth = 4
 				ctx.strokeRect(rendered_width, rendered_height, width, height)
+				ctx.fillStyle = '#48f'
+				ctx.strokeStyle = '#fff'
+				ctx.strokeRect(rendered_width + width - 4, rendered_height + height - 4, 8,8)
+				ctx.fillRect(rendered_width + width - 4, rendered_height + height - 4, 8,8)
 			}
 			rendered_width += width
 			cur_col++
@@ -126,6 +130,10 @@ canvas.addEventListener('wheel', e => {
 	 	scrollY += prev_height
 	 	row--
 	}
+
+	row = Math.max(row, 0)
+	col = Math.max(col, 0)
+
 })
 
 
@@ -139,6 +147,37 @@ document.addEventListener('keydown', e=> {
 	} else if(e.keyCode == 40){
 		selected_row++
 	}
+})
+
+document.addEventListener('click', e => {
+
+	let x = e.clientX * devicePixelRatio
+	let y = e.clientY * devicePixelRatio
+
+	if(x < left_margin || y < top_margin) return;
+
+	let rendered_height = top_margin
+	let cur_row = row
+	while(rendered_height <= y){
+		let height = row_heights[cur_row] || default_row_height
+
+		rendered_height += height
+		cur_row++
+	}
+
+
+	let rendered_width = left_margin
+	let cur_col = col
+	while(rendered_width <= x){
+		let width = col_widths[cur_col] || default_col_width
+
+		rendered_width += width
+		cur_col++
+	}
+
+	selected_row = cur_row - 1
+	selected_col = cur_col - 1
+
 })
 
 // function getLines(ctx, text, maxWidth) {
