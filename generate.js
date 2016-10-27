@@ -318,7 +318,7 @@ function lazy_intersect_multidags(...dags){
         if(_.isEqual(node, target)) return true;
 
         var sv = dags.map((k, i) => k.edges.filter(e => _.isEqual(e[0], node[i])));
-        for(var ev of cartesian_product2(...sv)){
+        for(var ev of cartesian_product(...sv)){
             var edge = [node, ev.map(k => k[1])];
 
             var last = dags[0].map[JSON.stringify(ev[0])]
