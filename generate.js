@@ -25,8 +25,7 @@ function generate_posSet_set(s, k){
 
     let parts = IParts(s)
 
-    // remove the special tokens 
-    let reps = Reps(parts).filter(k => k != 'StartTok' && k != 'EndTok')
+    let reps = Reps(parts)
 
     reps.forEach(t => {
         let tok = TokenRegexesStart[t]
@@ -90,7 +89,7 @@ function generate_posSet_set(s, k){
             let tok = TokenRegexesSticky[t]
             tok.lastIndex = seq.index
             let match = tok.exec(s)
-            if(match && match.index == seq.index){
+            if(match && match.index == seq.index && match[0].length){
                 let end = match.index + match[0].length
                 if(end == s.length){
                     eseq.push([...seq, t])
