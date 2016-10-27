@@ -247,27 +247,30 @@ function intersect_dags(d1, d2){
     cross(d1.edges, d2.edges).forEach(([e1, e2]) => {
         let edge = [[e1[0], e2[0]], [e1[1], e2[1]]];
 
-        edges.push(edge)
+        
 
         var intersection = []
         cross(d1.map[JSON.stringify(e1)], d2.map[JSON.stringify(e2)]).forEach(([f1, f2]) => {
             var int = intersect(f1, f2)
             if(int) intersection.push(int);
         })
-
-        W[JSON.stringify(edge)] = intersection
+        if(intersection.length > 0){
+            edges.push(edge)
+            W[JSON.stringify(edge)] = intersection    
+        }
+        
     })
 
-    return new DAG(nodes, [d1.source_node, d2.source_node], [d1.target_node, d2.target_node], edges, W)
+    return new DAG(nodes, [d1.source, d2.source], [d1.target, d2.target], edges, W)
 }
 
 function intersect_substrsets(s1, s2){
     if(s1.vi === s2.vi){
-        // console.log(s1, s2)    
+        var start = intersect_pos_set(s1.start_positions, s2.start_positions),
+            end = intersect_pos_set(s1.end_positions, s2.end_positions);
 
-        return new SubStrSet(s1.vi, 
-            intersect_pos_set(s1.start_positions, s2.start_positions),
-            intersect_pos_set(s1.end_positions, s2.end_positions))
+        if(start.length == 0 || end.length == 0) return null;
+        return new SubStrSet(s1.vi, start, end)
     }
 }
 
@@ -289,6 +292,24 @@ function intersect_pos(a, b){
     
     if(a instanceof CPosSet && b instanceof CPosSet){
         if(a.pos === b.pos) return a;
+    }else if(a instanceof PosSet && b instanceof PosSet){
+        var places = _.intersection(a.places, b.places)
+        if(places.length > 0 
+            && a.pre_regexes.length === b.pre_regexes.length
+            && a.post_regexes.length === b.post_regexes.length){
+            
+            var pre_regexes = _.zip(a.pre_regexes, b.pre_regexes)
+                .map(([r1, r2]) => _.intersection(r1, r2))
+            var post_regexes = _.zip(a.pre_regexes, b.pre_regexes)
+                .map(([r1, r2]) => _.intersection(r1, r2))
+
+            if(_.some(pre_regexes, _.isEmpty) ||
+               _.some(post_regexes, _.isEmpty)) return null;
+
+            // console.log(pre_regexes, post_regexes)
+
+            return new PosSet(pre_regexes, post_regexes, places)
+        }
     }else{
         console.log(a, b)    
     }
