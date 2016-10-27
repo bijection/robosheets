@@ -38,14 +38,14 @@ class PosSet {
         return new Pos(
             this.pre_regexes.map(sample),
             this.post_regexes.map(sample),
-            sample(this.places))
+            optional_sample(sample(this.places)))
     }
 
     *all(){
         for (let pre of cartesian_product(this.pre_regexes))
         for (let post of cartesian_product(this.post_regexes))
         for (let place of this.places){
-            yield new Pos(pre, post, place)
+            yield new Pos(pre, post, optional_sample(place))
         }
     }
 
@@ -54,6 +54,21 @@ class PosSet {
     }
 }
 
+function optional_sample(x){
+    if(x.sample) return x.sample()
+    return x;
+}
+
+
+class LoopSet {
+    constructor(w, fn){
+        this.w = w
+        this.fn = fn
+    }
+    sample(){
+        return new Loop(this.w, this.fn.sample())
+    }
+}
 
 class BoundVarSet {
     constructor(w, k1 = 1, k2 = 0){
@@ -244,11 +259,3 @@ class DAG {
 }
 
 
-class LoopSet {
-    constructor(w, fns){
-        this.w = w
-        this.fns = fns
-    }
-
-
-}
