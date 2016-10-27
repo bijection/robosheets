@@ -42,12 +42,10 @@ class PosSet {
     }
 
     *all(){
-        for(let pre of this.pre_regexes){
-            for(let post of this.post_regexes){
-                for(let place of this.places){
-                    yield new Pos(pre, post, place)
-                }
-            }
+        for (let pre of cartesian_product(this.pre_regexes))
+        for (let post of cartesian_product(this.post_regexes))
+        for (let place of this.places){
+            yield new Pos(pre, post, place)
         }
     }
 
