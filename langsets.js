@@ -193,6 +193,41 @@ class DAG {
     size(){
         return this._size_of_node(this.target)
     }
+
+
+
+    is_connected(node, info){
+        var nkey = JSON.stringify(node)
+        if(nkey in info) return info[nkey];
+        var connected = false;
+        for(let edge of this._all_edges_from(node)){
+            var key = JSON.stringify(edge);
+            var val = this.map[key];
+            if(!val) continue;
+            if(this.is_connected(edge[1], info)) connected = true;
+        }
+        return info[nkey] = connected;
+    }
+    connected_nodes(){
+        var info = {}
+        info[JSON.stringify(this.target)] = true;
+        this.is_connected(this.source, info)
+        // var connected = []
+        for(var key in info){
+            if(!info[key]) delete info[key];
+        }
+        return info
+    }
+    prune(){
+        var connected = this.connected_nodes()
+        var nodes = this.nodes.filter(k => JSON.stringify(k) in connected)
+        var edges = this.edges.filter(k => 
+            (JSON.stringify(k[0]) in connected)
+            && (JSON.stringify(k[1]) in connected))
+        var edgekeys = _.fromPairs(edges.map(k => [JSON.stringify(k), true]))
+        var map = _.pickBy(this.map, (val, key) => key in edgekeys)
+        return new DAG(nodes, this.source, this.target, edges, map)
+    }
 }
 
 
