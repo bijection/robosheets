@@ -424,6 +424,7 @@ function intersect_pos_core(a, b){
 }
 
 
+
 function intersect_regex(a, b){
     var ints = [];
     for (var i = a.length - 1; i >= 0; i--) {
@@ -434,3 +435,102 @@ function intersect_regex(a, b){
     return ints
 }
 
+
+
+
+
+
+
+function unify(a, b, w){
+    if(Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return null;
+
+    if(a instanceof DAG && b instanceof DAG){
+        return unify_dags(a, b, w)
+    }else if(a instanceof ConstStrSet && b instanceof ConstStrSet){
+        if(a.s === b.s) return a;
+    }else if(a instanceof SubStrSet && b instanceof SubStrSet){
+        return unify_substrsets(a, b, w)
+    }else{
+        console.log(a, b, w)
+    }
+}
+
+function unify_dags(d1, d2, w){
+    let nodes = cross(d1.nodes, d2.nodes)
+    let W = {}
+    let edges = [];
+
+    cross(d1.edges, d2.edges).forEach(([e1, e2]) => {
+        let edge = [[e1[0], e2[0]], [e1[1], e2[1]]];
+        var intersection = []
+        cross(d1.map[JSON.stringify(e1)], d2.map[JSON.stringify(e2)]).forEach(([f1, f2]) => {
+            var int = unify(f1, f2, w)
+            if(int) intersection.push(int);
+        })
+        if(intersection.length > 0){
+            edges.push(edge)
+            W[JSON.stringify(edge)] = intersection    
+        }
+    })
+
+    return new DAG(nodes, [d1.source, d2.source], [d1.target, d2.target], edges, W)
+}
+
+
+function unify_substrsets(s1, s2, w){
+    if(s1.vi === s2.vi){
+        var start = unify_pos_set(s1.start_positions, s2.start_positions, w);
+        if(start.length == 0) return null;
+        var end = unify_pos_set(s1.end_positions, s2.end_positions, w);
+        if(end.length == 0) return null;
+        return new SubStrSet(s1.vi, start, end)
+    }
+}
+
+function unify_pos_set(a, b, w){
+    var intersection = [];
+    for (var i = a.length - 1; i >= 0; i--) {
+        for (var j = b.length - 1; j >= 0; j--) {
+            var int = unify_pos(a[i], b[j], w)
+            if(int) intersection.push(int);   
+        }
+    }
+    return intersection;
+}
+
+
+function unify_pos(a, b, w){
+    if(a instanceof CPosSet && b instanceof CPosSet){
+        if(a.pos === b.pos) return a;
+    }else if(a instanceof PosSet && b instanceof PosSet){
+        return unify_pos_core(a, b, w)
+    }
+}
+
+// https://github.com/MikaelMayer/StringSolver/blob/899db96e1e39f5ce9b075355eb7fb089bd1cc071/src/main/scala/ch/epfl/lara/synthesis/stringsolver/ProgramSet.scala#L748
+function unify_pos_core(a, b, w){
+    if(a.pre_regexes.length !== b.pre_regexes.length) return null;
+    if(a.post_regexes.length !== b.post_regexes.length) return null;
+
+    // console.log(a, b)
+    var pre_regexes = intersect_regex(a.pre_regexes, b.pre_regexes)
+    if(!pre_regexes) return null;
+    var post_regexes = intersect_regex(a.post_regexes, b.post_regexes)
+    if(!post_regexes) return null;
+
+    
+    var places = []
+    cross(a.places, b.places).forEach(([k1, k2]) => {
+        if(k1 === k2){
+            // standard intersection case
+            places.push(k1)
+            // console.log('does this even matter?')
+        }else if(typeof k1 == 'number' && typeof k2 == 'number'){
+            console.log('boundvar', k1, k2)
+            places.push(new BoundVarSet(w, k2 - k1, k1))
+        }
+    })
+
+    if(places.length === 0) return null;
+    return new PosSet(pre_regexes, post_regexes, places)
+}
