@@ -43,6 +43,11 @@ function render() {
 	let cur_row = row
 	while(rendered_height <= canvas.height){
 		let height = row_heights[cur_row] || default_row_height
+		if(cur_row == selected_row){
+			ctx.fillStyle = '#ddd'
+			ctx.fillRect(0, rendered_height, left_margin, height)
+		}
+		ctx.fillStyle = '#222'
 		ctx.fillText(cur_row, left_margin - 10, rendered_height + height / 2)
 
 		ctx.beginPath()
@@ -61,6 +66,11 @@ function render() {
 	let cur_col = col
 	while(rendered_width <= canvas.width){
 		let width = col_widths[cur_col] || default_col_width
+		if(cur_col == selected_col){
+			ctx.fillStyle = '#ddd'
+			ctx.fillRect(rendered_width, 0, width, top_margin)
+		}
+		ctx.fillStyle = '#222'
 		ctx.fillText(cur_col, rendered_width + width / 2, top_margin / 2)
 
 		ctx.beginPath()
