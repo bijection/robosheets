@@ -300,7 +300,7 @@ function intersect_pos(a, b){
             
             var pre_regexes = _.zip(a.pre_regexes, b.pre_regexes)
                 .map(([r1, r2]) => _.intersection(r1, r2))
-            var post_regexes = _.zip(a.pre_regexes, b.pre_regexes)
+            var post_regexes = _.zip(a.post_regexes, b.post_regexes)
                 .map(([r1, r2]) => _.intersection(r1, r2))
 
             if(_.some(pre_regexes, _.isEmpty) ||
