@@ -299,6 +299,24 @@ canvas.addEventListener('wheel', e => {
 
 
 
+document.addEventListener('paste', function(e){
+	let data = e.clipboardData.getData('text/plain')
+	if(data.includes('\n') || data.includes('\t')){
+		e.preventDefault()
+		let row = selected_row
+		data.split('\n').forEach(line => {
+			let col = selected_col
+			line.split('\t').forEach(entry => {
+				content[[row, col]] = entry
+				col++
+			})
+			row++
+		})
+	}
+})
+
+
+
 
 
 function start_typing(){
@@ -342,12 +360,14 @@ keygetter.addEventListener('input', e => {
 
 
 document.addEventListener('keydown', e=> {
-	if([13,37,38,39,40].includes(e.keyCode)){
+	if([9,13,37,38,39,40].includes(e.keyCode)){
+		e.preventDefault()
+		if(e.keyCode == 9) bump_selected(0, 1)
+		if(e.keyCode == 13) bump_selected(1, 0)
 		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump_selected(0, -1)
 		if(e.keyCode == 38) bump_selected(-1, 0)
 		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump_selected(0, 1)
 		if(e.keyCode == 40) bump_selected(1, 0)
-		if(e.keyCode == 13) bump_selected(1, 0)
 	} else if(!is_typing()) {
 		start_typing()
 	}
