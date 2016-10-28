@@ -134,8 +134,8 @@ function generate_substring(sigma, s){
     for(var i = 0; i < sigma.length; i++){
         var indices = is_substr_at(sigma[i], s)
         for(var k = 0; k < indices.length; k++){
-            var y1 = generate_posSet_set(sigma[i], indices[k]),
-                y2 = generate_posSet_set(sigma[i], indices[k] + s.length);
+            var y1 = generate_position(sigma[i], indices[k]),
+                y2 = generate_position(sigma[i], indices[k] + s.length);
             result.push(new SubStrSet(i, y1, y2))
         }
     }
@@ -202,24 +202,6 @@ function generate_str_kevin(sigma, s){
 }
 
 
-
-function generate_loop(sigma, s, W){
-    let edge_expressions = W
-    
-    for(let k1 = 0; k1 < s.length; k1++)
-    for(let k2 = k1; k2 < s.length; k2++)
-    for(let k3 = k2; k3 < s.length; k3++) {
-
-        let e1 = generate_str(sigma, substring(s, k1, k2), false)
-        let e2 = generate_str(sigma, substring(s, k2, k3), false)
-
-        let e = unify(e1, e2)
-        // if(new Loop()) //;
-
-    }
-                   
-    return edge_expressions    
-}
 
 
 
@@ -424,6 +406,7 @@ function intersect_pos_core(a, b){
 }
 
 
+
 function intersect_regex(a, b){
     var ints = [];
     for (var i = a.length - 1; i >= 0; i--) {
@@ -432,5 +415,195 @@ function intersect_regex(a, b){
         ints.unshift(int)
     }
     return ints
+}
+
+
+
+
+function generate_str(sigma, s, shouldloop=true){
+    let W = {}, edges = [], nodes = []
+    for(let i = 0; i <= s.length; i++){
+        nodes.push(i)
+        for(let j = i+1; j <= s.length; j++) {
+            let edge = [i,j], 
+                part = substring(s,i,j)
+            edges.push(edge)
+            W[JSON.stringify(edge)] = [new ConstStrSet(part), ...generate_substring(sigma, part)]
+        }
+    }
+    if(shouldloop) W = generate_loop(sigma, s, W)
+    return new DAG(nodes, 0, s.length, edges, W)
+}
+
+
+function unify(a, b, w){
+    if(Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return null;
+
+    if(a instanceof DAG && b instanceof DAG){
+        return unify_dags(a, b, w)
+    }else if(a instanceof ConstStrSet && b instanceof ConstStrSet){
+        if(a.s === b.s) return a;
+    }else if(a instanceof SubStrSet && b instanceof SubStrSet){
+        return unify_substrsets(a, b, w)
+    }else{
+        console.log(a, b, w)
+    }
+}
+
+function unify_dags(d1, d2, w){
+    let nodes = cross(d1.nodes, d2.nodes)
+    let W = {}
+    let edges = [];
+
+    cross(d1.edges, d2.edges).forEach(([e1, e2]) => {
+        let edge = [[e1[0], e2[0]], [e1[1], e2[1]]];
+        var intersection = []
+        cross(d1.map[JSON.stringify(e1)], d2.map[JSON.stringify(e2)]).forEach(([f1, f2]) => {
+            var int = unify(f1, f2, w)
+            if(int) intersection.push(int);
+        })
+        if(intersection.length > 0){
+            edges.push(edge)
+            W[JSON.stringify(edge)] = intersection    
+        }
+    })
+
+    return new DAG(nodes, [d1.source, d2.source], [d1.target, d2.target], edges, W)
+}
+
+
+function unify_substrsets(s1, s2, w){
+    if(s1.vi === s2.vi){
+        var start = unify_pos_set(s1.start_positions, s2.start_positions, w);
+        if(start.length == 0) return null;
+        var end = unify_pos_set(s1.end_positions, s2.end_positions, w);
+        if(end.length == 0) return null;
+        return new SubStrSet(s1.vi, start, end)
+    }
+}
+
+function unify_pos_set(a, b, w){
+    var intersection = [];
+    for (var i = a.length - 1; i >= 0; i--) {
+        for (var j = b.length - 1; j >= 0; j--) {
+            var int = unify_pos(a[i], b[j], w)
+            if(int) intersection.push(int);   
+        }
+    }
+    return intersection;
+}
+
+
+function unify_pos(a, b, w){
+    if(a instanceof CPosSet && b instanceof CPosSet){
+        if(a.pos === b.pos) return a;
+    }else if(a instanceof PosSet && b instanceof PosSet){
+        return unify_pos_core(a, b, w)
+    }
+}
+
+// https://github.com/MikaelMayer/StringSolver/blob/899db96e1e39f5ce9b075355eb7fb089bd1cc071/src/main/scala/ch/epfl/lara/synthesis/stringsolver/ProgramSet.scala#L748
+function unify_pos_core(a, b, w){
+    if(a.pre_regexes.length !== b.pre_regexes.length) return null;
+    if(a.post_regexes.length !== b.post_regexes.length) return null;
+
+    // console.log(a, b)
+    var pre_regexes = intersect_regex(a.pre_regexes, b.pre_regexes)
+    if(!pre_regexes) return null;
+    var post_regexes = intersect_regex(a.post_regexes, b.post_regexes)
+    if(!post_regexes) return null;
+
+
+    var places = []
+    cross(a.places, b.places).forEach(([k1, k2]) => {
+        if(k1 === k2){
+            // standard intersection case
+            places.push(k1)
+            // console.log('does this even matter?')
+        }else if(typeof k1 == 'number' && typeof k2 == 'number'){
+            // console.log('boundvar', k1, k2)
+            places.push(new BoundVarSet(w, k2 - k1, k1))
+        }
+    })
+
+    if(places.length === 0) return null;
+    return new PosSet(pre_regexes, post_regexes, places)
+}
+
+
+function generate_position(s, k){
+    // TODO: check for off-by-one
+    var result = [ new CPosSet(k), new CPosSet(-(s.length - k)) ]
+
+    // TODO: check for off-by-one
+    var rr1 = _.flatten(_.range(0, k + 1).map(k1 => 
+        matching_token_sequences(substring(s, k1, k-1))
+        .map(r1 => [k1, r1])))
+
+    var rr2 = _.flatten(_.range(k+1, s.length + 1).map(k2 => 
+        matching_token_sequences(substring(s, k, k2))
+        .map(r2 => [k2, r2])))
+
+    for(var [[k1, r1], [k2, r2]] of cross(rr1, rr2)){
+        var r = new RegExp('(' + to_regex_string(r1) + ')(' + to_regex_string(r2) + ')', 'g')
+        var matches = all_matches(s, r)
+
+        // TODO: check for off-by-one
+        var c = _.findIndex(matches, m => 
+            m.index == k1 && m.index + m[0].length == k2)
+
+        result.push(new PosSet(
+            generate_regex(r1, s), 
+            generate_regex(r2, s), 
+            [c, -(matches.length - c + 1)])) // TODO: check for off-by-one
+    }
+
+    return result
+}
+
+function matching_token_sequences(s){
+    if(s.length == 0) return [[]];
+
+    var sequences = []
+    for(var tok in TokenRegexesStart){
+        if(tok == 'EndTok' || tok == 'StartTok') continue;
+        var re = TokenRegexesStart[tok],
+            m = re.exec(s);
+        if(!m) continue;
+        for(var seq of matching_token_sequences(s.slice(m[0].length))){
+            sequences.push([tok, ...seq])
+        }
+    }
+    return sequences
+}
+
+// matching_token_sequences('hello')
+
+function generate_regex(r, s){
+    // r is a token sequence
+    return r.map(k => [k])
+}
+
+
+function generate_loop(sigma, s, W){
+    let edge_expressions = W
+    
+    for(let k1 = 0; k1 < s.length; k1++)
+    for(let k2 = k1; k2 < s.length; k2++)
+    for(let k3 = k2; k3 < s.length; k3++) {
+
+        let e1 = generate_str(sigma, substring(s, k1, k2), false)
+        let e2 = generate_str(sigma, substring(s, k2, k3), false)
+
+        let w = 'wumbo';
+
+        let loop = new LoopSet(w, unify(e1, e2, w))
+        
+        console.log(loop, loop.sample())
+        // if(new Loop()) //;
+
+    }
+                   
+    return edge_expressions    
 }
 
