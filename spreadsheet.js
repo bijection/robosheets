@@ -172,8 +172,8 @@ function draw_cell_text(row, col){
 	ctx.fillStyle = '#fff'
 	ctx.fillRect(x+1, y+1, text_width, height - 2)
 
-	let shorter
-	while(ctx.measureText(shorter = text.slice(0,-1)).width > text_width) text = shorter;
+	
+	text = text.slice(0, 1 + text.length * text_width / ctx.measureText(text).width)
 
 	ctx.fillStyle = '#222'
 	ctx.fillText(text, x + cell_left_padding, y + height - cell_bottom_padding)
@@ -532,6 +532,8 @@ function scroll_into_view(r, c){
 // }
 
 
-
-
-setInterval(render, 16)
+let tick = () => {
+	requestAnimationFrame(tick)
+	render()
+}
+requestAnimationFrame(tick)
