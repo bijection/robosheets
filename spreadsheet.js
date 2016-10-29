@@ -15,6 +15,9 @@ const top_margin = 40
 let selected_row = 10
 let selected_col = 3
 
+let selected_end_row;
+let selected_end_col;
+
 
 let content = {}
 
@@ -36,6 +39,7 @@ function render() {
 	draw_cells_text()
 
 	draw_selection_box()
+	draw_selection_region()
 
 	// ctx.fillStyle = 'rgba(0,0,0,.1)'
 	// if(row > 0) ctx.fillRect(left_margin, top_margin, canvas.width, 10);
@@ -257,6 +261,78 @@ function draw_selection_box(){
 
 
 
+
+
+
+
+function draw_selection_region(){
+	ctx.save()
+
+	let [start_x, start_y] = cell_x_y(selected_row, selected_col)
+
+	let col = visible_col_n(selected_end_col)
+	let row = visible_row_n(selected_end_row)
+
+	if(!row  || !col) return;
+
+	let [, x, width] = col
+	let [, y, height] = row
+
+	ctx.lineWidth = 1
+	ctx.strokeStyle = '#48f'
+	ctx.strokeRect(start_x, start_y, x+width - start_x, y+height -start_y)
+	
+	ctx.fillStyle = 'rgba(80, 150, 255, .1)'
+	ctx.fillRect(start_x, start_y, x+width - start_x, y+height -start_y)
+
+	// ctx.strokeStyle = '#fff'
+	// ctx.strokeRect(selected_x + width - 4, selected_y + height - 4, 8,8)
+	
+	// ctx.fillStyle = '#48f'
+	// ctx.fillRect(selected_x + width - 4, selected_y + height - 4, 8,8)
+	
+	ctx.restore()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/*\
+|*|
+|*|
+|*|
+|*|
+|*|
+|*|
+|*|
+|*|       Events
+|*|
+|*|
+|*|
+|*|
+|*|
+|*|
+|*|
+\*/
+
+
+
+
+
+
+
+
+
+
+
 const x_speed = 4
 const y_speed = 4
 
@@ -316,28 +392,6 @@ document.addEventListener('paste', function(e){
 })
 
 
-
-
-
-function start_typing(){
-	keygetter.style.display = 'initial'
-	keygetter.focus()
-	keygetter.value = content[[selected_row, selected_col]] || ''
-	let [x, y] = cell_x_y(selected_row, selected_col)
-	keygetter.style.top = y / devicePixelRatio + 'px'
-	keygetter.style.left = x / devicePixelRatio + 'px'
-	keygetter.style['padding-left'] = cell_left_padding / devicePixelRatio + 'px'
-	keygetter.style.height = (row_heights[selected_row] || default_row_height) / devicePixelRatio + 'px'
-	keygetter.style['font-size'] = (default_row_height - 20) / devicePixelRatio +'px'
-}
-
-
-
-
-
-
-
-
 keygetter.addEventListener('blur', e=> {
 	keygetter.style.display = 'none'
 })
@@ -363,7 +417,9 @@ document.addEventListener('keydown', e=> {
 	if([9,13,37,38,39,40].includes(e.keyCode)){
 		if(e.keyCode == 9) {
 			e.preventDefault()
-			bump_selected(0, 1)
+			e.shiftKey
+				? bump_selected(0, -1)
+				: bump_selected(0, 1)
 		}
 		if(e.keyCode == 13) bump_selected(1, 0)
 		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump_selected(0, -1)
@@ -377,7 +433,7 @@ document.addEventListener('keydown', e=> {
 })
 
 
-document.addEventListener('mousedown', e => {
+canvas.addEventListener('mousedown', e => {
 
 	let start_x = e.clientX * devicePixelRatio
 	let start_y = e.clientY * devicePixelRatio
@@ -386,6 +442,23 @@ document.addEventListener('mousedown', e => {
 
 	if(typeof row != 'undefined' && typeof col != 'undefined'){
 		set_selected(row,col)
+
+		function move(e) {
+			[selected_end_row, selected_end_col] = cell_row_col(
+				e.clientX * devicePixelRatio,
+				e.clientY * devicePixelRatio
+			)
+			console.log(selected_end_row)
+		}
+
+		function up() {
+			document.removeEventListener('mousemove', move)
+			document.removeEventListener('mouseup', up)
+		}
+
+		document.addEventListener('mousemove', move)
+		document.addEventListener('mouseup', up)
+
 	} else if(typeof row != 'undefined' || typeof col != 'undefined'){
 
 		let start_row_height = row_heights[row] || default_row_height
@@ -516,12 +589,13 @@ function set_selected(row, col){
 	row = Math.max(row, 0)
 	col = Math.max(col, 0)
 
-	if(selected_row == row && selected_col == col) return;
-
 	selected_col = col
 	selected_row = row
 
 	keygetter.blur()
+	selected_end_row = null
+	selected_end_col = null
+
 	scroll_into_view(row, col)
 }
 
@@ -538,6 +612,20 @@ function scroll_into_view(r, c){
 
 	if(r > last_row - 1) row += r - last_row + 1
 	if(c > last_col - 1) col += c - last_col + 1
+}
+
+
+
+function start_typing(){
+	keygetter.style.display = 'initial'
+	keygetter.focus()
+	keygetter.value = content[[selected_row, selected_col]] || ''
+	let [x, y] = cell_x_y(selected_row, selected_col)
+	keygetter.style.top = y / devicePixelRatio + 'px'
+	keygetter.style.left = x / devicePixelRatio + 'px'
+	keygetter.style['padding-left'] = cell_left_padding / devicePixelRatio + 'px'
+	keygetter.style.height = (row_heights[selected_row] || default_row_height) / devicePixelRatio + 'px'
+	keygetter.style['font-size'] = (default_row_height - 20) / devicePixelRatio +'px'
 }
 
 
