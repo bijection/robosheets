@@ -448,7 +448,6 @@ canvas.addEventListener('mousedown', e => {
 				e.clientX * devicePixelRatio,
 				e.clientY * devicePixelRatio
 			)
-			console.log(selected_end_row)
 		}
 
 		function up() {
