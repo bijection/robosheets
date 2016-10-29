@@ -153,7 +153,7 @@ function draw_cell_text(row, col){
 
 	ctx.font = default_row_height - 20 +'px Helvetica'
 	ctx.textAlign = 'left'
-	ctx.textBaseline = 'alphabetic'
+	ctx.textBaseline = 'middle'
 	ctx.lineWidth = 1
 	ctx.strokeStyle = '#ccc'
 
@@ -173,10 +173,10 @@ function draw_cell_text(row, col){
 	ctx.fillRect(x+1, y+1, text_width, height - 2)
 
 	
-	text = text.slice(0, 1 + text.length * text_width / ctx.measureText(text).width)
+	text = text.slice(0, 5 + text.length * text_width / ctx.measureText(text).width)
 
 	ctx.fillStyle = '#222'
-	ctx.fillText(text, x + cell_left_padding, y + height - cell_bottom_padding)
+	ctx.fillText(text, x + cell_left_padding, y + height/2 )
 
 	ctx.beginPath()
 	ctx.moveTo(x + text_width, y)
@@ -361,8 +361,10 @@ keygetter.addEventListener('input', e => {
 
 document.addEventListener('keydown', e=> {
 	if([9,13,37,38,39,40].includes(e.keyCode)){
-		e.preventDefault()
-		if(e.keyCode == 9) bump_selected(0, 1)
+		if(e.keyCode == 9) {
+			e.preventDefault()
+			bump_selected(0, 1)
+		}
 		if(e.keyCode == 13) bump_selected(1, 0)
 		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump_selected(0, -1)
 		if(e.keyCode == 38) bump_selected(-1, 0)
@@ -374,17 +376,43 @@ document.addEventListener('keydown', e=> {
 
 })
 
-document.addEventListener('click', e => {
 
-	let [row, col] = cell_row_col(
-		e.clientX * devicePixelRatio,
-		e.clientY * devicePixelRatio)
+document.addEventListener('mousedown', e => {
 
-	set_selected(row,col)
+	let start_x = e.clientX * devicePixelRatio
+	let start_y = e.clientY * devicePixelRatio
+
+	let [row, col] = cell_row_col(start_x, start_y)
+
+	if(typeof row != 'undefined' && typeof col != 'undefined'){
+		set_selected(row,col)
+	} else if(typeof row != 'undefined' || typeof col != 'undefined'){
+
+		let start_row_height = row_heights[row] || default_row_height
+		let start_col_width = col_widths[col] || default_col_width
+
+		if(typeof row != 'undefined'){
+			function move(e){
+				let dy = e.clientY * devicePixelRatio - start_y
+				row_heights[row] = Math.max(start_row_height + dy, default_row_height)
+			}
+		} else {
+			function move(e){
+				let dx = e.clientX * devicePixelRatio - start_x
+				col_widths[col] = Math.max(start_col_width + dx, default_col_width)
+			}
+		}
+
+		function up() {
+			document.removeEventListener('mousemove', move)
+			document.removeEventListener('mouseup', up)
+		}
+
+		document.addEventListener('mousemove', move)
+		document.addEventListener('mouseup', up)
+	}
 
 })
-
-
 
 
 
@@ -487,6 +515,8 @@ function cell_row_col(x, y){
 function set_selected(row, col){
 	row = Math.max(row, 0)
 	col = Math.max(col, 0)
+
+	if(selected_row == row && selected_col == col) return;
 
 	selected_col = col
 	selected_row = row
