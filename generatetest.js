@@ -27,12 +27,12 @@
 // 	} 
 // })
 
-// var Kevin = generate_str(['Kevin'], 'Hello Kevin'),
-// 	Guillermo = generate_str(['Guillermo'], 'Hello Guillermo'),
-// 	Union = intersect(Kevin, Guillermo)
+var Kevin = generate_str(['Kevin'], 'Hello Kevin'),
+	Guillermo = generate_str(['Guillermo'], 'Hello Guillermo'),
+	Union = intersect(Kevin, Guillermo)
 
 // console.log(Union)
 
-I = generate_str(['Intl Bus Mach'], 'I')
-B = generate_str(['Intl Bus Mach'], 'B')
-M = generate_str(['Intl Bus Mach'], 'M')
+// I = generate_str(['Intl Bus Mach'], 'I')
+// B = generate_str(['Intl Bus Mach'], 'B')
+// M = generate_str(['Intl Bus Mach'], 'M')

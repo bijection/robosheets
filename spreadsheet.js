@@ -12,14 +12,15 @@ let row_heights = {}
 const left_margin = 60
 const top_margin = 40
 
-let selected_row = 10
-let selected_col = 3
+let selected_row = 0
+let selected_col = 0
 
 let selected_end_row;
 let selected_end_col;
 
 
 let content = {}
+let grey_content = {}
 
 
 function render() {
@@ -165,7 +166,14 @@ function draw_cell_text(row, col){
 	let [c, x, width] = col
 
 	let text = content[[r, c]] //|| [r, c].toString()
-	if(!text) return;
+	if(!text){
+		text = grey_content[[r,c]]
+		if(text){
+			ctx.fillStyle = '#ccc'
+			ctx.fillText(text, x + cell_left_padding, y + height/2 )
+		}
+		return
+	}
 
 	let editing_this_cell = is_typing() && selected_row == r && selected_col == c
 	let [edit_width, display_width] = cell_text_display_width(r, c)
@@ -396,13 +404,6 @@ keygetter.addEventListener('blur', e=> {
 	keygetter.style.display = 'none'
 })
 
-keygetter.addEventListener('keydown', e => {
-	if(e.keyCode == 13){//enter 
-		// bump_selected(1, 0)
-		// setTimeout(() => keygetter.blur(), 300)
-	}
-})
-
 keygetter.addEventListener('input', e => {
 	ctx.save()
 	ctx.font = default_row_height - 20 +'px Helvetica'
@@ -421,11 +422,50 @@ document.addEventListener('keydown', e=> {
 				? bump_selected(0, -1)
 				: bump_selected(0, 1)
 		}
-		if(e.keyCode == 13) bump_selected(1, 0)
+		if(e.keyCode == 13){
+			let active_cols = []
+			for (let i = 0; i < 10; i++) {
+				if(content[[selected_row, i]] && i != selected_col) active_cols.push(i);
+			}
+
+			console.log('active_cols', active_cols)
+			let program;
+			let i = 0
+			while (true) {
+				let sigma = active_cols.map(col => content[[i, col]])
+				let s = content[[i, selected_col]]
+				console.log('sigma, s', sigma, s)
+				if( !sigma.every( x=>x )  || !s) break;
+				let f = generate_str(sigma, s)
+				console.log(f)
+				program = program ? intersect(program, f) : f
+				i++
+			}
+
+			i = 0
+			while (true) {
+				let sigma = active_cols.map(col => content[[i, col]])
+				let s = content[i, selected_col]
+				if( !sigma.every( x=>x ) || !sigma.length) break;
+				if(s) continue;
+
+				let tries = 0
+				while(tries < 100){
+					tries++
+					try{
+						grey_content[[i, selected_col]] = program.sample().apply(sigma)
+						break
+					} catch (e) {}
+				}
+				i++
+			}
+
+			bump_selected(1, 0)
+		}
 		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump_selected(0, -1)
 		if(e.keyCode == 38) bump_selected(-1, 0)
 		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump_selected(0, 1)
-		if(e.keyCode == 40) bump_selected(1, 0)
+		if(e.keyCode == 40) bump_selected( 1, 0)
 	} else if(!is_typing()) {
 		start_typing()
 	}

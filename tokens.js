@@ -23,41 +23,41 @@
 // with the hyphen character.
 
 
-// TokenStrings = {
-//     'AlphNumTok': '[a-zA-Z0-9]+',
-//     'AlphNumWsTok': '[a-zA-Z0-9 ]+',
-//     'AlphTok': '[a-zA-Z]+',
-//     'BckSlashTok': "\\\\",
-//     'ColonTok': ':',
-//     'CommaTok': ',',
-//     'DashTok': '-',
-//     'DotTok': '\\.',
-//     'EndTok': '$',
-//     'HyphenTok': '\\-',
-//     'LeftAngleTok': '<',
-//     'LeftParenTok': '\\(',
-//     'LeftSquareTok': '<',
-//     'LoDashTok': '_',
-//     'LowerTok': '[a-z]+',
-//     'NonAlphNumTok': '[^a-zA-Z0-9]+',
-//     'NonAlphNumWsTok': '[^a-zA-Z0-9 ]+',
-//     'NonAlphTok': '[^a-zA-Z]+',
-//     'NonLowerTok': '[^a-z]+',
-//     'NonNumTok': '[^\\d]+',
-//     'NonUpperTok': '[^A-Z]+',
-//     'NumTok': '\\d+',
-//     'RightAngleTok': '>',
-//     'RightParenTok': '\\)',
-//     'RightSquareTok': '>',
-//     'SemicolonTok': ';',
-//     'SlashTok': "[\\\/]",
-//     'SlashTok': "\/",
-//     'StartTok': '^',
-//     'UpperTok': '[A-Z]+',
-//     'WsTok': ' ',
-// }
+TokenStrings = {
+    'AlphNumTok': '[a-zA-Z0-9]+',
+    'AlphNumWsTok': '[a-zA-Z0-9 ]+',
+    'AlphTok': '[a-zA-Z]+',
+    'BckSlashTok': "\\\\",
+    'ColonTok': ':',
+    'CommaTok': ',',
+    'DashTok': '-',
+    'DotTok': '\\.',
+    'EndTok': '$',
+    'HyphenTok': '\\-',
+    'LeftAngleTok': '<',
+    'LeftParenTok': '\\(',
+    'LeftSquareTok': '<',
+    'LoDashTok': '_',
+    'LowerTok': '[a-z]+',
+    'NonAlphNumTok': '[^a-zA-Z0-9]+',
+    'NonAlphNumWsTok': '[^a-zA-Z0-9 ]+',
+    'NonAlphTok': '[^a-zA-Z]+',
+    'NonLowerTok': '[^a-z]+',
+    'NonNumTok': '[^\\d]+',
+    'NonUpperTok': '[^A-Z]+',
+    'NumTok': '\\d+',
+    'RightAngleTok': '>',
+    'RightParenTok': '\\)',
+    'RightSquareTok': '>',
+    'SemicolonTok': ';',
+    'SlashTok': "[\\\/]",
+    'SlashTok': "\/",
+    'StartTok': '^',
+    'UpperTok': '[A-Z]+',
+    'WsTok': ' ',
+}
 
-
+/*
 TokenStrings = {
     // 'AlphNumTok': '[a-zA-Z0-9]+',
     // 'AlphNumWsTok': '[a-zA-Z0-9 ]+',
@@ -90,7 +90,7 @@ TokenStrings = {
     'StartTok': '^',
     'UpperTok': '[A-Z]+',
     'WsTok': ' ',
-}
+}*/
 
 
 

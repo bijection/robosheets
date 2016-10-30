@@ -134,8 +134,10 @@ function generate_substring(sigma, s){
     for(var i = 0; i < sigma.length; i++){
         var indices = is_substr_at(sigma[i], s)
         for(var k = 0; k < indices.length; k++){
-            var y1 = generate_position(sigma[i], indices[k]),
-                y2 = generate_position(sigma[i], indices[k] + s.length);
+            // var y1 = generate_position(sigma[i], indices[k]),
+            //     y2 = generate_position(sigma[i], indices[k] + s.length);
+            var y1 = generate_posSet_set(sigma[i], indices[k]),
+                y2 = generate_posSet_set(sigma[i], indices[k] + s.length);
             result.push(new SubStrSet(i, y1, y2))
         }
     }
@@ -415,24 +417,6 @@ function intersect_regex(a, b){
         ints.unshift(int)
     }
     return ints
-}
-
-
-
-
-function generate_str(sigma, s, shouldloop=true){
-    let W = {}, edges = [], nodes = []
-    for(let i = 0; i <= s.length; i++){
-        nodes.push(i)
-        for(let j = i+1; j <= s.length; j++) {
-            let edge = [i,j], 
-                part = substring(s,i,j)
-            edges.push(edge)
-            W[JSON.stringify(edge)] = [new ConstStrSet(part), ...generate_substring(sigma, part)]
-        }
-    }
-    if(shouldloop) W = generate_loop(sigma, s, W)
-    return new DAG(nodes, 0, s.length, edges, W)
 }
 
 
