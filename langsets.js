@@ -128,6 +128,20 @@ class SubStrSet {
     }
 }
 
+
+class ExtdSubStrSet {
+    constructor(substrset, f){
+        this.substrset = substrset
+        this.f = f
+    }
+
+    sample(sigma, bindings){
+        return new ExtdSubStr(this.substrset.sample(), this.f)
+    }
+}
+
+
+
 class ConstStrSet {
     constructor(s){
         this.s = s

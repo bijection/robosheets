@@ -434,13 +434,14 @@ document.addEventListener('keydown', e=> {
 			while (true) {
 				let sigma = active_cols.map(col => content[[i, col]])
 				let s = content[[i, selected_col]]
-				console.log('sigma, s', sigma, s)
 				if( !sigma.every( x=>x )  || !s) break;
 				let f = generate_str(sigma, s)
-				console.log(f)
+				console.log('program fragment:', f)
 				program = program ? intersect(program, f) : f
 				i++
 			}
+
+			console.log('program generated:', program)
 
 			i = 0
 			while (true) {

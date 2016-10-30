@@ -140,6 +140,19 @@ function generate_substring(sigma, s){
                 y2 = generate_posSet_set(sigma[i], indices[k] + s.length);
             result.push(new SubStrSet(i, y1, y2))
         }
+        
+        Transformations.forEach(t => {
+            if(t.test(s)){
+                let indices = is_substr_at(sigma[i], t.inverse_transform(s))
+                for(var k = 0; k < indices.length; k++){
+                    // var y1 = generate_position(sigma[i], indices[k]),
+                    //     y2 = generate_position(sigma[i], indices[k] + s.length);
+                    var y1 = generate_posSet_set(sigma[i], indices[k]),
+                        y2 = generate_posSet_set(sigma[i], indices[k] + s.length);
+                    result.push(new ExtdSubStrSet(new SubStrSet(i, y1, y2), t.transform))
+                }
+            }
+        })
     }
     return result
 }
@@ -218,6 +231,8 @@ function intersect(a, b){
         if(a.s === b.s) return a;
     }else if(a instanceof SubStrSet && b instanceof SubStrSet){
         return intersect_substrsets(a, b)
+    }else if(a instanceof ExtdSubStrSet && b instanceof ExtdSubStrSet){
+        return intersect_extdsubstrsets(a, b)
     }else{
         console.log(a, b)    
     }
@@ -330,6 +345,13 @@ function lazy_intersect_multidags(...dags){
     var nodes = _.uniq(_.flatten(edges))
     return new DAG(nodes, source, target, edges, W)
 }
+
+
+function intersect_extdsubstrsets(s1, s2){
+    let int = intersect_substrsets(s1.substrset, s2.substrset)
+    if(int && s1.f == s2.f) return new ExtdSubStrSet(int, s1.f)
+}
+
 
 function intersect_substrsets(s1, s2){
     if(s1.vi === s2.vi){

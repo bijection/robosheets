@@ -198,6 +198,19 @@ class SubStr {
     }
 }
 
+
+class ExtdSubStr {
+    constructor(substring, f){
+        this.substring = substring
+        this.f = f
+    }
+
+    apply(sigma, bindings){
+        return this.f(this.substring.apply(sigma, bindings))
+    }
+}
+
+
 // We use the notation SubStr2(𝑣𝑖,r,c) to denote the c𝑡h occurrence
 // of regular expression r in 𝑣𝑖 , i.e., SubStr(𝑣𝑖 , Pos(𝜖, r, c), Pos(r, 𝜖, c)). 
 // We often denote SubStr(𝑣𝑖 , CPos(0), CPos(-1)) by simply 𝑣𝑖.

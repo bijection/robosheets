@@ -41,7 +41,7 @@ RegExp.escape = function(s) {
 };
 
 function is_substr_at(str, substr){
-    var re = new RegExp(RegExp.escape(substr), 'g'),
+    var re = substr instanceof RegExp ? substr : new RegExp(RegExp.escape(substr), 'g'),
         m,
         indices = [];
     while(m = re.exec(str)){
