@@ -208,6 +208,10 @@ class ExtdSubStr {
     apply(sigma, bindings){
         return this.f(this.substring.apply(sigma, bindings))
     }
+
+    toString(){
+        return "new ExtdSubStr( " + [this.substring, this.f].join(', ') +" )"
+    }
 }
 
 

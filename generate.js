@@ -313,6 +313,8 @@ function lazy_intersect_dags(d1, d2){
 
 
 function lazy_intersect_multidags(...dags){
+    if(dags.length === 1) return dags[0];
+    
     var source = dags.map(k => k.source),
         target = dags.map(k => k.target)
 
@@ -335,10 +337,10 @@ function lazy_intersect_multidags(...dags){
                 last = intersection;
             }
 
-            if(intersection.length === 0) continue;
+            if(last.length === 0) continue;
 
             if(helper(edge[1])){
-                W[JSON.stringify(edge)] = intersection;
+                W[JSON.stringify(edge)] = last;
                 edges.push(edge)
                 
                 return true

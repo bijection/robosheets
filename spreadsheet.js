@@ -423,44 +423,79 @@ document.addEventListener('keydown', e=> {
 				: bump_selected(0, 1)
 		}
 		if(e.keyCode == 13){
-			let active_cols = []
-			for (let i = 0; i < 10; i++) {
-				if(content[[selected_row, i]] && i != selected_col) active_cols.push(i);
-			}
+			var cols  = _.groupBy(Object.keys(content), k => k.split(',')[1]);
+			var rows  = _.groupBy(Object.keys(content), k => k.split(',')[0]);
 
-			console.log('active_cols', active_cols)
-			let program;
-			let i = 0
-			while (true) {
-				let sigma = active_cols.map(col => content[[i, col]])
-				let s = content[[i, selected_col]]
-				if( !sigma.every( x=>x )  || !s) break;
-				let f = generate_str(sigma, s)
-				console.log('program fragment:', f)
-				program = program ? intersect(program, f) : f
-				i++
-			}
+			var col_ids = _.sortBy(Object.keys(cols), k => +k);
+			for(var i = 1; i < col_ids.length; i++){
+				let col = col_ids[i];
+				let row_ids = cols[col];
+				
+				var dags = _.sampleSize(row_ids, 5).map(k => {
+					var row_prefix = k.split(',')[0]
+					var sigma = _.range(i).map(k => content[[row_prefix, k]] || '')
+					return generate_str(sigma, content[k])
+				})
 
-			console.log('program generated:', program)
-
-			i = 0
-			while (true) {
-				let sigma = active_cols.map(col => content[[i, col]])
-				let s = content[i, selected_col]
-				if( !sigma.every( x=>x ) || !sigma.length) break;
-				if(s) continue;
-
-				let tries = 0
-				grey_content[[i, selected_col]] = ''
-				while(tries < 100){
-					tries++
-					try{
-						grey_content[[i, selected_col]] = program.sample().apply(sigma)
-						break
-					} catch (e) {}
+				var pset = lazy_intersect_multidags(...dags);
+				
+				for(let row in rows){
+					grey_content[[row, col]] = '' 
 				}
-				i++
+
+				try {
+					var program = pset.sample()	
+				} catch (e) { continue  }
+				
+				for(let row in rows){
+					var sigma = _.range(i).map(k => content[[row, k]] || '')
+					try {
+						var text = program.apply(sigma)
+					} catch (e) { continue }
+					grey_content[[row, col]] = text
+				}
+				
+				console.log(col, cols[col], dags, pset, program, program + '')
 			}
+
+			// let active_cols = []
+			// for (let i = 0; i < 10; i++) {
+			// 	if(content[[selected_row, i]] && i != selected_col) active_cols.push(i);
+			// }
+
+			// console.log('active_cols', active_cols)
+			// let program;
+			// let i = 0
+			// while (true) {
+			// 	let sigma = active_cols.map(col => content[[i, col]])
+			// 	let s = content[[i, selected_col]]
+			// 	if( !sigma.every( x=>x )  || !s) break;
+			// 	let f = generate_str(sigma, s)
+			// 	console.log('program fragment:', f)
+			// 	program = program ? intersect(program, f) : f
+			// 	i++
+			// }
+
+			// console.log('program generated:', program)
+
+			// i = 0
+			// while (true) {
+			// 	let sigma = active_cols.map(col => content[[i, col]])
+			// 	let s = content[i, selected_col]
+			// 	if( !sigma.every( x=>x ) || !sigma.length) break;
+			// 	if(s) continue;
+
+			// 	let tries = 0
+			// 	grey_content[[i, selected_col]] = ''
+			// 	while(tries < 100){
+			// 		tries++
+			// 		try{
+			// 			grey_content[[i, selected_col]] = program.sample().apply(sigma)
+			// 			break
+			// 		} catch (e) {}
+			// 	}
+			// 	i++
+			// }
 
 			bump_selected(1, 0)
 		}
