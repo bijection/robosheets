@@ -169,7 +169,7 @@ function draw_cell_text(row, col){
 	if(!text){
 		text = grey_content[[r,c]]
 		if(text){
-			ctx.fillStyle = '#ccc'
+			ctx.fillStyle = '#aaa'
 			ctx.fillText(text, x + cell_left_padding, y + height/2 )
 		}
 		return
@@ -423,8 +423,9 @@ document.addEventListener('keydown', e=> {
 				: bump_selected(0, 1)
 		}
 		if(e.keyCode == 13){
-			var cols  = _.groupBy(Object.keys(content), k => k.split(',')[1]);
-			var rows  = _.groupBy(Object.keys(content), k => k.split(',')[0]);
+			var nonempty = Object.keys(content).filter(k => content[k]);
+			var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
+			var rows  = _.groupBy(nonempty, k => k.split(',')[0]);
 
 			var col_ids = _.sortBy(Object.keys(cols), k => +k);
 			for(var i = 1; i < col_ids.length; i++){
