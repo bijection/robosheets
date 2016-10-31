@@ -451,6 +451,7 @@ document.addEventListener('keydown', e=> {
 				if(s) continue;
 
 				let tries = 0
+				grey_content[[i, selected_col]] = ''
 				while(tries < 100){
 					tries++
 					try{

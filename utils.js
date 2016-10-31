@@ -41,11 +41,13 @@ RegExp.escape = function(s) {
 };
 
 function is_substr_at(str, substr){
-    var re = substr instanceof RegExp ? substr : new RegExp(RegExp.escape(substr), 'g'),
-        m,
-        indices = [];
+    let m, indices = [];
+    let re = substr instanceof RegExp
+        ? substr
+        : new RegExp(RegExp.escape(substr), 'g');
+    
     while(m = re.exec(str)){
-        indices.push(m.index)
+        indices.push([m.index, m[0].length])
     }
     return indices
 }

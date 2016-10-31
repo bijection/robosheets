@@ -136,8 +136,8 @@ function generate_substring(sigma, s){
         for(var k = 0; k < indices.length; k++){
             // var y1 = generate_position(sigma[i], indices[k]),
             //     y2 = generate_position(sigma[i], indices[k] + s.length);
-            var y1 = generate_posSet_set(sigma[i], indices[k]),
-                y2 = generate_posSet_set(sigma[i], indices[k] + s.length);
+            var y1 = generate_posSet_set(sigma[i], indices[k][0]),
+                y2 = generate_posSet_set(sigma[i], indices[k][0] + indices[k][1]);
             result.push(new SubStrSet(i, y1, y2))
         }
         
@@ -145,10 +145,8 @@ function generate_substring(sigma, s){
             if(t.test(s)){
                 let indices = is_substr_at(sigma[i], t.inverse_transform(s))
                 for(var k = 0; k < indices.length; k++){
-                    // var y1 = generate_position(sigma[i], indices[k]),
-                    //     y2 = generate_position(sigma[i], indices[k] + s.length);
-                    var y1 = generate_posSet_set(sigma[i], indices[k]),
-                        y2 = generate_posSet_set(sigma[i], indices[k] + s.length);
+                    var y1 = generate_posSet_set(sigma[i], indices[k][0]),
+                        y2 = generate_posSet_set(sigma[i], indices[k][0] + indices[k][1]);
                     result.push(new ExtdSubStrSet(new SubStrSet(i, y1, y2), t.transform))
                 }
             }
@@ -166,7 +164,8 @@ function generate_str(sigma, s, shouldloop=true){
             let edge = [i,j], 
                 part = substring(s,i,j)
             edges.push(edge)
-            W[JSON.stringify(edge)] = [new ConstStrSet(part), ...generate_substring(sigma, part)]
+            let substr = generate_substring(sigma, part)
+            W[JSON.stringify(edge)] = [new ConstStrSet(part), ...substr]
         }
     }
     // if(shouldloop) W = generate_loop(sigma, s, W)
@@ -246,7 +245,14 @@ function intersect_dags(d1, d2){
     cross(d1.edges, d2.edges).forEach(([e1, e2]) => {
         let edge = [[e1[0], e2[0]], [e1[1], e2[1]]];
         var intersection = []
-        cross(d1.map[JSON.stringify(e1)], d2.map[JSON.stringify(e2)]).forEach(([f1, f2]) => {
+        let k1 = JSON.stringify(e1)
+        let k2 = JSON.stringify(e2)
+
+        let d1_edge_programs = d1.map[k1]
+        let d2_edge_programs = d2.map[k2]
+
+
+        cross(d1_edge_programs, d2_edge_programs).forEach(([f1, f2]) => {
             var int = intersect(f1, f2)
             if(int) intersection.push(int);
         })
@@ -254,7 +260,6 @@ function intersect_dags(d1, d2){
             edges.push(edge)
             W[JSON.stringify(edge)] = intersection    
         }
-        
     })
 
     return new DAG(nodes, [d1.source, d2.source], [d1.target, d2.target], edges, W)
@@ -349,7 +354,7 @@ function lazy_intersect_multidags(...dags){
 
 function intersect_extdsubstrsets(s1, s2){
     let int = intersect_substrsets(s1.substrset, s2.substrset)
-    if(int && s1.f == s2.f) return new ExtdSubStrSet(int, s1.f)
+    if(int && s1.f.type == s2.f.type) return new ExtdSubStrSet(int, s1.f)
 }
 
 

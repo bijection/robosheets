@@ -183,7 +183,8 @@ class DAG {
 
 
     sample(){
-        var trace = this._sample_from(this.source).next().value
+        let s = this._sample_from(this.source).next()
+        var trace = s.value
             .map(k => sample(k).sample())
         return new Concatenate(...trace)
     }
