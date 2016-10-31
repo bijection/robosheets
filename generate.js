@@ -16,6 +16,83 @@ function Reps(iparts){
     return Array.from(new Set(Object.values(iparts)), s=>Object.keys(s)[0])
 }
 
+function generate_short_posSet_set(s, k){
+
+    let bseq = []
+    let eseq = []
+
+    let parts = IParts(s)
+    let reps = Reps(parts)
+    let beginnings = {}
+    let endings = {}
+
+    reps.forEach(t => {
+        let tok = TokenRegexesG[t]
+        let matches = all_matches(s, tok)
+        matches.forEach(match => {
+            let begin = match.index
+            let end = match.index + match[0].length
+
+            beginnings[begin] = beginnings[begin] || []
+            beginnings[begin].push({t, end})
+
+            endings[end] = endings[end] || []
+            endings[end].push({t, begin})
+        })
+    })
+
+    endings[k] && endings[k].forEach(e1 => {
+        bseq.push([e1.t])
+
+        endings[e1.begin] && endings[e1.begin].forEach(e2 => {
+            bseq.push([e2.t, e1.t])
+
+            // endings[e2.begin] && endings[e2.begin].forEach(e3 => {
+            //     bseq.push([e3.t, e2.t, e1.t])
+            // })
+        })
+    })
+
+    beginnings[k] && beginnings[k].forEach(b1 => {
+        eseq.push([b1.t])
+
+        beginnings[b1.end] && beginnings[b1.end].forEach(b2 => {
+            eseq.push([b1.t, b2.t])
+
+            // beginnings[b2.end] && beginnings[b2.end].forEach(b3 => {
+            //     eseq.push([b1.t, b2.t, b3.t])
+            // })
+        })
+    })
+
+    let possets = [new CPosSet(k), new CPosSet(k -(s.length + 1))]
+
+    bseq.forEach(bs => {
+        eseq.forEach(es => {
+            let re = new RegExp('(' + to_regex_string(bs) + ')(' + to_regex_string(es) + ')', 'g')
+            let match, c = 0, total = 0, last;
+            while(match = re.exec(s)){
+                if(match.index === last) break;
+                last = match.index
+                if(match.index + match[1].length < k) c++;
+                // else if(c == total) {
+                //     console.log('c', c, 'k', k, match.index + match[1].length)
+                //     console.assert(match.index + match[1].length === k)
+                // }
+                total++;
+            }
+            possets.push(new PosSet(
+                bs.map(k => Object.keys(parts[k])),
+                es.map(k => Object.keys(parts[k])),
+                [c, -(total - c)]
+            ))
+        })
+    })
+    return possets
+}
+
+
+
 function generate_posSet_set(s, k){
 
     let bseq = []
@@ -129,6 +206,9 @@ function generate_posSet_set(s, k){
 
 
 function generate_substring(sigma, s){
+
+    // console.log('sub', s)
+
     if(!Array.isArray(sigma)) throw 'sigma should be an array of strings!'
     var result = []
     for(var i = 0; i < sigma.length; i++){
@@ -136,8 +216,8 @@ function generate_substring(sigma, s){
         for(var k = 0; k < indices.length; k++){
             // var y1 = generate_position(sigma[i], indices[k]),
             //     y2 = generate_position(sigma[i], indices[k] + s.length);
-            var y1 = generate_posSet_set(sigma[i], indices[k][0]),
-                y2 = generate_posSet_set(sigma[i], indices[k][0] + indices[k][1]);
+            var y1 = generate_short_posSet_set(sigma[i], indices[k][0]),
+                y2 = generate_short_posSet_set(sigma[i], indices[k][0] + indices[k][1]);
             result.push(new SubStrSet(i, y1, y2))
         }
         
@@ -145,8 +225,8 @@ function generate_substring(sigma, s){
             if(t.test(s)){
                 let indices = is_substr_at(sigma[i], t.inverse_transform(s))
                 for(var k = 0; k < indices.length; k++){
-                    var y1 = generate_posSet_set(sigma[i], indices[k][0]),
-                        y2 = generate_posSet_set(sigma[i], indices[k][0] + indices[k][1]);
+                    var y1 = generate_short_posSet_set(sigma[i], indices[k][0]),
+                        y2 = generate_short_posSet_set(sigma[i], indices[k][0] + indices[k][1]);
                     result.push(new ExtdSubStrSet(new SubStrSet(i, y1, y2), t.transform))
                 }
             }
@@ -313,6 +393,9 @@ function lazy_intersect_dags(d1, d2){
 
 
 function lazy_intersect_multidags(...dags){
+
+    console.log('multi', dags)
+
     if(dags.length === 1) return dags[0];
     
     var source = dags.map(k => k.source),

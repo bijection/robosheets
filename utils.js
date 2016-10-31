@@ -1,6 +1,7 @@
 function all_matches(s, re) {
     var m, matches = [];
     var lastI;
+    re.lastIndex = 0
     while ((m = re.exec(s)) && m.index != lastI){
         lastI = m.index
         matches.push(m);
