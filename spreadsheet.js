@@ -181,8 +181,7 @@ function draw_cell_text(row, col){
 		? edit_width
 		: display_width
 
-	ctx.fillStyle = '#fff'
-	ctx.fillRect(x+1, y+1, text_width, height - 2)
+	ctx.clearRect(x+1, y+1, text_width, height - 2)
 
 	
 	text = text.slice(0, 5 + text.length * text_width / ctx.measureText(text).width)
