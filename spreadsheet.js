@@ -404,14 +404,18 @@ keygetter.addEventListener('blur', e=> {
 	keygetter.style.display = 'none'
 })
 
-keygetter.addEventListener('input', e => {
+
+function sync_canvas_and_keygetter() {
 	ctx.save()
 	ctx.font = default_row_height - 20 +'px Helvetica'
 	let desired_width = ctx.measureText(keygetter.value).width
 	keygetter.style.width = (ctx.measureText(keygetter.value).width + cell_left_padding + 2) / devicePixelRatio
 	content[[selected_row, selected_col]] = keygetter.value
 	ctx.restore()
-})
+}
+
+
+keygetter.addEventListener('input', sync_canvas_and_keygetter)
 
 
 document.addEventListener('keydown', e=> {
@@ -422,7 +426,7 @@ document.addEventListener('keydown', e=> {
 				? bump_selected(0, -1)
 				: bump_selected(0, 1)
 		}
-		if(e.keyCode == 13){
+		if(e.keyCode == 13 && is_typing()){
 			var nonempty = Object.keys(content).filter(k => content[k]);
 			var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
 			var rows  = _.groupBy(nonempty, k => k.split(',')[0]);
@@ -460,6 +464,7 @@ document.addEventListener('keydown', e=> {
 			}
 			bump_selected(1, 0)
 		}
+		if(e.keyCode == 13 && !is_typing()) start_typing()
 		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump_selected(0, -1)
 		if(e.keyCode == 38) bump_selected(-1, 0)
 		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump_selected(0, 1)
@@ -471,7 +476,7 @@ document.addEventListener('keydown', e=> {
 document.addEventListener('keypress', e=> {
 	if(!is_typing() && e.keyCode != 13) {
 		// console.log(String.fromCharCode(e.keyCode)
-
+		content[[selected_row, selected_col]] = ''
 		start_typing()
 	}
 })
@@ -663,13 +668,14 @@ function start_typing(){
 	console.log('start typing')
 	keygetter.style.display = 'initial'
 	keygetter.focus()
-	keygetter.value = content[[selected_row, selected_col]] = ''
+	keygetter.value = content[[selected_row, selected_col]] || ''
 	let [x, y] = cell_x_y(selected_row, selected_col)
 	keygetter.style.top = y / devicePixelRatio + 'px'
 	keygetter.style.left = x / devicePixelRatio + 'px'
 	keygetter.style['padding-left'] = cell_left_padding / devicePixelRatio + 'px'
 	keygetter.style.height = (row_heights[selected_row] || default_row_height) / devicePixelRatio + 'px'
 	keygetter.style['font-size'] = (default_row_height - 20) / devicePixelRatio +'px'
+	sync_canvas_and_keygetter()
 }
 
 
