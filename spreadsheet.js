@@ -458,56 +458,22 @@ document.addEventListener('keydown', e=> {
 				
 				console.log(col, cols[col], dags, pset, program, program + '')
 			}
-
-			// let active_cols = []
-			// for (let i = 0; i < 10; i++) {
-			// 	if(content[[selected_row, i]] && i != selected_col) active_cols.push(i);
-			// }
-
-			// console.log('active_cols', active_cols)
-			// let program;
-			// let i = 0
-			// while (true) {
-			// 	let sigma = active_cols.map(col => content[[i, col]])
-			// 	let s = content[[i, selected_col]]
-			// 	if( !sigma.every( x=>x )  || !s) break;
-			// 	let f = generate_str(sigma, s)
-			// 	console.log('program fragment:', f)
-			// 	program = program ? intersect(program, f) : f
-			// 	i++
-			// }
-
-			// console.log('program generated:', program)
-
-			// i = 0
-			// while (true) {
-			// 	let sigma = active_cols.map(col => content[[i, col]])
-			// 	let s = content[i, selected_col]
-			// 	if( !sigma.every( x=>x ) || !sigma.length) break;
-			// 	if(s) continue;
-
-			// 	let tries = 0
-			// 	grey_content[[i, selected_col]] = ''
-			// 	while(tries < 100){
-			// 		tries++
-			// 		try{
-			// 			grey_content[[i, selected_col]] = program.sample().apply(sigma)
-			// 			break
-			// 		} catch (e) {}
-			// 	}
-			// 	i++
-			// }
-
 			bump_selected(1, 0)
 		}
 		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump_selected(0, -1)
 		if(e.keyCode == 38) bump_selected(-1, 0)
 		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump_selected(0, 1)
 		if(e.keyCode == 40) bump_selected( 1, 0)
-	} else if(!is_typing()) {
-		start_typing()
 	}
 
+})
+
+document.addEventListener('keypress', e=> {
+	if(!is_typing() && e.keyCode != 13) {
+		// console.log(String.fromCharCode(e.keyCode)
+
+		start_typing()
+	}
 })
 
 
@@ -694,9 +660,10 @@ function scroll_into_view(r, c){
 
 
 function start_typing(){
+	console.log('start typing')
 	keygetter.style.display = 'initial'
 	keygetter.focus()
-	keygetter.value = content[[selected_row, selected_col]] || ''
+	keygetter.value = content[[selected_row, selected_col]] = ''
 	let [x, y] = cell_x_y(selected_row, selected_col)
 	keygetter.style.top = y / devicePixelRatio + 'px'
 	keygetter.style.left = x / devicePixelRatio + 'px'
