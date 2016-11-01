@@ -385,10 +385,11 @@ canvas.addEventListener('wheel', e => {
 
 document.addEventListener('paste', function(e){
 	let data = e.clipboardData.getData('text/plain')
+	console.log(data)
 	if(data.includes('\n') || data.includes('\t')){
 		e.preventDefault()
 		let row = selected_row
-		data.split('\n').forEach(line => {
+		data.split(/\r\n|\r|\n/).forEach(line => {
 			let col = selected_col
 			line.split('\t').forEach(entry => {
 				content[[row, col]] = entry
