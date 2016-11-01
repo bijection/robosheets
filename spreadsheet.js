@@ -288,15 +288,15 @@ function get_selection_region(){
 function draw_blue_box(start_row, start_col, end_row, end_col) {
 	ctx.save()
 
-	let [start_x, start_y] = cell_x_y(start_row, start_col)
+	let [start_x, start_y] = cell_x_y(Math.max(start_row, row), Math.max(start_col, col))
 
-	let col = visible_col_n(end_col)
-	let row = visible_row_n(end_row)
+	end_col = visible_col_n(Math.min(end_col, last_visible_col()[0]))
+	end_row = visible_row_n(Math.min(end_row, last_visible_row()[0]))
 
-	if(!row  || !col) return;
+	if(!end_row  || !end_col) return;
 
-	let [, x, width] = col
-	let [, y, height] = row
+	let [, x, width] = end_col
+	let [, y, height] = end_row
 
 	ctx.lineWidth = 1
 	ctx.strokeStyle = '#48f'
@@ -304,6 +304,8 @@ function draw_blue_box(start_row, start_col, end_row, end_col) {
 	
 	ctx.fillStyle = 'rgba(80, 150, 255, .1)'
 	ctx.fillRect(start_x, start_y, x+width - start_x, y+height -start_y)
+
+
 
 	ctx.restore()
 }
