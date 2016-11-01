@@ -67,8 +67,13 @@ function generate_short_posSet_set(s, k){
 
     let possets = [new CPosSet(k), new CPosSet(k -(s.length + 1))]
 
-    bseq.forEach(bs => {
-        eseq.forEach(es => {
+
+    let bwau = bseq.map(bs => [bs, bs.map(k => Object.keys(parts[k]))])
+    let ewau = eseq.map(es => [es, es.map(k => Object.keys(parts[k]))])
+
+
+    bwau.forEach(([bs, bre]) => {
+        ewau.forEach(([es, ere]) => {
             let re = new RegExp('(' + to_regex_string(bs) + ')(' + to_regex_string(es) + ')', 'g')
             let match, c = 0, total = 0, last;
             while(match = re.exec(s)){
@@ -81,11 +86,7 @@ function generate_short_posSet_set(s, k){
                 // }
                 total++;
             }
-            possets.push(new PosSet(
-                bs.map(k => Object.keys(parts[k])),
-                es.map(k => Object.keys(parts[k])),
-                [c, -(total - c)]
-            ))
+            possets.push(new PosSet(bre, ere, [c, -(total - c)] ))
         })
     })
     return possets
