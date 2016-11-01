@@ -533,7 +533,7 @@ document.addEventListener('keydown', e=> {
 		if(e.keyCode == 38) bump_selected(-1, 0)
 		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump_selected(0, 1)
 		if(e.keyCode == 40) bump_selected( 1, 0)
-		if(e.keyCode == 8 || e.keyCode == 46 && !is_typing()) {
+		if((e.keyCode == 8 || e.keyCode == 46) && !is_typing()) {
 			let region = get_selection_region()
 			if(region) delete_region(region)
 			else content[[selected_row, selected_col]] = ''
@@ -559,7 +559,12 @@ canvas.addEventListener('mousedown', e => {
 	let [row, col] = cell_row_col(start_x, start_y)
 
 	if(typeof row != 'undefined' && typeof col != 'undefined'){
-		set_selected(row,col)
+		if(e.shiftKey){
+			selected_end_row = row
+			selected_end_col = col
+		} else {
+			set_selected(row,col)
+		}
 
 		function move(e) {
 			[selected_end_row, selected_end_col] = cell_row_col(

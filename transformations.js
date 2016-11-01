@@ -4,13 +4,27 @@ let Mons = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'
 function listPlaceTransform(list){
 	return {
 		transform(s){
-			return list[parseInt(s) - 1]
+			return list[+s - 1]
 		},
 		inverse_transform(s){
 			return list.indexOf(s) + 1 + ''
 		},
 		test(s){
 			return list.indexOf(s) > -1
+		}
+	}
+}
+
+function inverseListPlaceTransform(list){
+	return {
+		transform(s){
+			return list.indexOf(s) + 1 + ''
+		},
+		inverse_transform(s){
+			return list[+s - 1]
+		},
+		test(s){
+			return +s >= 1 && +s <= list.length
 		}
 	}
 }
@@ -24,7 +38,7 @@ let NamedTransformations = {
 			return new RegExp(RegExp.escape(s), 'gi')
 		},
 		test(s){
-			return s === s.toUpperCase()
+			return s.match(/[a-zA-Z]/) && s === s.toUpperCase()
 		}
 	},
 
@@ -36,7 +50,7 @@ let NamedTransformations = {
 			return new RegExp(RegExp.escape(s), 'gi')
 		},
 		test(s){
-			return s === s.toLowerCase()
+			return s.match(/[a-zA-Z]/) && s === s.toLowerCase()
 		}
 	},
 
@@ -45,7 +59,13 @@ let NamedTransformations = {
 	MonthName: listPlaceTransform(Months),
 	MonName: listPlaceTransform(Mons),
 	monthName: listPlaceTransform(Months.map(m => m.toLowerCase())),
-	monName: listPlaceTransform(Mons.map(m => m.toLowerCase()))
+	monName: listPlaceTransform(Mons.map(m => m.toLowerCase())),
+	MONTHNameInverse: inverseListPlaceTransform(Months.map(m => m.toUpperCase())),
+	MONNameInverse: inverseListPlaceTransform(Mons.map(m => m.toUpperCase())),
+	MonthNameInverse: inverseListPlaceTransform(Months),
+	MonNameInverse: inverseListPlaceTransform(Mons),
+	monthNameInverse: inverseListPlaceTransform(Months.map(m => m.toLowerCase())),
+	monNameInverse: inverseListPlaceTransform(Mons.map(m => m.toLowerCase())),
 }
 
 let Transformations = Object.keys(NamedTransformations).map(name => {
