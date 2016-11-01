@@ -214,11 +214,18 @@ function generate_substring(sigma, s){
     var result = []
     for(var i = 0; i < sigma.length; i++){
         var indices = is_substr_at(sigma[i], s)
+
+        let posSet_sets = {}
+        let get_set = j => {
+            if(!posSet_sets[j]) posSet_sets[j] = generate_short_posSet_set(sigma[i], j)
+            return posSet_sets[j]
+        }
+
         for(var k = 0; k < indices.length; k++){
             // var y1 = generate_position(sigma[i], indices[k]),
             //     y2 = generate_position(sigma[i], indices[k] + s.length);
-            var y1 = generate_short_posSet_set(sigma[i], indices[k][0]),
-                y2 = generate_short_posSet_set(sigma[i], indices[k][0] + indices[k][1]);
+            var y1 = get_set(indices[k][0]),
+                y2 = get_set(indices[k][0] + indices[k][1]);
             result.push(new SubStrSet(i, y1, y2))
         }
         
@@ -226,8 +233,8 @@ function generate_substring(sigma, s){
             if(t.test(s)){
                 let indices = is_substr_at(sigma[i], t.inverse_transform(s))
                 for(var k = 0; k < indices.length; k++){
-                    var y1 = generate_short_posSet_set(sigma[i], indices[k][0]),
-                        y2 = generate_short_posSet_set(sigma[i], indices[k][0] + indices[k][1]);
+                    var y1 = get_set(indices[k][0]),
+                        y2 = get_set(indices[k][0] + indices[k][1]);
                     result.push(new ExtdSubStrSet(new SubStrSet(i, y1, y2), t.transform))
                 }
             }
