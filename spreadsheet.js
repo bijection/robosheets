@@ -39,7 +39,7 @@ function render() {
 
 	draw_cells_text()
 
-	draw_selection_box()
+	draw_selected_cell()
 	draw_selection_region()
 
 	// ctx.fillStyle = 'rgba(0,0,0,.1)'
@@ -235,7 +235,7 @@ function cell_text_display_width(r, c) {
 
 
 
-function draw_selection_box(){
+function draw_selected_cell(){
 	ctx.save()
 
 	let row = visible_row_n(selected_row),
@@ -266,19 +266,32 @@ function draw_selection_box(){
 
 
 
-
-
-
-
-
-
 function draw_selection_region(){
+
+	let region = get_selection_region()
+	if(region) draw_blue_box(...region)
+
+}
+
+
+function get_selection_region(){
+	if(selected_end_row != null && selected_end_col != null) return [
+		Math.min(selected_row, selected_end_row),
+		Math.min(selected_col, selected_end_col),
+		Math.max(selected_row, selected_end_row),
+		Math.max(selected_col, selected_end_col)
+	]
+}
+
+
+
+function draw_blue_box(start_row, start_col, end_row, end_col) {
 	ctx.save()
 
-	let [start_x, start_y] = cell_x_y(selected_row, selected_col)
+	let [start_x, start_y] = cell_x_y(start_row, start_col)
 
-	let col = visible_col_n(selected_end_col)
-	let row = visible_row_n(selected_end_row)
+	let col = visible_col_n(end_col)
+	let row = visible_row_n(end_row)
 
 	if(!row  || !col) return;
 
@@ -292,16 +305,8 @@ function draw_selection_region(){
 	ctx.fillStyle = 'rgba(80, 150, 255, .1)'
 	ctx.fillRect(start_x, start_y, x+width - start_x, y+height -start_y)
 
-	// ctx.strokeStyle = '#fff'
-	// ctx.strokeRect(selected_x + width - 4, selected_y + height - 4, 8,8)
-	
-	// ctx.fillStyle = '#48f'
-	// ctx.fillRect(selected_x + width - 4, selected_y + height - 4, 8,8)
-	
 	ctx.restore()
 }
-
-
 
 
 
@@ -384,8 +389,7 @@ canvas.addEventListener('wheel', e => {
 
 document.addEventListener('paste', function(e){
 	let data = e.clipboardData.getData('text/plain')
-	console.log(data)
-	if(data.includes('\n') || data.includes('\t')){
+	if(data.includes('\n') || data.includes('\t') || !is_typing()){
 		e.preventDefault()
 		let row = selected_row
 		data.split(/\r\n|\r|\n/).forEach(line => {
@@ -398,6 +402,66 @@ document.addEventListener('paste', function(e){
 		})
 	}
 })
+
+
+
+document.addEventListener('copy', function(e){
+
+	if(is_typing()) return;
+
+	e.preventDefault()
+
+	let data
+	let region = get_selection_region()
+
+	if(region){
+		data = to_text(region)
+	} else {
+		data = content[[selected_row, selected_col]] || grey_content[[selected_row, selected_col]] || ''
+	}
+
+	e.clipboardData.setData('text/plain', data);
+
+})
+
+
+function to_text(region){
+	let [start_row, start_col, end_row, end_col] = region
+
+	return _.range(start_row, end_row+1)
+	.map(row => _.range(start_col, end_col+1)
+	 			.map(col => content[[row,col]] || grey_content[[row,col]] || '')
+	 			.join('\t'))
+	.join('\n')
+}
+
+document.addEventListener('cut', e => {
+	if(is_typing()) return;
+	e.preventDefault()
+
+	let data
+	let region = get_selection_region()
+
+	if(region){
+		data = to_text(region)
+		delete_region(region)
+	} else {
+		data = content[[selected_row, selected_col]] || grey_content[[selected_row, selected_col]] || ''
+		content[[selected_row, selected_col]] = ''
+	}
+
+	e.clipboardData.setData('text/plain', data);
+})
+
+
+function delete_region(region){
+	let [start_row, start_col, end_row, end_col] = region
+
+	_.range(start_row, end_row+1)
+	.forEach(row =>
+		_.range(start_col, end_col+1)
+		.forEach(col => content[[row,col]] = ''))
+}
 
 
 keygetter.addEventListener('blur', e=> {
@@ -419,7 +483,7 @@ keygetter.addEventListener('input', sync_canvas_and_keygetter)
 
 
 document.addEventListener('keydown', e=> {
-	if([9,13,37,38,39,40].includes(e.keyCode)){
+	if([8,9,13,37,38,39,40,46].includes(e.keyCode)){
 		if(e.keyCode == 9) {
 			e.preventDefault()
 			e.shiftKey
@@ -469,6 +533,11 @@ document.addEventListener('keydown', e=> {
 		if(e.keyCode == 38) bump_selected(-1, 0)
 		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump_selected(0, 1)
 		if(e.keyCode == 40) bump_selected( 1, 0)
+		if(e.keyCode == 8 || e.keyCode == 46 && !is_typing()) {
+			let region = get_selection_region()
+			if(region) delete_region(region)
+			else content[[selected_row, selected_col]] = ''
+		}
 	}
 
 })
