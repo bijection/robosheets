@@ -9,8 +9,29 @@ function listPlaceTransform(list){
 		inverse_transform(s){
 			return list.indexOf(s) + 1 + ''
 		},
-		test(s){
+		could_produce(s){
 			return list.indexOf(s) > -1
+		}
+	}
+}
+
+
+function zeroPadTransForm(n){
+
+	let zeros = _.range(n).map( k=> '0').join('')
+	let re = new RegExp('^[0-9]{'+n+'}$')
+
+	return {
+		transform(s){
+			return (zeros + s).slice(-n)
+		},
+		inverse_transform(s){
+			let match = s.match(/^0+/)
+			let ret = s.slice(match ? match[0].length : 0)
+			return ret.length ? ret : '0'
+		},
+		could_produce(s){
+			return s.match(re)
 		}
 	}
 }
@@ -23,7 +44,7 @@ function inverseListPlaceTransform(list){
 		inverse_transform(s){
 			return list[+s - 1]
 		},
-		test(s){
+		could_produce(s){
 			return +s >= 1 && +s <= list.length
 		}
 	}
@@ -37,7 +58,7 @@ let NamedTransformations = {
 		inverse_transform(s){
 			return new RegExp(RegExp.escape(s), 'gi')
 		},
-		test(s){
+		could_produce(s){
 			return s.match(/[a-zA-Z]/) && s === s.toUpperCase()
 		}
 	},
@@ -49,10 +70,21 @@ let NamedTransformations = {
 		inverse_transform(s){
 			return new RegExp(RegExp.escape(s), 'gi')
 		},
-		test(s){
+		could_produce(s){
 			return s.match(/[a-zA-Z]/) && s === s.toLowerCase()
 		}
 	},
+
+
+	zeroPad2: zeroPadTransForm(2),
+	zeroPad3: zeroPadTransForm(3),
+	zeroPad4: zeroPadTransForm(4),
+	zeroPad5: zeroPadTransForm(5),
+	zeroPad6: zeroPadTransForm(6),
+	zeroPad7: zeroPadTransForm(7),
+	zeroPad8: zeroPadTransForm(8),
+	zeroPad9: zeroPadTransForm(9),
+	zeroPad10: zeroPadTransForm(10),
 
 	MONTHName: listPlaceTransform(Months.map(m => m.toUpperCase())),
 	MONName: listPlaceTransform(Mons.map(m => m.toUpperCase())),

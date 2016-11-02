@@ -230,7 +230,7 @@ function generate_substring(sigma, s){
         }
         
         Transformations.forEach(t => {
-            if(t.test(s)){
+            if(t.could_produce(s)){
                 let indices = is_substr_at(sigma[i], t.inverse_transform(s))
                 for(var k = 0; k < indices.length; k++){
                     var y1 = get_set(indices[k][0]),

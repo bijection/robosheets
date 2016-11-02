@@ -509,7 +509,7 @@ document.addEventListener('keydown', e=> {
 				})
 
 				var pset = lazy_intersect_multidags(...dags);
-				
+
 				for(let row in rows){
 					grey_content[[row, col]] = '' 
 				}
@@ -518,6 +518,7 @@ document.addEventListener('keydown', e=> {
 					var program = pset.sample()	
 				} catch (e) { continue  }
 				
+
 				for(let row in rows){
 					var sigma = _.range(i).map(k => content[[row, k]] || '')
 					try {
@@ -526,11 +527,11 @@ document.addEventListener('keydown', e=> {
 					grey_content[[row, col]] = text
 				}
 				
-				console.log(col, cols[col], dags, pset, program, program + '')
+
+				
 			}
 			bump_selected(1, 0)
-		}
-		if(e.keyCode == 13 && !is_typing()) start_typing()
+		} else if(e.keyCode == 13 && !is_typing()) start_typing()
 		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump_selected(0, -1)
 		if(e.keyCode == 38) bump_selected(-1, 0)
 		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump_selected(0, 1)
