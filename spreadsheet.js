@@ -71,7 +71,7 @@ function draw_label_backgrounds(){
 
 
 
-function draw_vertical_lines_and_labels(){
+function draw_horizontal_lines_and_labels(){
 	ctx.save()
 
 	ctx.font = '20px Avenir'
@@ -80,14 +80,13 @@ function draw_vertical_lines_and_labels(){
 	ctx.textAlign = 'right'
 	ctx.textBaseline = 'middle'
 
-
 	for(let [row, rendered_height, height] of visible_rows()){
 		if(row == selected_row){
 			ctx.fillStyle = '#ddd'
 			ctx.fillRect(0, rendered_height, left_margin, height)
 		}
 		ctx.fillStyle = '#222'
-		ctx.fillText(row, left_margin - 10, rendered_height + height / 2)
+		ctx.fillText(row + 1, left_margin - 10, rendered_height + height / 2)
 
 		ctx.beginPath()
 		ctx.moveTo(0, rendered_height)
@@ -112,7 +111,7 @@ function draw_vertical_lines_and_labels(){
 
 
 
-function draw_horizontal_lines_and_labels(){
+function draw_vertical_lines_and_labels(){
 	ctx.save()
 	
 	ctx.font = '20px Avenir'
@@ -127,7 +126,10 @@ function draw_horizontal_lines_and_labels(){
 			ctx.fillRect(rendered_width, 0, width, top_margin)
 		}
 		ctx.fillStyle = '#222'
-		ctx.fillText(col, rendered_width + width / 2, top_margin / 2)
+		let letters = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase()
+		let b26 = '0123456789abcdefghijklmnop'
+		let text = col.toString(26).split('').map(c => letters[b26.indexOf(c)]).join('')
+		ctx.fillText(text, rendered_width + width / 2, top_margin / 2)
 
 		ctx.beginPath()
 		ctx.moveTo(rendered_width, 0)
@@ -152,6 +154,8 @@ function draw_horizontal_lines_and_labels(){
 
 const cell_left_padding = 6
 const cell_bottom_padding = 14
+let suggestion_color = 'hsl(134, 50%, 50%)'
+
 
 function draw_cell_text(row, col){
 	ctx.save()
@@ -169,7 +173,7 @@ function draw_cell_text(row, col){
 	if(!text){
 		text = grey_content[[r,c]]
 		if(text){
-			ctx.fillStyle = '#aaa'
+			ctx.fillStyle = suggestion_color
 			ctx.fillText(text, x + cell_left_padding, y + height/2 )
 		}
 		return
