@@ -487,52 +487,55 @@ function sync_canvas_and_keygetter() {
 
 keygetter.addEventListener('input', sync_canvas_and_keygetter)
 
+function auto_fill(){
+	var nonempty = Object.keys(content).filter(k => content[k]);
+	var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
+	var rows  = _.groupBy(nonempty, k => k.split(',')[0]);
+
+	var col_ids = _.sortBy(Object.keys(cols), k => +k);
+	for(var i = 1; i < col_ids.length; i++){
+		let col = col_ids[i];
+		let row_ids = cols[col];
+		
+		var dags = _.sampleSize(row_ids, 5).map(k => {
+			var row_prefix = k.split(',')[0]
+			var sigma = _.range(i).map(k => content[[row_prefix, k]] || '')
+			return generate_str(sigma, content[k])
+		})
+
+		var pset = lazy_intersect_multidags(...dags);
+
+		for(let row in rows){
+			grey_content[[row, col]] = '' 
+		}
+
+		try {
+			var program = pset.sample()	
+		} catch (e) { continue  }
+		
+
+		for(let row in rows){
+			var sigma = _.range(i).map(k => content[[row, k]] || '')
+			try {
+				var text = program.apply(sigma)
+			} catch (e) { continue }
+			grey_content[[row, col]] = text
+		}		
+	}
+}
+
+
 let handle_keydown = e=> {
 	if([8,9,13,37,38,39,40,46].includes(e.keyCode)){
 		if(e.keyCode == 9) {
 			e.preventDefault()
+			auto_fill()
 			e.shiftKey
 				? bump_selected(0, -1)
 				: bump_selected(0, 1)
 		}
 		if(e.keyCode == 13 && is_typing()){
-			var nonempty = Object.keys(content).filter(k => content[k]);
-			var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
-			var rows  = _.groupBy(nonempty, k => k.split(',')[0]);
-
-			var col_ids = _.sortBy(Object.keys(cols), k => +k);
-			for(var i = 1; i < col_ids.length; i++){
-				let col = col_ids[i];
-				let row_ids = cols[col];
-				
-				var dags = _.sampleSize(row_ids, 5).map(k => {
-					var row_prefix = k.split(',')[0]
-					var sigma = _.range(i).map(k => content[[row_prefix, k]] || '')
-					return generate_str(sigma, content[k])
-				})
-
-				var pset = lazy_intersect_multidags(...dags);
-
-				for(let row in rows){
-					grey_content[[row, col]] = '' 
-				}
-
-				try {
-					var program = pset.sample()	
-				} catch (e) { continue  }
-				
-
-				for(let row in rows){
-					var sigma = _.range(i).map(k => content[[row, k]] || '')
-					try {
-						var text = program.apply(sigma)
-					} catch (e) { continue }
-					grey_content[[row, col]] = text
-				}
-				
-
-				
-			}
+			auto_fill()
 			bump_selected(1, 0)
 		} else if(e.keyCode == 13 && !is_typing()) start_typing()
 		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump_selected(0, -1)
