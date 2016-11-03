@@ -487,8 +487,7 @@ function sync_canvas_and_keygetter() {
 
 keygetter.addEventListener('input', sync_canvas_and_keygetter)
 
-
-document.addEventListener('keydown', e=> {
+let handle_keydown = e=> {
 	if([8,9,13,37,38,39,40,46].includes(e.keyCode)){
 		if(e.keyCode == 9) {
 			e.preventDefault()
@@ -546,17 +545,18 @@ document.addEventListener('keydown', e=> {
 			else content[[selected_row, selected_col]] = ''
 		}
 	}
+}
 
-})
-
-document.addEventListener('keypress', e=> {
+let handle_keypress = e=> {
 	if(!is_typing() && e.keyCode != 13) {
 		// console.log(String.fromCharCode(e.keyCode)
 		content[[selected_row, selected_col]] = ''
 		start_typing()
 	}
-})
+}
 
+document.addEventListener('keydown', handle_keydown)
+document.addEventListener('keypress', handle_keypress)
 
 canvas.addEventListener('mousedown', e => {
 
