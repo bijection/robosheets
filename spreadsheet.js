@@ -880,6 +880,10 @@ function scroll_into_view(r, c){
 
 function start_typing(){
 	console.log('start typing')
+
+	selected_end_col = undefined
+	selected_end_row = undefined
+	
 	keygetter.style.display = 'initial'
 	keygetter.focus()
 	keygetter.value = content[[selected_row, selected_col]] || ''
