@@ -45,7 +45,7 @@ function inverseListPlaceTransform(list){
 			return list[+s - 1]
 		},
 		could_produce(s){
-			return +s >= 1 && +s <= list.length
+			return s.match(/^[0-9]+$/) && +s >= 1 && +s <= list.length
 		}
 	}
 }
