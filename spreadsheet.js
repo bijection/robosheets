@@ -288,6 +288,9 @@ function cell_text_display_width(r, c) {
 
 
 function draw_selected_cell(){
+
+	// if(defined(selected_end_col) || defined(selected_end_row)) return;
+
 	ctx.save()
 
 	let row = visible_row_n(selected_row),
@@ -308,10 +311,10 @@ function draw_selected_cell(){
 	ctx.strokeStyle = selection_color
 	ctx.lineWidth = 4
 	ctx.strokeRect(selected_x, selected_y, width, height)
-	ctx.fillStyle = selection_color
-	ctx.strokeStyle = '#fff'
-	ctx.strokeRect(selected_x + width - 4, selected_y + height - 4, 8,8)
-	ctx.fillRect(selected_x + width - 4, selected_y + height - 4, 8,8)
+	// ctx.fillStyle = selection_color
+	// ctx.strokeStyle = '#fff'
+	// ctx.strokeRect(selected_x + width - 4, selected_y + height - 4, 8,8)
+	// ctx.fillRect(selected_x + width - 4, selected_y + height - 4, 8,8)
 	
 	ctx.restore()
 }
@@ -535,7 +538,10 @@ function delete_region(region){
 	_.range(start_row, end_row+1)
 	.forEach(row =>
 		_.range(start_col, end_col+1)
-		.forEach(col => content[[row,col]] = ''))
+		.forEach(col =>{
+			delete content[[row,col]]
+			delete grey_content[[row,col]]
+		}))
 }
 
 
@@ -561,18 +567,34 @@ function auto_fill(){
 	var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
 	var rows  = _.groupBy(nonempty, k => k.split(',')[0]);
 
+	let max_col_height = _.maxBy(_.values(cols), 'length').length
+
 	var col_ids = _.sortBy(Object.keys(cols), k => +k);
 	for(var i = 1; i < col_ids.length; i++){
+		if(cols[i].length === max_col_height) continue;
+
 		let col = col_ids[i];
 		let row_ids = cols[col];
 		
-		var dags = _.sampleSize(row_ids, 5).map(k => {
+		// var dags = _.sampleSize(row_ids, 5).map(k => {
+		// 	var row_prefix = k.split(',')[0]
+		// 	var sigma = _.range(i).map(k => content[[row_prefix, k]] || '')
+		// 	return generate_str(sigma, content[k])
+		// })
+
+		var row_id_sample = _.sampleSize(row_ids, 5)
+		var inputs = row_id_sample.map(k => {
 			var row_prefix = k.split(',')[0]
-			var sigma = _.range(i).map(k => content[[row_prefix, k]] || '')
-			return generate_str(sigma, content[k])
+			return _.range(i).map(k => content[[row_prefix, k]] || '')
 		})
 
-		var pset = lazy_intersect_multidags(...dags);
+		var outputs = row_id_sample.map(k => {
+			return content[k]
+		})
+
+		// var pset = lazy_intersect_multidags(...dags);
+		var pset = lazy_generate_intersect_multidags(inputs, outputs);
+
 
 		for(let row in rows){
 			grey_content[[row, col]] = '' 
@@ -614,7 +636,7 @@ let handle_keydown = e=> {
 		if((e.keyCode == 8 || e.keyCode == 46) && !is_typing()) {
 			let region = get_selection_region()
 			if(region) delete_region(region)
-			else content[[selected_row, selected_col]] = ''
+			else delete content[[selected_row, selected_col]]
 		}
 	}
 }
