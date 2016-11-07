@@ -97,14 +97,14 @@ function draw_hovered_divider(){
 		? hovered_row_divider
 		: get_hovered_row_divider()
 
-	if(defined(col_divider)){
-		let [,x] = visible_col_n(col_divider + 1)
-		ctx.fillRect(x - resize_handle_drawn_width / 2, 0, resize_handle_drawn_width, top_margin)
+	if(defined(col_divider) && col_divider >= 0){
+		let [,x,width] = visible_col_n(col_divider)
+		ctx.fillRect(x + width - resize_handle_drawn_width / 2, 0, resize_handle_drawn_width, top_margin)
 	}
 
-	if(defined(row_divider)){
-		let [,y] = visible_row_n(row_divider + 1)
-		ctx.fillRect(0, y - resize_handle_drawn_width / 2, left_margin, resize_handle_drawn_width)
+	if(defined(row_divider) && row_divider >= 0){
+		let [,y, height] = visible_row_n(row_divider)
+		ctx.fillRect(0, y + height - resize_handle_drawn_width / 2, left_margin, resize_handle_drawn_width)
 	}
 	ctx.restore()
 }
@@ -479,8 +479,29 @@ document.addEventListener('copy', function(e){
 })
 
 
-function to_text(region){
+
+function filled_region(region){
 	let [start_row, start_col, end_row, end_col] = region
+
+	let real_end_row = 0, real_end_col = 0
+
+	Object.keys(content)
+	.concat(Object.keys(grey_content))
+	.forEach(k => {
+		let [r, c] = k.split(',')
+		if(r >= start_row && r <= end_row && c >= start_col && c <= end_col){
+			real_end_col = Math.max(real_end_col, c)
+			real_end_row = Math.max(real_end_row, r)
+		}
+	})
+
+	return [start_row, start_col, real_end_row, real_end_col]
+}
+
+
+
+function to_text(region){
+	let [start_row, start_col, end_row, end_col] = filled_region(region)
 
 	return _.range(start_row, end_row+1)
 	.map(row => _.range(start_col, end_col+1)
@@ -509,7 +530,7 @@ document.addEventListener('cut', e => {
 
 
 function delete_region(region){
-	let [start_row, start_col, end_row, end_col] = region
+	let [start_row, start_col, end_row, end_col] = filled_region(region)
 
 	_.range(start_row, end_row+1)
 	.forEach(row =>
@@ -633,23 +654,18 @@ canvas.addEventListener('mousedown', e => {
 			set_selected(clicked_row,clicked_col)
 		}
 
-		function set_selection() {
+		function move() {
 			scroll_into_view(selected_end_row, selected_end_col)
 			;[selected_end_row, selected_end_col] = cell_row_col(mouse_x, mouse_y)
 			if(!defined(selected_end_row)) selected_end_row = Math.max(row - 1, 0)
 			if(!defined(selected_end_col)) selected_end_col = Math.max(col - 1, 0)
 		}
 
-		let int = setInterval(set_selection, 30)
+		let int = setInterval(move, 30)
 
 		function up() {
 			clearInterval(int)
-			document.removeEventListener('mousemove', set_selection)
-			document.removeEventListener('mouseup', up)
 		}
-
-		document.addEventListener('mousemove', set_selection)
-		document.addEventListener('mouseup', up)
 
 	} else if(defined(clicked_row) && defined(row_divider)){
 
@@ -663,12 +679,8 @@ canvas.addEventListener('mousedown', e => {
 
 		function up() {
 			hovered_row_divider = undefined
-			document.removeEventListener('mousemove', move)
-			document.removeEventListener('mouseup', up)
 		}
 
-		document.addEventListener('mousemove', move)
-		document.addEventListener('mouseup', up)
 	} else if(defined(clicked_col) && defined(col_divider)){
 
 		let start_col_width = col_widths[col_divider] || default_col_width
@@ -681,13 +693,60 @@ canvas.addEventListener('mousedown', e => {
 
 		function up() {
 			hovered_col_divider = undefined
-			document.removeEventListener('mousemove', move)
-			document.removeEventListener('mouseup', up)
 		}
 
-		document.addEventListener('mousemove', move)
-		document.addEventListener('mouseup', up)
+	} else if(defined(clicked_col)){
+
+		selected_row = 0
+		selected_col = clicked_col
+
+		selected_end_col = undefined
+		selected_end_row = undefined
+
+		function move(e){
+			scroll_into_view(undefined, selected_end_col)
+			selected_end_row = Infinity
+			;[,selected_end_col] = cell_row_col(mouse_x, mouse_y)
+			if(!defined(selected_end_col)) selected_end_col = Math.max(col - 1, 0)
+		}
+
+		let int = setInterval(move, 30)
+
+		function up() {
+			clearInterval(int)
+		}
+
+	} else if(defined(clicked_row)){
+
+		selected_col = 0
+		selected_row = clicked_row
+
+		selected_end_col = undefined
+		selected_end_row = undefined
+
+		function move(e){
+			scroll_into_view(selected_end_row, undefined)
+			selected_end_col = Infinity
+			;[selected_end_row] = cell_row_col(mouse_x, mouse_y)
+			if(!defined(selected_end_row)) selected_end_row = Math.max(row - 1, 0)
+		}
+
+		let int = setInterval(move, 30)
+
+		function up() {
+			clearInterval(int)
+		}
+
 	}
+
+	function onup() {
+		up()
+		document.removeEventListener('mousemove', move)
+		document.removeEventListener('mouseup', onup)
+	}
+
+	document.addEventListener('mousemove', move)
+	document.addEventListener('mouseup', onup)
 
 })
 
@@ -738,8 +797,8 @@ function get_hovered_col_divider(){
 
 	if(!defined(row) && defined(col)){
 		
-		let [,prev_x] = visible_col_n(col)
-		let [,next_x] = visible_col_n(col + 1)
+		let [,prev_x,width] = visible_col_n(col)
+		let next_x = prev_x + width
 
 		if(mouse_x - prev_x <= resize_handle_width / 2) return col - 1
 		if(next_x - mouse_x <= resize_handle_width / 2) return col
@@ -752,8 +811,8 @@ function get_hovered_row_divider(){
 
 	if(!defined(col) && defined(row)){
 		
-		let [,prev_y] = visible_row_n(row)
-		let [,next_y] = visible_row_n(row + 1)
+		let [,prev_y,height] = visible_row_n(row)
+		let next_y = prev_y + height
 
 		if(mouse_y - prev_y <= resize_handle_width / 2) return row - 1
 		if(next_y - mouse_y <= resize_handle_width / 2) return row
@@ -879,14 +938,14 @@ function bump_selected(rows, cols) {
 }
 
 function scroll_into_view(r, c){
-	if(r < row) row = r;
-	if(c < col) col = c;
+	if(defined(r) && r < row) row = r;
+	if(defined(c) && c < col) col = c;
 
 	let [last_row] = last_visible_row()
 	let [last_col] = last_visible_col()
 
-	if(r > last_row - 1) row += r - last_row + 1
-	if(c > last_col - 1) col += c - last_col + 1
+	if(defined(r) && r > last_row - 1) row += r - last_row + 1
+	if(defined(c) && c > last_col - 1) col += c - last_col + 1
 }
 
 
