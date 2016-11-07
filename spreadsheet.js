@@ -36,6 +36,11 @@ let mouse_x
 let mouse_y
 
 
+try{
+	content = JSON.parse(localStorage.sheet1)
+} catch(e) {}
+
+
 function render() {
 	canvas.width = innerWidth * devicePixelRatio
 	canvas.height = innerHeight * devicePixelRatio
@@ -56,6 +61,8 @@ function render() {
 
 	draw_selected_cell()
 	draw_selection_region()
+
+	if(Math.random() < 1/60) localStorage.sheet1 = JSON.stringify(content)
 
 	// ctx.fillStyle = 'rgba(0,0,0,.1)'
 	// if(row > 0) ctx.fillRect(left_margin, top_margin, canvas.width, 10);
@@ -116,7 +123,10 @@ function draw_horizontal_lines_and_labels(){
 	ctx.textBaseline = 'middle'
 
 	for(let [row, rendered_height, height] of visible_rows()){
-		if(row == selected_row){
+		if(row == selected_row || (
+			defined(selected_end_row)
+			&& row <= Math.max(selected_end_row, selected_row)
+			&& row >= Math.min(selected_end_row, selected_row))){
 			ctx.fillStyle = '#ddd'
 			ctx.fillRect(0, rendered_height, left_margin, height)
 		}
@@ -156,7 +166,10 @@ function draw_vertical_lines_and_labels(){
 	ctx.textBaseline = 'middle'
 
 	for(let [col, rendered_width, width] of visible_cols()){
-		if(col == selected_col){
+		if(col == selected_col || (
+			defined(selected_end_col)
+			&& col <= Math.max(selected_end_col, selected_col)
+			&& col >= Math.min(selected_end_col, selected_col))){
 			ctx.fillStyle = '#ddd'
 			ctx.fillRect(rendered_width, 0, width, top_margin)
 		}
