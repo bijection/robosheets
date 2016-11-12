@@ -248,10 +248,19 @@ function draw_cell_text(row, col){
 	}
 
 	function draw_offset_text(){
-		let cropped_text = text.slice(-text.length * (text_width - result_width) / measured_text)
+		let cropped_text = text.slice(-Math.floor(text.length * (text_width - result_width) / measured_text))
 		ctx.textAlign = 'end'
 		ctx.fillStyle = drawing_suggestiong_text ? suggestion_color : '#222'
+
+
+		var gradient = ctx.createLinearGradient(x,0,x+30,0);
+		gradient.addColorStop(0.5,"white");
+		gradient.addColorStop(1,"rgba(255, 255, 255, 0)");
+
 		ctx.fillText(cropped_text, x + text_width - result_width, y + height/2 )
+
+		ctx.fillStyle = gradient
+		ctx.fillRect(x, y + 1, 30, height - 2);
 	}
 
 	function draw_result(){
@@ -641,6 +650,7 @@ function auto_fill(){
 
 	var col_ids = _.sortBy(Object.keys(cols), k => +k);
 	for(var i = 1; i < col_ids.length; i++){
+		if(!cols[i]) continue;
 		if(cols[i].length === max_col_height) continue;
 
 		let col = col_ids[i];
