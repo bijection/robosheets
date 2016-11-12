@@ -649,10 +649,13 @@ let handle_keydown = e=> {
 			auto_fill()
 			bump_selected(1, 0)
 		} else if(e.keyCode == 13 && !is_typing()) start_typing()
-		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump_selected(0, -1)
-		if(e.keyCode == 38) bump_selected(-1, 0)
-		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump_selected(0, 1)
-		if(e.keyCode == 40) bump_selected( 1, 0)
+		var bump = e.shiftKey ? bump_selected_end : bump_selected
+		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump(0, -1)
+		if(e.keyCode == 38) bump(-1, 0)
+		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump(0, 1)
+		if(e.keyCode == 40) bump( 1, 0)
+
+
 		if((e.keyCode == 8 || e.keyCode == 46) && !is_typing()) {
 			let region = get_selection_region()
 			if(region) delete_region(region)
@@ -973,6 +976,28 @@ function set_selected(row, col){
 	selected_end_col = undefined
 
 	scroll_into_view(row, col)
+}
+
+
+function set_selected_end(row, col){
+	row = Math.max(row, 0)
+	col = Math.max(col, 0)
+
+	// selected_col = col
+	// selected_row = row
+
+	keygetter.blur()
+	selected_end_row = row
+	selected_end_col = col
+
+	scroll_into_view(row, col)
+}
+
+
+function bump_selected_end(rows, cols){
+	set_selected_end(
+		_.defaultTo(selected_end_row, selected_row) + rows, 
+		_.defaultTo(selected_end_col, selected_col) + cols)
 }
 
 function bump_selected(rows, cols) {
