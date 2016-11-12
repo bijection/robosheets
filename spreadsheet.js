@@ -673,18 +673,31 @@ function cell_text(r, c){
 }
 
 function linear_program(numsigma, numoutputs){
+
 	// constant function
 	if(_.every(numoutputs, k => k === numoutputs[0])){
 		return function(sigma){ return numoutputs[0] }
 	}
 
-	// linear offset
+	// scalar offset
 	for(var i = 0; i < numsigma[0].length; i++){
 		var delta = numoutputs[0] - numsigma[0][i];
 		if(_.every(numoutputs, (k, f) => numsigma[f][i] + delta == k)){
 			return function(sigma){ return sigma[i] + delta }
 		}
 	}
+
+	// linear thingy
+	if(numsigma.length >= 2){
+		for(var i = 0; i < numsigma[0].length; i++){
+			var m = (numoutputs[1] - numoutputs[0]) / (numsigma[1][i] - numsigma[0][i])
+			var b = numoutputs[0] - m * numsigma[0][i]
+			if(_.every(numoutputs, (k, f) => m * numsigma[f][i] + b == k)){
+				return function(sigma){ return m * sigma[i] + b }
+			}
+		}	
+	}
+	
 }
 
 
@@ -722,13 +735,14 @@ function auto_fill(){
 	var nonempty = Object.keys(user_content).filter(k => user_content[k]);
 	var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
 	var rows  = _.groupBy(nonempty, k => k.split(',')[0]);
-	if(_.values(cols).length === 0) return;
-	let max_col_height = _.maxBy(_.values(cols), 'length').length
+	// if(_.values(cols).length === 0) return;
+	// let max_col_height = _.maxBy(_.values(cols), 'length').length
 
 	var col_ids = _.sortBy(Object.keys(cols), k => +k);
-	for(var i = 1; i < col_ids.length; i++){
-		if(!cols[i]) continue;
-		if(cols[i].length === max_col_height) continue;
+
+	for(var i = 0; i < col_ids.length; i++){
+		// if(!cols[i]) continue;
+		// if(cols[i].length === max_col_height) continue;
 
 		let col = col_ids[i];
 		let row_ids = cols[col];
