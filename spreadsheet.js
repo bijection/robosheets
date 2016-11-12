@@ -28,7 +28,6 @@ let selected_end_col;
 
 let user_content = {}
 let autofill_content = {}
-let computed_content = {}
 
 let hovered_col_divider
 let hovered_row_divider
@@ -247,23 +246,17 @@ function draw_cell_text(row, col){
 	ctx.fillText(text, x + cell_left_padding, y + height/2 )
 
 
+	var result = evaluate(text);
 
 	// prefix notation or suffix notation that is the question
-	if(text.trim().endsWith('=')){
+	if(result != text){
 		
-		try {
-			var result = eval(text.trim().replace('=', ''))	
-		} catch (err) { }
-		if(!defined(result)) result = 'ERROR';
-
-		computed_content[[r,c]] = result + ''
-
-		let result_width = ctx.measureText(computed_content[[r,c]]).width + cell_left_padding * 2
-		// ctx.clearRect(x+1+text_width - result_width, y+1, result_width, height - 2)
+		let result_width = ctx.measureText(result).width + cell_left_padding * 2
+		ctx.clearRect(x+1+text_width - result_width, y+1, result_width, height - 2)
 
 		ctx.textAlign = 'end'
 		ctx.fillStyle = (result === 'ERROR') ? 'red' : '#007fff'
-		ctx.fillText(computed_content[[r,c]], x + text_width - cell_left_padding, y + height / 2)
+		ctx.fillText(result, x + text_width - cell_left_padding, y + height / 2)
 	}
 	
 
@@ -275,6 +268,20 @@ function draw_cell_text(row, col){
 	ctx.restore()
 }
 
+
+function evaluate(text){
+	if(text.trim().endsWith('=')){
+		
+		try {
+			var result = eval(text.trim().replace('=', ''))	
+		} catch (err) { }
+		if(!defined(result)) result = 'ERROR';
+
+		return result + ''
+	}
+	return text
+}
+
 function draw_cells_text(){
 	for(let {row, col} of visible_cells()){
 		draw_cell_text(row, col)
@@ -284,8 +291,15 @@ function draw_cells_text(){
 
 function cell_text_display_width(r, c) {
 	ctx.font = content_font
-	let text = (user_content[[r,c]] || autofill_content[[r,c]] || '') + (computed_content[[r,c]] || '')
-	var desired_width = ctx.measureText(text).width + cell_left_padding + (([r,c] in computed_content) ? cell_left_padding : 0)
+	let text = (user_content[[r,c]] || autofill_content[[r,c]] || '')
+	var desired_width = ctx.measureText(text).width + cell_left_padding;
+
+	let result = evaluate(text)
+	if(result != text){
+		text += result;
+		desired_width += ctx.measureText(result).width + cell_left_padding
+	}
+
 	let display_width = col_widths[c] || default_col_width
 	let edit_width = display_width
 	let next_col = c + 1
@@ -516,10 +530,9 @@ function to_text(region){
 
 	return _.range(start_row, end_row+1)
 	.map(row => _.range(start_col, end_col+1)
-	 			.map(col => computed_content[[row,col]] 
-	 					|| user_content[[row,col]] 
+	 			.map(col => evaluate(user_content[[row,col]] 
 	 					|| autofill_content[[row,col]] 
-	 					|| '')
+	 					|| ''))
 	 			.join('\t'))
 	.join('\n')
 }
@@ -537,10 +550,9 @@ document.addEventListener('copy', function(e){
 	if(region){
 		data = to_text(region)
 	} else {
-		data = computed_content[[selected_row, selected_col]]
-			|| user_content[[selected_row, selected_col]] 
+		data = evaluate(user_content[[selected_row, selected_col]] 
 			|| autofill_content[[selected_row, selected_col]] 
-			|| ''
+			|| '')
 	}
 
 	e.clipboardData.setData('text/plain', data);
@@ -559,10 +571,9 @@ document.addEventListener('cut', e => {
 		data = to_text(region)
 		delete_region(region)
 	} else {
-		data = computed_content[[selected_row, selected_col]]
-			|| user_content[[selected_row, selected_col]] 
+		data = evaluate(user_content[[selected_row, selected_col]] 
 			|| autofill_content[[selected_row, selected_col]] 
-			|| ''
+			|| '')
 		user_content[[selected_row, selected_col]] = ''
 	}
 
@@ -626,9 +637,7 @@ function auto_fill(){
 		var inputs = row_id_sample.map(k => {
 			var row_prefix = k.split(',')[0]
 			return _.range(i).map(
-				k   => computed_content[[row_prefix, k]] 
-					|| user_content[[row_prefix, k]] 
-					|| '')
+				k   => evaluate(user_content[[row_prefix, k]] || ''))
 		})
 
 		var outputs = row_id_sample.map(k => {
@@ -650,10 +659,8 @@ function auto_fill(){
 			
 			for(let row in rows){
 				let vecs = input_to_vec(_.range(i).map(
-					k => computed_content[[row, k]]
-					  || user_content[[row, k]] 
-					  || ''))
-				autofill_content[[row, col]] = ''+wolo(vecs)
+					k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || '')))
+				autofill_content[[row, col]] = '' + wolo(vecs)
 			}
 
 
@@ -665,9 +672,7 @@ function auto_fill(){
 
 			for(let row in rows){
 				var sigma = _.range(i).map(
-					k => computed_content[[row, k]]
-					  || user_content[[row, k]] 
-					  || '')
+					k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || ''))
 				try {
 					var text = program.apply(sigma)
 				} catch (e) { continue }
@@ -1110,3 +1115,5 @@ let tick = () => {
 	render()
 }
 requestAnimationFrame(tick)
+
+auto_fill()
