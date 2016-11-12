@@ -239,9 +239,17 @@ function draw_cell_text(row, col){
 	ctx.clearRect(x+1, y+1, text_width, height - 2)
 
 
+
+	text = text.slice(0, 5 + text.length * text_width / ctx.measureText(text).width)
+
+	ctx.textAlign = 'start'
+	ctx.fillStyle = drawing_suggestiong_text ? suggestion_color : '#222'
+	ctx.fillText(text, x + cell_left_padding, y + height/2 )
+
+
+
 	// prefix notation or suffix notation that is the question
-	if(text.trim().startsWith('=') || text.trim().endsWith('=')){
-		ctx.textAlign = 'end'
+	if(text.trim().endsWith('=')){
 		
 		try {
 			var result = eval(text.trim().replace('=', ''))	
@@ -250,16 +258,14 @@ function draw_cell_text(row, col){
 
 		computed_content[[r,c]] = result + ''
 
+		let result_width = ctx.measureText(computed_content[[r,c]]).width + cell_left_padding * 2
+		// ctx.clearRect(x+1+text_width - result_width, y+1, result_width, height - 2)
+
+		ctx.textAlign = 'end'
 		ctx.fillStyle = (result === 'ERROR') ? 'red' : '#007fff'
 		ctx.fillText(computed_content[[r,c]], x + text_width - cell_left_padding, y + height / 2)
 	}
 	
-
-	text = text.slice(0, 5 + text.length * text_width / ctx.measureText(text).width)
-
-	ctx.textAlign = 'start'
-	ctx.fillStyle = drawing_suggestiong_text ? suggestion_color : '#222'
-	ctx.fillText(text, x + cell_left_padding, y + height/2 )
 
 	ctx.beginPath()
 	ctx.moveTo(x + text_width, y)
@@ -287,7 +293,7 @@ function cell_text_display_width(r, c) {
 	while(edit_width < desired_width){
 		let next_col_width = col_widths[next_col] || default_col_width
 	
-		if(!user_content[[r, next_col]] && !hit_filled_cell) display_width += next_col_width
+		if(!(user_content[[r, next_col]] || autofill_content[[r, next_col]]) && !hit_filled_cell) display_width += next_col_width
 		else hit_filled_cell = true;
 
 		edit_width += next_col_width
@@ -619,13 +625,17 @@ function auto_fill(){
 		var row_id_sample = _.sampleSize(row_ids, 5)
 		var inputs = row_id_sample.map(k => {
 			var row_prefix = k.split(',')[0]
-			return _.range(i).map(k => user_content[[row_prefix, k]] || '')
+			return _.range(i).map(
+				k   => computed_content[[row_prefix, k]] 
+					|| user_content[[row_prefix, k]] 
+					|| '')
 		})
 
 		var outputs = row_id_sample.map(k => {
 			return user_content[k]
 		})
 
+		console.log(inputs, outputs)
 		// var pset = lazy_intersect_multidags(...dags);
 		var pset = lazy_generate_intersect_multidags(inputs, outputs);
 
@@ -639,7 +649,10 @@ function auto_fill(){
 			let wolo = regress(vecs, outputs.map(output => +output))
 			
 			for(let row in rows){
-				let vecs = input_to_vec(_.range(i).map(k => user_content[[row, k]] || ''))
+				let vecs = input_to_vec(_.range(i).map(
+					k => computed_content[[row, k]]
+					  || user_content[[row, k]] 
+					  || ''))
 				autofill_content[[row, col]] = ''+wolo(vecs)
 			}
 
@@ -651,7 +664,10 @@ function auto_fill(){
 			
 
 			for(let row in rows){
-				var sigma = _.range(i).map(k => user_content[[row, k]] || '')
+				var sigma = _.range(i).map(
+					k => computed_content[[row, k]]
+					  || user_content[[row, k]] 
+					  || '')
 				try {
 					var text = program.apply(sigma)
 				} catch (e) { continue }
