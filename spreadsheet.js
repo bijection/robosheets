@@ -237,26 +237,44 @@ function draw_cell_text(row, col){
 
 	ctx.clearRect(x+1, y+1, text_width, height - 2)
 
+	let measured_text = ctx.measureText(text).width;
 
+	
+	function draw_normal_text(){
+		let cropped_text = text.slice(0, 5 + text.length * text_width / measured_text)
+		ctx.textAlign = 'start'
+		ctx.fillStyle = drawing_suggestiong_text ? suggestion_color : '#222'
+		ctx.fillText(cropped_text, x + cell_left_padding, y + height/2 )
+	}
 
-	text = text.slice(0, 5 + text.length * text_width / ctx.measureText(text).width)
+	function draw_offset_text(){
+		let cropped_text = text.slice(-text.length * (text_width - result_width) / measured_text)
+		ctx.textAlign = 'end'
+		ctx.fillStyle = drawing_suggestiong_text ? suggestion_color : '#222'
+		ctx.fillText(cropped_text, x + text_width - result_width, y + height/2 )
+	}
 
-	ctx.textAlign = 'start'
-	ctx.fillStyle = drawing_suggestiong_text ? suggestion_color : '#222'
-	ctx.fillText(text, x + cell_left_padding, y + height/2 )
-
-
-	var result = evaluate(text);
-
-	// prefix notation or suffix notation that is the question
-	if(result != text){
-		
-		let result_width = ctx.measureText(result).width + cell_left_padding * 2
-		ctx.clearRect(x+1+text_width - result_width, y+1, result_width, height - 2)
-
+	function draw_result(){
+		// ctx.clearRect(x+1+text_width - result_width, y+1, result_width, height - 2)
 		ctx.textAlign = 'end'
 		ctx.fillStyle = (result === 'ERROR') ? 'red' : '#007fff'
 		ctx.fillText(result, x + text_width - cell_left_padding, y + height / 2)
+	}
+
+
+	var result = evaluate(text);
+	var result_width = ctx.measureText(result).width + cell_left_padding * 2
+	
+
+	if(result != text){
+		draw_result()
+		if(result_width + measured_text < text_width){
+			draw_normal_text()
+		}else{
+			draw_offset_text()
+		}
+	}else{
+		draw_normal_text()
 	}
 	
 
@@ -270,6 +288,7 @@ function draw_cell_text(row, col){
 
 
 function evaluate(text){
+	// prefix notation or suffix notation that is the question
 	if(text.trim().endsWith('=')){
 		
 		try {

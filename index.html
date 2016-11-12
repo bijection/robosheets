@@ -108,7 +108,7 @@
 <script type="text/javascript">
 	let focussheet = e => spreadsheet.contentWindow.focus()
 	window.addEventListener("load", focussheet)
-	chrome.addEventListener('click', focussheet)
+	// chrome.addEventListener('click', focussheet)
 	window.CRISP_READY_TRIGGER = function() {
 		$crisp.on("chat:closed", focussheet)
 	};
