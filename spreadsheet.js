@@ -643,6 +643,103 @@ function sync_canvas_and_keygetter() {
 keygetter.addEventListener('input', sync_canvas_and_keygetter)
 
 
+function apply_program(program, sigma){
+	if(!program) return '';
+	try {
+		return program.apply(sigma)
+	} catch (err) {
+		return ''
+	}
+	
+}
+
+
+function* numerical_programs(sigma){
+	for(var i = 0; i < sigma.length; i++){
+		yield ['+', ['lookup', i], '?']
+	}
+}
+
+function sample_program(examples){
+	var inputs = examples.map(k => k[0]),
+		outputs = examples.map(k => k[1])
+
+
+	if(outputs.every(output => output.match(/^\d+$/))){
+		let input_to_vec = input_vec_transform(inputs),
+			numsigma = inputs.map(input_to_vec),
+			numoutputs = outputs.map(k => +k),
+			numexamples = _.zip(numsigma, numoutputs)
+
+
+
+		// let DC = _.mean(numoutputs),
+		// 	AC = numoutputs.map(k => k - DC);
+
+
+
+		// let square = x => x*x;
+		
+		// let apply = (numsig, coeff) => 
+		// 	coeff[0] + _.sum(_.zipWith(numsig, _.tail(coeff), _.multiply));
+
+		// let loss = coeff =>
+		// 	_.sum(
+		// 		numexamples.map(([numsig, numout]) => 
+		// 			square(apply(numsig, coeff) - numout))
+		// 	)
+
+		// let regularized = coeff => 
+		//  	loss(coeff)// + _.sum(coeff.map(square)) // regularize
+
+		// let x0 = _.range(numsigma[0].length + 1).map(Math.random);
+		// // let x0 = [14, 0, 0, 0, 0]
+		// var result = minimize(regularized, x0)
+		// console.log(numexamples, result, 
+		// 	apply(numsigma[0], [14, 0, 0, 0, 0]),
+		// 	apply(numsigma[1], [14, 0, 0, 0, 0])
+		// 	// apply(numsigma[0], [14, 0, 0, 0, 0]), loss([14, 0, 0, 0, 0]))
+		// )
+		// console.log(result, apply([]))
+		// console.log(loss(x0), apply(numsigma[0], x0), )
+
+
+
+
+		// let wolo = regress(numsigma, numoutputs)
+		// if(wolo){
+
+		// 	return {
+		// 		apply: function(sigma){
+		// 			return wolo(input_to_vec(sigma)) + ''
+		// 		}
+		// 	}
+		// }
+		// console.log(wolo)
+
+	}
+		// // 	
+		// // 	let vecs = inputs.map(input_to_vec)
+		// 	
+			
+		// // 	for(let row in rows){
+		// // 		let vecs = input_to_vec(_.range(i).map(
+		// // 			k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || '')))
+		// // 		autofill_content[[row, col]] = '' + wolo(vecs)
+		// // 	}
+
+
+	var pset = lazy_generate_intersect_multidags(inputs, outputs);
+	console.log(inputs, outputs, pset)
+	try {
+		var program = pset.sample()
+	} catch (err) { 
+		console.log('sample error', pset, err)
+	}
+	console.log(program)
+	return program;
+}
+
 
 function auto_fill(){
 	var nonempty = Object.keys(user_content).filter(k => user_content[k]);
@@ -658,92 +755,58 @@ function auto_fill(){
 
 		let col = col_ids[i];
 		let row_ids = cols[col];
-		
-		// var dags = _.sampleSize(row_ids, 5).map(k => {
-		// 	var row_prefix = k.split(',')[0]
-		// 	var sigma = _.range(i).map(k => user_content[[row_prefix, k]] || '')
-		// 	return generate_str(sigma, user_content[k])
-		// })
+	
+		function clear_autofill(){
+			// clear existing autofill column
+			for(let row in rows) autofill_content[[row, col]] = '';
+		}
 
-		var row_id_sample = _.sampleSize(row_ids, 5)
-		var inputs = row_id_sample.map(k => {
-			var row_prefix = k.split(',')[0]
-			return _.range(i).map(
-				k   => evaluate(
-					user_content[[row_prefix, k]] ||
-					autofill_content[[row_prefix, k]] || ''))
-		})
+		function set_autofill(program){
+			// apply the program and set the autofill content
+			for(let row in rows){
+				var sigma = _.range(i).map(
+					k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || ''))
+				autofill_content[[row, col]] = apply_program(program, sigma)
+			}
 
-		var outputs = row_id_sample.map(k => {
-			return user_content[k]
-		})
+			// cache the program
+			autofill_programs[col] = program;
+		}
 
-
+		// TODO: make sure most recently edited thing is part of the sample
+		// alternatively, don't sample and use everything... 
+		// if we can make intersect_lazy_whatever_generate_something 
+		// sufficiently speedy
+		let examples = _.sampleSize(row_ids, 5)
+			.map(k => {
+				var row_prefix = k.split(',')[0]
+				let sigma = _.range(i).map(
+					k   => evaluate(
+						user_content[[row_prefix, k]] ||
+						autofill_content[[row_prefix, k]] || ''))
+				let output = user_content[k]
+				return [sigma, output]
+			})
 
 		// if the previously cached program still works, use that
 		// and don't do the expensive recomputation
-		if(autofill_programs[col]){
-			let cached_program = autofill_programs[col]
-			var cached_success = false;
-			try {
-				cached_success = _.every(_.zip(inputs, outputs), ([sigma, out]) => cached_program.apply(sigma) == out)
-			} catch (err) {}
-			if(cached_success){
-				console.log('using cached program')
-				for(let row in rows){
-					autofill_content[[row, col]] = '' 
-				}
-				for(let row in rows){
-					var sigma = _.range(i).map(
-						k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || ''))
-					try {
-						var text = cached_program.apply(sigma)
-					} catch (e) { continue }
-					autofill_content[[row, col]] = text
-				}
+
+		let cached_program = autofill_programs[col]
+		if(cached_program){
+			if(_.every(examples.map(([sigma, out]) => 
+				apply_program(cached_program, sigma) == out))){
+				set_autofill(cached_program)
 				continue
 			}
 		}
 
-		console.log(inputs, outputs)
-		// var pset = lazy_intersect_multidags(...dags);
-		var pset = lazy_generate_intersect_multidags(inputs, outputs);
-
-		for(let row in rows){
-			autofill_content[[row, col]] = '' 
+		// intersect_programs
+		let program = sample_program(examples);
+		if(program){
+			set_autofill(program)	
+		}else{
+			clear_autofill()
 		}
-
-		// if( outputs.every(output => output.match(/^\d+$/)) ){
-		// 	let input_to_vec = input_vec_transform(inputs)
-		// 	let vecs = inputs.map(input_to_vec)
-		// 	let wolo = regress(vecs, outputs.map(output => +output))
-			
-		// 	for(let row in rows){
-		// 		let vecs = input_to_vec(_.range(i).map(
-		// 			k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || '')))
-		// 		autofill_content[[row, col]] = '' + wolo(vecs)
-		// 	}
-
-
-		// } else {
-		try {
-			var program = pset.sample()	
-		} catch (e) { continue  }
-		
-		autofill_programs[col] = program;
-
-		for(let row in rows){
-			var sigma = _.range(i).map(
-				k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || ''))
-			try {
-				var text = program.apply(sigma)
-			} catch (e) { continue }
-			autofill_content[[row, col]] = text
-		}
-		// }
-
-
-
 
 	}
 }
