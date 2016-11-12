@@ -654,6 +654,22 @@ function apply_program(program, sigma){
 }
 
 
+function linear_program(numsigma, numoutputs){
+	// constant function
+	if(_.every(numoutputs, k => k === numoutputs[0])){
+		return function(sigma){ return numoutputs[0] }
+	}
+
+	// linear offset
+	for(var i = 0; i < numsigma[0].length; i++){
+		var delta = numoutputs[0] - numsigma[0][i];
+		console.log('delta', delta)
+		if(_.every(numoutputs, (k, f) => numsigma[f][i] + delta == k)){
+			return function(sigma){ return sigma[i] + delta }
+		}
+	}
+}
+
 
 function sample_program(examples){
 	var inputs = examples.map(k => k[0]),
@@ -666,17 +682,11 @@ function sample_program(examples){
 			numoutputs = outputs.map(k => +k),
 			numexamples = _.zip(numsigma, numoutputs)
 
+		var lp = linear_program(numsigma, numoutputs);
+		if(lp) return { apply: sigma => lp(input_to_vec(sigma)) + '' };
 
 		let wolo = regress(numsigma, numoutputs)
-		if(wolo){
-			console.log(wolo)
-
-			return {
-				apply: function(sigma){
-					return wolo(input_to_vec(sigma)) + ''
-				}
-			}
-		}
+		if(wolo) return { apply: sigma => wolo(input_to_vec(sigma)) + '' };
 	}
 
 	var pset = lazy_generate_intersect_multidags(inputs, outputs);
@@ -695,7 +705,7 @@ function auto_fill(){
 	var nonempty = Object.keys(user_content).filter(k => user_content[k]);
 	var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
 	var rows  = _.groupBy(nonempty, k => k.split(',')[0]);
-
+	if(_.values(cols).length === 0) return;
 	let max_col_height = _.maxBy(_.values(cols), 'length').length
 
 	var col_ids = _.sortBy(Object.keys(cols), k => +k);
@@ -711,12 +721,18 @@ function auto_fill(){
 			for(let row in rows) autofill_content[[row, col]] = '';
 		}
 
+		function get_sigma(row, i){
+			return [row].concat(_.range(i)
+				.map(k => evaluate(
+					user_content[[row, k]] 
+					|| autofill_content[[row, k]] 
+					|| '')))
+		}
+
 		function set_autofill(program){
 			// apply the program and set the autofill content
 			for(let row in rows){
-				var sigma = _.range(i).map(
-					k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || ''))
-				autofill_content[[row, col]] = apply_program(program, sigma)
+				autofill_content[[row, col]] = apply_program(program, get_sigma(row, i))
 			}
 
 			// cache the program
@@ -730,10 +746,7 @@ function auto_fill(){
 		let examples = _.sampleSize(row_ids, 5)
 			.map(k => {
 				var row_prefix = k.split(',')[0]
-				let sigma = _.range(i).map(
-					k   => evaluate(
-						user_content[[row_prefix, k]] ||
-						autofill_content[[row_prefix, k]] || ''))
+				let sigma = get_sigma(row_prefix, i)
 				let output = user_content[k]
 				return [sigma, output]
 			})
