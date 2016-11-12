@@ -666,7 +666,9 @@ function auto_fill(){
 		var inputs = row_id_sample.map(k => {
 			var row_prefix = k.split(',')[0]
 			return _.range(i).map(
-				k   => evaluate(user_content[[row_prefix, k]] || ''))
+				k   => evaluate(
+					user_content[[row_prefix, k]] ||
+					autofill_content[[row_prefix, k]] || ''))
 		})
 
 		var outputs = row_id_sample.map(k => {
@@ -862,6 +864,11 @@ canvas.addEventListener('mousedown', e => {
 			clearInterval(int)
 		}
 
+	}else{
+
+		function up() {
+			
+		}		
 	}
 
 	function onup() {
@@ -890,22 +897,18 @@ document.addEventListener('dblclick', function(e){
 		start_typing()
 	} else if(defined(col_divider)) {
 		let max_width = default_col_width - cell_left_padding * 2
-		
-		Object.keys(user_content)
-		.filter(k => k.split(',')[1] == col_divider)
-		.map(k => user_content[k])
-		.filter(k => k && k.length)
-		.forEach(k => {
-			max_width = Math.max(max_width, ctx.measureText(k).width)
-		})
 
-		Object.keys(autofill_content)
-		.filter(k => k.split(',')[1] == col_divider)
-		.map(k => autofill_content[k])
-		.filter(k => k && k.length)
-		.forEach(k => {
-			max_width = Math.max(max_width, ctx.measureText(k).width)
-		})
+
+		max_width = Math.max(max_width, _.max(Object.keys(user_content)
+			.filter(k => k.split(',')[1] == col_divider)
+			.map(k => {
+				let text = user_content[k] || autofill_content[k] || ''
+				let result = evaluate(text)
+				return (text == result) ? text : (text + ' ' + result)
+			})
+			.filter(k => k.length > 1)
+			.map(k => ctx.measureText(k).width)))
+		
 		col_widths[col_divider] = max_width + cell_left_padding * 2
 
 	} 
