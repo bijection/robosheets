@@ -654,17 +654,12 @@ function apply_program(program, sigma){
 }
 
 
-function* numerical_programs(sigma){
-	for(var i = 0; i < sigma.length; i++){
-		yield ['+', ['lookup', i], '?']
-	}
-}
 
 function sample_program(examples){
 	var inputs = examples.map(k => k[0]),
 		outputs = examples.map(k => k[1])
 
-
+	// console.log(inputs, outputs)
 	if(outputs.every(output => output.match(/^\d+$/))){
 		let input_to_vec = input_vec_transform(inputs),
 			numsigma = inputs.map(input_to_vec),
@@ -672,62 +667,17 @@ function sample_program(examples){
 			numexamples = _.zip(numsigma, numoutputs)
 
 
+		let wolo = regress(numsigma, numoutputs)
+		if(wolo){
+			console.log(wolo)
 
-		// let DC = _.mean(numoutputs),
-		// 	AC = numoutputs.map(k => k - DC);
-
-
-
-		// let square = x => x*x;
-		
-		// let apply = (numsig, coeff) => 
-		// 	coeff[0] + _.sum(_.zipWith(numsig, _.tail(coeff), _.multiply));
-
-		// let loss = coeff =>
-		// 	_.sum(
-		// 		numexamples.map(([numsig, numout]) => 
-		// 			square(apply(numsig, coeff) - numout))
-		// 	)
-
-		// let regularized = coeff => 
-		//  	loss(coeff)// + _.sum(coeff.map(square)) // regularize
-
-		// let x0 = _.range(numsigma[0].length + 1).map(Math.random);
-		// // let x0 = [14, 0, 0, 0, 0]
-		// var result = minimize(regularized, x0)
-		// console.log(numexamples, result, 
-		// 	apply(numsigma[0], [14, 0, 0, 0, 0]),
-		// 	apply(numsigma[1], [14, 0, 0, 0, 0])
-		// 	// apply(numsigma[0], [14, 0, 0, 0, 0]), loss([14, 0, 0, 0, 0]))
-		// )
-		// console.log(result, apply([]))
-		// console.log(loss(x0), apply(numsigma[0], x0), )
-
-
-
-
-		// let wolo = regress(numsigma, numoutputs)
-		// if(wolo){
-
-		// 	return {
-		// 		apply: function(sigma){
-		// 			return wolo(input_to_vec(sigma)) + ''
-		// 		}
-		// 	}
-		// }
-		// console.log(wolo)
-
+			return {
+				apply: function(sigma){
+					return wolo(input_to_vec(sigma)) + ''
+				}
+			}
+		}
 	}
-		// // 	
-		// // 	let vecs = inputs.map(input_to_vec)
-		// 	
-			
-		// // 	for(let row in rows){
-		// // 		let vecs = input_to_vec(_.range(i).map(
-		// // 			k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || '')))
-		// // 		autofill_content[[row, col]] = '' + wolo(vecs)
-		// // 	}
-
 
 	var pset = lazy_generate_intersect_multidags(inputs, outputs);
 	console.log(inputs, outputs, pset)
@@ -993,7 +943,8 @@ document.addEventListener('dblclick', function(e){
 		let max_width = default_col_width - cell_left_padding * 2
 
 
-		max_width = Math.max(max_width, _.max(Object.keys(user_content)
+		max_width = Math.max(max_width, _.max(
+			_.union(Object.keys(user_content), Object.keys(autofill_content))
 			.filter(k => k.split(',')[1] == col_divider)
 			.map(k => {
 				let text = user_content[k] || autofill_content[k] || ''
