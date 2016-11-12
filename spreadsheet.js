@@ -28,6 +28,7 @@ let selected_end_col;
 
 let user_content = {}
 let autofill_content = {}
+var autofill_programs = {}
 
 let hovered_col_divider
 let hovered_row_divider
@@ -641,6 +642,8 @@ function sync_canvas_and_keygetter() {
 
 keygetter.addEventListener('input', sync_canvas_and_keygetter)
 
+
+
 function auto_fill(){
 	var nonempty = Object.keys(user_content).filter(k => user_content[k]);
 	var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
@@ -675,6 +678,33 @@ function auto_fill(){
 			return user_content[k]
 		})
 
+
+
+		// if the previously cached program still works, use that
+		// and don't do the expensive recomputation
+		if(autofill_programs[col]){
+			let cached_program = autofill_programs[col]
+			var cached_success = false;
+			try {
+				cached_success = _.every(_.zip(inputs, outputs), ([sigma, out]) => cached_program.apply(sigma) == out)
+			} catch (err) {}
+			if(cached_success){
+				console.log('using cached program')
+				for(let row in rows){
+					autofill_content[[row, col]] = '' 
+				}
+				for(let row in rows){
+					var sigma = _.range(i).map(
+						k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || ''))
+					try {
+						var text = cached_program.apply(sigma)
+					} catch (e) { continue }
+					autofill_content[[row, col]] = text
+				}
+				continue
+			}
+		}
+
 		console.log(inputs, outputs)
 		// var pset = lazy_intersect_multidags(...dags);
 		var pset = lazy_generate_intersect_multidags(inputs, outputs);
@@ -683,33 +713,34 @@ function auto_fill(){
 			autofill_content[[row, col]] = '' 
 		}
 
-		if( outputs.every(output => output.match(/^\d+$/)) ){
-			let input_to_vec = input_vec_transform(inputs)
-			let vecs = inputs.map(input_to_vec)
-			let wolo = regress(vecs, outputs.map(output => +output))
+		// if( outputs.every(output => output.match(/^\d+$/)) ){
+		// 	let input_to_vec = input_vec_transform(inputs)
+		// 	let vecs = inputs.map(input_to_vec)
+		// 	let wolo = regress(vecs, outputs.map(output => +output))
 			
-			for(let row in rows){
-				let vecs = input_to_vec(_.range(i).map(
-					k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || '')))
-				autofill_content[[row, col]] = '' + wolo(vecs)
-			}
+		// 	for(let row in rows){
+		// 		let vecs = input_to_vec(_.range(i).map(
+		// 			k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || '')))
+		// 		autofill_content[[row, col]] = '' + wolo(vecs)
+		// 	}
 
 
-		} else {
+		// } else {
+		try {
+			var program = pset.sample()	
+		} catch (e) { continue  }
+		
+		autofill_programs[col] = program;
+
+		for(let row in rows){
+			var sigma = _.range(i).map(
+				k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || ''))
 			try {
-				var program = pset.sample()	
-			} catch (e) { continue  }
-			
-
-			for(let row in rows){
-				var sigma = _.range(i).map(
-					k => evaluate(user_content[[row, k]] || autofill_content[[row, k]] || ''))
-				try {
-					var text = program.apply(sigma)
-				} catch (e) { continue }
-				autofill_content[[row, col]] = text
-			}		
+				var text = program.apply(sigma)
+			} catch (e) { continue }
+			autofill_content[[row, col]] = text
 		}
+		// }
 
 
 
