@@ -473,7 +473,7 @@ function lazy_generate_intersect_multidags(inputs, outputs){
         if(_.isEqual(node, target)) return true;
 
         // var sv = outputs.map((output, i) => k.edges.filter(e => _.isEqual(e[0], node[i])));
-        var sv = outputs.map((output, i) => _.range(node[i]+1, output.length + 1).map(end => [node[i], end]));
+        var sv = outputs.map((output, i) => _.range(node[i]+1, output.length + 1).map(end => [node[i], end]).reverse());
         for(var ev of cartesian_product(...sv)){
             var edge = [node, ev.map(k => k[1])];
 
