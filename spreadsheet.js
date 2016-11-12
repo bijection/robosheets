@@ -734,19 +734,17 @@ function sample_program(examples){
 function auto_fill(){
 	var nonempty = Object.keys(user_content).filter(k => user_content[k]);
 	var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
-	var rows  = _.groupBy(nonempty, k => k.split(',')[0]);
-	// if(_.values(cols).length === 0) return;
-	// let max_col_height = _.maxBy(_.values(cols), 'length').length
-
 	var col_ids = _.sortBy(Object.keys(cols), k => +k);
 
 	for(var i = 0; i < col_ids.length; i++){
-		// if(!cols[i]) continue;
-		// if(cols[i].length === max_col_height) continue;
-
 		let col = col_ids[i];
 		let row_ids = cols[col];
-	
+
+		let max_col_height = _.max(col_ids.slice(0, i).map(k => 
+			_.max(_.flatten(cols[k].map(e => +e.split(',')[0])))))
+
+		if(cols[i].length >= max_col_height) continue;
+
 		// TODO: make sure most recently edited thing is part of the sample
 		// alternatively, don't sample and use everything... 
 		// if we can make intersect_lazy_whatever_generate_something 
