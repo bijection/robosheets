@@ -26,8 +26,9 @@ let selected_end_row;
 let selected_end_col;
 
 
-let content = {}
-let grey_content = {}
+let user_content = {}
+let autofill_content = {}
+let computed_content = {}
 
 let hovered_col_divider
 let hovered_row_divider
@@ -37,7 +38,7 @@ let mouse_y
 
 
 try{
-	content = JSON.parse(localStorage.sheet1)
+	user_content = JSON.parse(localStorage.sheet1)
 } catch(e) {}
 
 keygetter.style.display = 'none';
@@ -64,7 +65,7 @@ function render() {
 	draw_selected_cell()
 	draw_selection_region()
 
-	if(Math.random() < 1/60) localStorage.sheet1 = JSON.stringify(content)
+	if(Math.random() < 1/60) localStorage.sheet1 = JSON.stringify(user_content)
 
 	// ctx.fillStyle = 'rgba(0,0,0,.1)'
 	// if(row > 0) ctx.fillRect(left_margin, top_margin, canvas.width, 10);
@@ -220,10 +221,10 @@ function draw_cell_text(row, col){
 	let [c, x, width] = col
 
 	let drawing_suggestiong_text = false
-	let text = content[[r, c]]//|| [r, c].toString()
+	let text = user_content[[r, c]]//|| [r, c].toString()
 
 	if(!text){
-		text = grey_content[[r,c]]
+		text = autofill_content[[r,c]]
 		drawing_suggestiong_text = true
 	}
 	
@@ -237,9 +238,26 @@ function draw_cell_text(row, col){
 
 	ctx.clearRect(x+1, y+1, text_width, height - 2)
 
+
+	// prefix notation or suffix notation that is the question
+	if(text.trim().startsWith('=') || text.trim().endsWith('=')){
+		ctx.textAlign = 'end'
+		
+		try {
+			var result = eval(text.trim().replace('=', ''))	
+		} catch (err) { }
+		if(!defined(result)) result = 'ERROR';
+
+		computed_content[[r,c]] = result + ''
+
+		ctx.fillStyle = (result === 'ERROR') ? 'red' : '#007fff'
+		ctx.fillText(computed_content[[r,c]], x + text_width - cell_left_padding, y + height / 2)
+	}
 	
+
 	text = text.slice(0, 5 + text.length * text_width / ctx.measureText(text).width)
 
+	ctx.textAlign = 'start'
 	ctx.fillStyle = drawing_suggestiong_text ? suggestion_color : '#222'
 	ctx.fillText(text, x + cell_left_padding, y + height/2 )
 
@@ -260,7 +278,8 @@ function draw_cells_text(){
 
 function cell_text_display_width(r, c) {
 	ctx.font = content_font
-	var desired_width = ctx.measureText(content[[r,c]] || grey_content[[r,c]] || '').width + cell_left_padding
+	let text = (user_content[[r,c]] || autofill_content[[r,c]] || '') + (computed_content[[r,c]] || '')
+	var desired_width = ctx.measureText(text).width + cell_left_padding + (([r,c] in computed_content) ? cell_left_padding : 0)
 	let display_width = col_widths[c] || default_col_width
 	let edit_width = display_width
 	let next_col = c + 1
@@ -268,7 +287,7 @@ function cell_text_display_width(r, c) {
 	while(edit_width < desired_width){
 		let next_col_width = col_widths[next_col] || default_col_width
 	
-		if(!content[[r, next_col]] && !hit_filled_cell) display_width += next_col_width
+		if(!user_content[[r, next_col]] && !hit_filled_cell) display_width += next_col_width
 		else hit_filled_cell = true;
 
 		edit_width += next_col_width
@@ -454,7 +473,7 @@ document.addEventListener('paste', function(e){
 		data.split(/\r\n|\r|\n/).forEach(line => {
 			let col = selected_col
 			line.split('\t').forEach(entry => {
-				content[[row, col]] = entry
+				user_content[[row, col]] = entry
 				col++
 			})
 			row++
@@ -464,25 +483,6 @@ document.addEventListener('paste', function(e){
 
 
 
-document.addEventListener('copy', function(e){
-
-	if(is_typing()) return;
-
-	e.preventDefault()
-
-	let data
-	let region = get_selection_region()
-
-	if(region){
-		data = to_text(region)
-	} else {
-		data = content[[selected_row, selected_col]] || grey_content[[selected_row, selected_col]] || ''
-	}
-
-	e.clipboardData.setData('text/plain', data);
-
-})
-
 
 
 function filled_region(region){
@@ -490,8 +490,8 @@ function filled_region(region){
 
 	let real_end_row = 0, real_end_col = 0
 
-	Object.keys(content)
-	.concat(Object.keys(grey_content))
+	Object.keys(user_content)
+	.concat(Object.keys(autofill_content))
 	.forEach(k => {
 		let [r, c] = k.split(',')
 		if(r >= start_row && r <= end_row && c >= start_col && c <= end_col){
@@ -510,10 +510,37 @@ function to_text(region){
 
 	return _.range(start_row, end_row+1)
 	.map(row => _.range(start_col, end_col+1)
-	 			.map(col => content[[row,col]] || grey_content[[row,col]] || '')
+	 			.map(col => computed_content[[row,col]] 
+	 					|| user_content[[row,col]] 
+	 					|| autofill_content[[row,col]] 
+	 					|| '')
 	 			.join('\t'))
 	.join('\n')
 }
+
+
+document.addEventListener('copy', function(e){
+
+	if(is_typing()) return;
+
+	e.preventDefault()
+
+	let data
+	let region = get_selection_region()
+
+	if(region){
+		data = to_text(region)
+	} else {
+		data = computed_content[[selected_row, selected_col]]
+			|| user_content[[selected_row, selected_col]] 
+			|| autofill_content[[selected_row, selected_col]] 
+			|| ''
+	}
+
+	e.clipboardData.setData('text/plain', data);
+
+})
+
 
 document.addEventListener('cut', e => {
 	if(is_typing()) return;
@@ -526,8 +553,11 @@ document.addEventListener('cut', e => {
 		data = to_text(region)
 		delete_region(region)
 	} else {
-		data = content[[selected_row, selected_col]] || grey_content[[selected_row, selected_col]] || ''
-		content[[selected_row, selected_col]] = ''
+		data = computed_content[[selected_row, selected_col]]
+			|| user_content[[selected_row, selected_col]] 
+			|| autofill_content[[selected_row, selected_col]] 
+			|| ''
+		user_content[[selected_row, selected_col]] = ''
 	}
 
 	e.clipboardData.setData('text/plain', data);
@@ -541,16 +571,16 @@ function delete_region(region){
 	.forEach(row =>
 		_.range(start_col, end_col+1)
 		.forEach(col =>{
-			delete content[[row,col]]
-			delete grey_content[[row,col]]
+			delete user_content[[row,col]]
+			delete autofill_content[[row,col]]
 		}))
 }
 
 
 keygetter.addEventListener('blur', e=> {
 	keygetter.style.display = 'none';
-	// if(content[[selected_row, selected_col]] && content[[selected_row, selected_col]].length === 0)
-	// 	delete content[[selected_row, selected_col]]
+	// if(user_content[[selected_row, selected_col]] && user_content[[selected_row, selected_col]].length === 0)
+	// 	delete user_content[[selected_row, selected_col]]
 })
 
 
@@ -559,7 +589,7 @@ function sync_canvas_and_keygetter() {
 	ctx.font = content_font
 	let desired_width = ctx.measureText(keygetter.value).width
 	keygetter.style.width = (ctx.measureText(keygetter.value).width + cell_left_padding + 2) / devicePixelRatio
-	content[[selected_row, selected_col]] = keygetter.value
+	user_content[[selected_row, selected_col]] = keygetter.value
 	ctx.restore()
 }
 
@@ -567,7 +597,7 @@ function sync_canvas_and_keygetter() {
 keygetter.addEventListener('input', sync_canvas_and_keygetter)
 
 function auto_fill(){
-	var nonempty = Object.keys(content).filter(k => content[k]);
+	var nonempty = Object.keys(user_content).filter(k => user_content[k]);
 	var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
 	var rows  = _.groupBy(nonempty, k => k.split(',')[0]);
 
@@ -582,25 +612,25 @@ function auto_fill(){
 		
 		// var dags = _.sampleSize(row_ids, 5).map(k => {
 		// 	var row_prefix = k.split(',')[0]
-		// 	var sigma = _.range(i).map(k => content[[row_prefix, k]] || '')
-		// 	return generate_str(sigma, content[k])
+		// 	var sigma = _.range(i).map(k => user_content[[row_prefix, k]] || '')
+		// 	return generate_str(sigma, user_content[k])
 		// })
 
 		var row_id_sample = _.sampleSize(row_ids, 5)
 		var inputs = row_id_sample.map(k => {
 			var row_prefix = k.split(',')[0]
-			return _.range(i).map(k => content[[row_prefix, k]] || '')
+			return _.range(i).map(k => user_content[[row_prefix, k]] || '')
 		})
 
 		var outputs = row_id_sample.map(k => {
-			return content[k]
+			return user_content[k]
 		})
 
 		// var pset = lazy_intersect_multidags(...dags);
 		var pset = lazy_generate_intersect_multidags(inputs, outputs);
 
 		for(let row in rows){
-			grey_content[[row, col]] = '' 
+			autofill_content[[row, col]] = '' 
 		}
 
 		if( outputs.every(output => output.match(/^\d+$/)) ){
@@ -609,8 +639,8 @@ function auto_fill(){
 			let wolo = regress(vecs, outputs.map(output => +output))
 			
 			for(let row in rows){
-				let vecs = input_to_vec(_.range(i).map(k => content[[row, k]] || ''))
-				grey_content[[row, col]] = ''+wolo(vecs)
+				let vecs = input_to_vec(_.range(i).map(k => user_content[[row, k]] || ''))
+				autofill_content[[row, col]] = ''+wolo(vecs)
 			}
 
 
@@ -621,11 +651,11 @@ function auto_fill(){
 			
 
 			for(let row in rows){
-				var sigma = _.range(i).map(k => content[[row, k]] || '')
+				var sigma = _.range(i).map(k => user_content[[row, k]] || '')
 				try {
 					var text = program.apply(sigma)
 				} catch (e) { continue }
-				grey_content[[row, col]] = text
+				autofill_content[[row, col]] = text
 			}		
 		}
 
@@ -659,7 +689,7 @@ let handle_keydown = e=> {
 		if((e.keyCode == 8 || e.keyCode == 46) && !is_typing()) {
 			let region = get_selection_region()
 			if(region) delete_region(region)
-			else delete content[[selected_row, selected_col]]
+			else delete user_content[[selected_row, selected_col]]
 		}
 	}
 }
@@ -667,7 +697,7 @@ let handle_keydown = e=> {
 let handle_keypress = e=> {
 	if(!is_typing() && e.keyCode != 13) {
 		// console.log(String.fromCharCode(e.keyCode)
-		content[[selected_row, selected_col]] = ''
+		user_content[[selected_row, selected_col]] = ''
 		start_typing()
 	}
 }
@@ -811,17 +841,17 @@ document.addEventListener('dblclick', function(e){
 	} else if(defined(col_divider)) {
 		let max_width = default_col_width - cell_left_padding * 2
 		
-		Object.keys(content)
+		Object.keys(user_content)
 		.filter(k => k.split(',')[1] == col_divider)
-		.map(k => content[k])
+		.map(k => user_content[k])
 		.filter(k => k && k.length)
 		.forEach(k => {
 			max_width = Math.max(max_width, ctx.measureText(k).width)
 		})
 
-		Object.keys(grey_content)
+		Object.keys(autofill_content)
 		.filter(k => k.split(',')[1] == col_divider)
-		.map(k => grey_content[k])
+		.map(k => autofill_content[k])
 		.filter(k => k && k.length)
 		.forEach(k => {
 			max_width = Math.max(max_width, ctx.measureText(k).width)
@@ -1025,7 +1055,7 @@ function start_typing(){
 	
 	keygetter.style.display = 'initial'
 	keygetter.focus()
-	keygetter.value = content[[selected_row, selected_col]] || ''
+	keygetter.value = user_content[[selected_row, selected_col]] || ''
 	let [x, y] = cell_x_y(selected_row, selected_col)
 	keygetter.style.top = y / devicePixelRatio + 'px'
 	keygetter.style.left = x / devicePixelRatio + 'px'
