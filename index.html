@@ -103,9 +103,18 @@
 			
 		</div>
 	</div>
-	<iframe src="spreadsheet.html"></iframe>	
+	<iframe id='spreadsheet' src="spreadsheet.html"></iframe>	
 </div>
-<script type="text/javascript">CRISP_WEBSITE_ID = "711dddb2-aba7-4f43-ae55-1d4643bb3c7a";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.im/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script>
+<script type="text/javascript">
+	let focussheet = e => spreadsheet.contentWindow.focus()
+	window.addEventListener("load", focussheet)
+	app.addEventListener('click', focussheet)
+	window.CRISP_READY_TRIGGER = function() {
+		$crisp.on("chat:closed", focussheet)
+	};
+</script>
+<script type="text/javascript">CRISP_WEBSITE_ID = "711dddb2-aba7-4f43-ae55-1d4643bb3c7a";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.im/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();
+</script>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
