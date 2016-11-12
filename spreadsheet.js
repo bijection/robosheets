@@ -40,6 +40,8 @@ try{
 	content = JSON.parse(localStorage.sheet1)
 } catch(e) {}
 
+keygetter.style.display = 'none';
+
 
 function render() {
 	canvas.width = innerWidth * devicePixelRatio
@@ -546,7 +548,9 @@ function delete_region(region){
 
 
 keygetter.addEventListener('blur', e=> {
-	keygetter.style.display = 'none'
+	keygetter.style.display = 'none';
+	// if(content[[selected_row, selected_col]] && content[[selected_row, selected_col]].length === 0)
+	// 	delete content[[selected_row, selected_col]]
 })
 
 
@@ -595,23 +599,39 @@ function auto_fill(){
 		// var pset = lazy_intersect_multidags(...dags);
 		var pset = lazy_generate_intersect_multidags(inputs, outputs);
 
-
 		for(let row in rows){
 			grey_content[[row, col]] = '' 
 		}
 
-		try {
-			var program = pset.sample()	
-		} catch (e) { continue  }
-		
+		if( outputs.every(output => output.match(/^\d+$/)) ){
+			let input_to_vec = input_vec_transform(inputs)
+			let vecs = inputs.map(input_to_vec)
+			let wolo = regress(vecs, outputs.map(output => +output))
+			
+			for(let row in rows){
+				let vecs = input_to_vec(_.range(i).map(k => content[[row, k]] || ''))
+				grey_content[[row, col]] = ''+wolo(vecs)
+			}
 
-		for(let row in rows){
-			var sigma = _.range(i).map(k => content[[row, k]] || '')
+
+		} else {
 			try {
-				var text = program.apply(sigma)
-			} catch (e) { continue }
-			grey_content[[row, col]] = text
-		}		
+				var program = pset.sample()	
+			} catch (e) { continue  }
+			
+
+			for(let row in rows){
+				var sigma = _.range(i).map(k => content[[row, k]] || '')
+				try {
+					var text = program.apply(sigma)
+				} catch (e) { continue }
+				grey_content[[row, col]] = text
+			}		
+		}
+
+
+
+
 	}
 }
 
@@ -786,7 +806,7 @@ document.addEventListener('dblclick', function(e){
 	if(defined(row) && defined(col) && !is_typing()){
 		start_typing()
 	} else if(defined(col_divider)) {
-		let max_width = default_col_width
+		let max_width = default_col_width - cell_left_padding * 2
 		
 		Object.keys(content)
 		.filter(k => k.split(',')[1] == col_divider)
