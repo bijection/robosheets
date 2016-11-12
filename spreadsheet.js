@@ -27,7 +27,7 @@ let selected_end_col;
 
 
 let user_content = {}
-let autofill_content = {}
+// let autofill_content = {}
 var autofill_programs = {}
 
 let hovered_col_divider
@@ -221,10 +221,11 @@ function draw_cell_text(row, col){
 	let [c, x, width] = col
 
 	let drawing_suggestiong_text = false
-	let text = user_content[[r, c]]//|| [r, c].toString()
+	// let text = user_content[[r, c]]//|| [r, c].toString()
+	let text = cell_text(r, c)
 
-	if(!text){
-		text = autofill_content[[r,c]]
+	if(!user_content[[r, c]]){
+		// text = autofill_content[[r,c]]
 		drawing_suggestiong_text = true
 	}
 	
@@ -318,9 +319,10 @@ function draw_cells_text(){
 }
 
 
+
 function cell_text_display_width(r, c) {
 	ctx.font = content_font
-	let text = (user_content[[r,c]] || autofill_content[[r,c]] || '')
+	let text = cell_text(r, c)
 	var desired_width = ctx.measureText(text).width + cell_left_padding;
 
 	let result = evaluate(text)
@@ -336,7 +338,7 @@ function cell_text_display_width(r, c) {
 	while(edit_width < desired_width){
 		let next_col_width = col_widths[next_col] || default_col_width
 	
-		if(!(user_content[[r, next_col]] || autofill_content[[r, next_col]]) && !hit_filled_cell) display_width += next_col_width
+		if(!cell_text(r, next_col) && !hit_filled_cell) display_width += next_col_width
 		else hit_filled_cell = true;
 
 		edit_width += next_col_width
@@ -540,7 +542,7 @@ function filled_region(region){
 	let real_end_row = 0, real_end_col = 0
 
 	Object.keys(user_content)
-	.concat(Object.keys(autofill_content))
+	// .concat(Object.keys(autofill_content))
 	.forEach(k => {
 		let [r, c] = k.split(',')
 		if(r >= start_row && r <= end_row && c >= start_col && c <= end_col){
@@ -559,9 +561,7 @@ function to_text(region){
 
 	return _.range(start_row, end_row+1)
 	.map(row => _.range(start_col, end_col+1)
-	 			.map(col => evaluate(user_content[[row,col]] 
-	 					|| autofill_content[[row,col]] 
-	 					|| ''))
+	 			.map(col => evaluate(cell_text(row, col)))
 	 			.join('\t'))
 	.join('\n')
 }
@@ -579,9 +579,7 @@ document.addEventListener('copy', function(e){
 	if(region){
 		data = to_text(region)
 	} else {
-		data = evaluate(user_content[[selected_row, selected_col]] 
-			|| autofill_content[[selected_row, selected_col]] 
-			|| '')
+		data = evaluate(cell_text(selected_row, selected_col))
 	}
 
 	e.clipboardData.setData('text/plain', data);
@@ -600,9 +598,7 @@ document.addEventListener('cut', e => {
 		data = to_text(region)
 		delete_region(region)
 	} else {
-		data = evaluate(user_content[[selected_row, selected_col]] 
-			|| autofill_content[[selected_row, selected_col]] 
-			|| '')
+		data = evaluate(cell_text(selected_row, selected_col))
 		user_content[[selected_row, selected_col]] = ''
 	}
 
@@ -617,9 +613,11 @@ function delete_region(region){
 	.forEach(row =>
 		_.range(start_col, end_col+1)
 		.forEach(col =>{
-			delete user_content[[row,col]]
-			delete autofill_content[[row,col]]
+			delete user_content[[row, col]]
 		}))
+
+	// delete all empty columns
+	cleanup_autofill()
 }
 
 
@@ -653,6 +651,26 @@ function apply_program(program, sigma){
 	
 }
 
+function get_sigma(row, col){
+	var sigma = _.range(+col)
+		.map(c => 
+			evaluate(cell_text(row, c)))
+	return [row + ''].concat(sigma);
+}
+
+function cell_text(r, c){
+
+	if(user_content[[r, c]]){
+		return user_content[[r, c]];
+	}
+	
+	if(autofill_programs[c]){
+		let program = autofill_programs[c];
+		return apply_program(program, get_sigma(r, c))
+	}
+
+	return ''
+}
 
 function linear_program(numsigma, numoutputs){
 	// constant function
@@ -663,7 +681,6 @@ function linear_program(numsigma, numoutputs){
 	// linear offset
 	for(var i = 0; i < numsigma[0].length; i++){
 		var delta = numoutputs[0] - numsigma[0][i];
-		console.log('delta', delta)
 		if(_.every(numoutputs, (k, f) => numsigma[f][i] + delta == k)){
 			return function(sigma){ return sigma[i] + delta }
 		}
@@ -716,39 +733,14 @@ function auto_fill(){
 		let col = col_ids[i];
 		let row_ids = cols[col];
 	
-		function clear_autofill(){
-			// clear existing autofill column
-			for(let row in rows) autofill_content[[row, col]] = '';
-		}
-
-		function get_sigma(row, i){
-			return [row].concat(_.range(i)
-				.map(k => evaluate(
-					user_content[[row, k]] 
-					|| autofill_content[[row, k]] 
-					|| '')))
-		}
-
-		function set_autofill(program){
-			// apply the program and set the autofill content
-			for(let row in rows){
-				autofill_content[[row, col]] = apply_program(program, get_sigma(row, i))
-			}
-
-			// cache the program
-			autofill_programs[col] = program;
-		}
-
 		// TODO: make sure most recently edited thing is part of the sample
 		// alternatively, don't sample and use everything... 
 		// if we can make intersect_lazy_whatever_generate_something 
 		// sufficiently speedy
 		let examples = _.sampleSize(row_ids, 5)
 			.map(k => {
-				var row_prefix = k.split(',')[0]
-				let sigma = get_sigma(row_prefix, i)
-				let output = user_content[k]
-				return [sigma, output]
+				var row_prefix = k.split(',')[0];
+				return [get_sigma(row_prefix, col), user_content[k]]
 			})
 
 		// if the previously cached program still works, use that
@@ -758,7 +750,6 @@ function auto_fill(){
 		if(cached_program){
 			if(_.every(examples.map(([sigma, out]) => 
 				apply_program(cached_program, sigma) == out))){
-				set_autofill(cached_program)
 				continue
 			}
 		}
@@ -766,9 +757,9 @@ function auto_fill(){
 		// intersect_programs
 		let program = sample_program(examples);
 		if(program){
-			set_autofill(program)	
+			autofill_programs[col] = program;
 		}else{
-			clear_autofill()
+			delete autofill_programs[col]
 		}
 
 	}
@@ -797,10 +788,21 @@ let handle_keydown = e=> {
 
 		if((e.keyCode == 8 || e.keyCode == 46) && !is_typing()) {
 			let region = get_selection_region()
-			if(region) delete_region(region)
-			else delete user_content[[selected_row, selected_col]]
+			if(region){
+				delete_region(region)
+			}else{
+				delete user_content[[selected_row, selected_col]]
+				cleanup_autofill()
+			} 
 		}
 	}
+}
+
+function cleanup_autofill(){
+	var nonempty_columns = _.uniq(Object.keys(user_content).map(k => k.split(',')[1]))
+	_.difference(Object.keys(autofill_programs), nonempty_columns).forEach(col => {
+		delete autofill_programs[col]
+	})
 }
 
 let handle_keypress = e=> {
@@ -957,10 +959,12 @@ document.addEventListener('dblclick', function(e){
 
 
 		max_width = Math.max(max_width, _.max(
-			_.union(Object.keys(user_content), Object.keys(autofill_content))
+			Object.keys(user_content)
+			// _.union(Object.keys(user_content), Object.keys(autofill_content))
 			.filter(k => k.split(',')[1] == col_divider)
 			.map(k => {
-				let text = user_content[k] || autofill_content[k] || ''
+				let [r, c] = k.split(',');
+				let text = cell_text(r, c)
 				let result = evaluate(text)
 				return (text == result) ? text : (text + ' ' + result)
 			})
