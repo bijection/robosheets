@@ -255,13 +255,13 @@ function draw_cell_text(row, col){
 
 
 		var gradient = ctx.createLinearGradient(x,0,x+30,0);
-		gradient.addColorStop(0.5,"white");
+		gradient.addColorStop(0.5,"rgba(255, 255, 255, 1)");
 		gradient.addColorStop(1,"rgba(255, 255, 255, 0)");
 
-		ctx.fillText(cropped_text, x + text_width - result_width, y + height/2 )
+		ctx.fillText(cropped_text, x+cell_left_padding + text_width - result_width, y + height/2 )
 
 		ctx.fillStyle = gradient
-		ctx.fillRect(x, y + 1, 30, height - 2);
+		ctx.fillRect(x+1, y + 1, 30, height - 2);
 	}
 
 	function draw_result(){
