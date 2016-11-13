@@ -715,13 +715,15 @@ function sample_program(examples){
 	}
 
 	var pset = lazy_generate_intersect_multidags(inputs, outputs);
-	console.log(inputs, outputs, pset)
+	
 	try {
 		var program = pset.sample()
 	} catch (err) { 
 		console.log('sample error', pset, err)
 	}
-	console.log(program)
+	
+	console.log(inputs, outputs, pset, program)
+
 	return program;
 }
 
@@ -964,19 +966,29 @@ document.addEventListener('dblclick', function(e){
 	} else if(defined(col_divider)) {
 		let max_width = default_col_width - cell_left_padding * 2
 
+		let max_row = _.max(Object.keys(user_content).map(k => +k.split(',')[0]));
+		
+		for(var r = 0; r < max_row; r++){
+			let text = cell_text(r, col_divider)
+			let result = evaluate(text)
+			let combined = (text == result) ? text : (text + ' ' + result);
+			if(combined.length > 1){
+				max_width = Math.max(max_width, ctx.measureText(combined).width)
+			}
+		}
 
-		max_width = Math.max(max_width, _.max(
-			Object.keys(user_content)
-			// _.union(Object.keys(user_content), Object.keys(autofill_content))
-			.filter(k => k.split(',')[1] == col_divider)
-			.map(k => {
-				let [r, c] = k.split(',');
-				let text = cell_text(r, c)
-				let result = evaluate(text)
-				return (text == result) ? text : (text + ' ' + result)
-			})
-			.filter(k => k.length > 1)
-			.map(k => ctx.measureText(k).width)))
+		// max_width = Math.max(max_width, _.max(
+		// 	Object.keys(user_content)
+		// 	// _.union(Object.keys(user_content), Object.keys(autofill_content))
+		// 	.filter(k => k.split(',')[1] == col_divider)
+		// 	.map(k => {
+		// 		let [r, c] = k.split(',');
+		// 		let text = cell_text(r, c)
+		// 		let result = evaluate(text)
+		// 		return (text == result) ? text : (text + ' ' + result)
+		// 	})
+		// 	.filter(k => k.length > 1)
+		// 	.map(k => ctx.measureText(k).width)))
 		
 		col_widths[col_divider] = max_width + cell_left_padding * 2
 
