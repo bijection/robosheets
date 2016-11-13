@@ -667,32 +667,49 @@ function cell_text(r, c){
 	return ''
 }
 
-function linear_program(numsigma, numoutputs){
 
-	// constant function
-	if(_.every(numoutputs, k => k === numoutputs[0])){
-		return function(sigma){ return numoutputs[0] }
-	}
+function numerical_simple(numsigma, numoutputs){
+	function train(x0, fn){
+		for(var col = 0; col < numsigma[0].length; col++){
+			// try {
+				var result = minimize(function f(x){
+					return _.sum(numoutputs.map((k, i) => 
+						(fn([numsigma[i][col], ...x]) - k)**2))
+				}, x0)
+			// } catch (err) {
+			// 	console.log('failed', err, x0)
+			// }
+			if(result && result.f < 0.001){
+				var rounded = result.solution.map(k => Math.round(k * 1024) / 1024);
 
-	// scalar offset
-	for(var i = 0; i < numsigma[0].length; i++){
-		var delta = numoutputs[0] - numsigma[0][i];
-		if(_.every(numoutputs, (k, f) => numsigma[f][i] + delta == k)){
-			return function(sigma){ return sigma[i] + delta }
+				return function(sigma){
+					return fn([sigma[col], ...rounded])
+				}
+				console.log(result.solution, 'solved')
+			}
 		}
 	}
 
-	// linear thingy
-	if(numsigma.length >= 2){
-		for(var i = 0; i < numsigma[0].length; i++){
-			var m = (numoutputs[1] - numoutputs[0]) / (numsigma[1][i] - numsigma[0][i])
-			var b = numoutputs[0] - m * numsigma[0][i]
-			if(_.every(numoutputs, (k, f) => m * numsigma[f][i] + b == k)){
-				return function(sigma){ return m * sigma[i] + b }
-			}
-		}	
-	}
+	var constant = train([1], ([x, p]) => p)
+	if(constant) return constant;
+
+	var constant = train([1], ([x, p]) => x + p)
+	if(constant) return constant;
+
+	var constant = train([1, 1], ([x, p, n]) => x * p + n)
+	if(constant) return constant;
+
+	var constant = train([1], ([x, p]) => p ** x)
+	if(constant) return constant;
+
+	var constant = train([1], ([x, p]) => x ** p)
+	if(constant) return constant;
 	
+	var constant = train([1, 2], ([x, p, n]) => n * p ** x)
+	if(constant) return constant;
+
+	var constant = train([2, 1], ([x, p, n]) => n * p ** (x + 1))
+	if(constant) return constant;
 }
 
 
@@ -707,7 +724,7 @@ function sample_program(examples){
 			numoutputs = outputs.map(k => +k),
 			numexamples = _.zip(numsigma, numoutputs)
 
-		var lp = linear_program(numsigma, numoutputs);
+		var lp = numerical_simple(numsigma, numoutputs);
 		if(lp) return { apply: sigma => lp(input_to_vec(sigma)) + '' };
 
 		let wolo = regress(numsigma, numoutputs)
@@ -740,7 +757,7 @@ function auto_fill(){
 		let max_col_height = _.max(col_ids.slice(0, i).map(k => 
 			_.max(_.flatten(cols[k].map(e => +e.split(',')[0])))))
 
-		if(cols[i].length >= max_col_height) continue;
+		if(max_col_height && cols[i].length >= max_col_height) continue;
 
 		// TODO: make sure most recently edited thing is part of the sample
 		// alternatively, don't sample and use everything... 
@@ -808,7 +825,11 @@ let handle_keydown = e=> {
 }
 
 function cleanup_autofill(){
-	var nonempty_columns = _.uniq(Object.keys(user_content).map(k => k.split(',')[1]))
+	var nonempty_columns = _.uniq(
+		Object.keys(user_content)
+		.filter(k => user_content[k])
+		.map(k => k.split(',')[1]));
+
 	_.difference(Object.keys(autofill_programs), nonempty_columns).forEach(col => {
 		delete autofill_programs[col]
 	})
@@ -965,8 +986,7 @@ document.addEventListener('dblclick', function(e){
 		start_typing()
 	} else if(defined(col_divider)) {
 		let max_width = default_col_width - cell_left_padding * 2
-
-		let max_row = _.max(Object.keys(user_content).map(k => +k.split(',')[0]));
+		let max_row = _.max(Object.keys(user_content).map(k => +k.split(',')[0]))
 		
 		for(var r = 0; r < max_row; r++){
 			let text = cell_text(r, col_divider)
@@ -976,22 +996,7 @@ document.addEventListener('dblclick', function(e){
 				max_width = Math.max(max_width, ctx.measureText(combined).width)
 			}
 		}
-
-		// max_width = Math.max(max_width, _.max(
-		// 	Object.keys(user_content)
-		// 	// _.union(Object.keys(user_content), Object.keys(autofill_content))
-		// 	.filter(k => k.split(',')[1] == col_divider)
-		// 	.map(k => {
-		// 		let [r, c] = k.split(',');
-		// 		let text = cell_text(r, c)
-		// 		let result = evaluate(text)
-		// 		return (text == result) ? text : (text + ' ' + result)
-		// 	})
-		// 	.filter(k => k.length > 1)
-		// 	.map(k => ctx.measureText(k).width)))
-		
 		col_widths[col_divider] = max_width + cell_left_padding * 2
-
 	} 
 
 	ctx.restore()
