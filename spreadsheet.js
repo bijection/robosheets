@@ -303,7 +303,7 @@ function evaluate(text){
 	if(text.trim().endsWith('=')){
 		
 		try {
-			var result = eval(text.trim().replace('=', ''))	
+			var result = eval(text.trim().replace(/=$/, ''))
 		} catch (err) { }
 		if(!defined(result)) result = 'ERROR';
 
