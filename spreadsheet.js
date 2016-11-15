@@ -205,7 +205,8 @@ function draw_vertical_lines_and_labels(){
 
 const cell_left_padding = 6
 const cell_bottom_padding = 14
-let suggestion_color = 'hsl(134, 50%, 50%)'
+let suggestion_color = '#08c773'//'hsl(134, 50%, 50%)'
+
 
 
 function draw_cell_text(row, col){
@@ -239,7 +240,7 @@ function draw_cell_text(row, col){
 
 	ctx.clearRect(x+1, y+1, text_width, height - 2)
 
-	let measured_text = ctx.measureText(text).width;
+	let measured_text = measure_text(text).width;
 
 	
 	function draw_normal_text(){
@@ -272,17 +273,36 @@ function draw_cell_text(row, col){
 		ctx.fillText(result, x + text_width - cell_left_padding, y + height / 2)
 	}
 
+	function draw_result_solo(){
+		ctx.textAlign = 'start'
+		ctx.fillStyle = (result === 'ERROR') ? 'red' : '#007fff'
+		ctx.fillText(result, x + cell_left_padding, y + height / 2)
+	}
+
 
 	var result = evaluate(text);
-	var result_width = ctx.measureText(result).width + cell_left_padding * 2
+	var result_width = measure_text(result).width + cell_left_padding * 2
 	
 
 	if(result != text){
-		draw_result()
-		if(result_width + measured_text < text_width){
-			draw_normal_text()
-		}else{
-			draw_offset_text()
+		let selected = c == selected_col //&& r == selected_row
+		
+		// let region = get_selection_region()		
+		// if(region){
+		// 	let [ssrow, sscol, serow, secol] = region
+		// 	selected = selected || ssrow <= r && r <= serow 
+		// 	        && sscol <= c && c <= secol
+		// }
+
+		if(selected || !drawing_suggestiong_text){
+			draw_result()
+			if(result_width + measured_text < text_width){
+				draw_normal_text()
+			}else{
+				draw_offset_text()
+			}			
+		} else {
+			draw_result_solo()
 		}
 	}else{
 		draw_normal_text()
@@ -323,12 +343,12 @@ function draw_cells_text(){
 function cell_text_display_width(r, c) {
 	ctx.font = content_font
 	let text = cell_text(r, c)
-	var desired_width = ctx.measureText(text).width + cell_left_padding;
+	var desired_width = measure_text(text).width + cell_left_padding;
 
 	let result = evaluate(text)
 	if(result != text){
 		text += result;
-		desired_width += ctx.measureText(result).width + cell_left_padding
+		desired_width += measure_text(result).width + cell_left_padding
 	}
 
 	let display_width = col_widths[c] || default_col_width
@@ -626,8 +646,8 @@ keygetter.addEventListener('blur', e=> {
 function sync_canvas_and_keygetter() {
 	ctx.save()
 	ctx.font = content_font
-	let desired_width = ctx.measureText(keygetter.value).width
-	keygetter.style.width = (ctx.measureText(keygetter.value).width + cell_left_padding + 2) / devicePixelRatio
+	let desired_width = measure_text(keygetter.value).width
+	keygetter.style.width = (measure_text(keygetter.value).width + cell_left_padding + 2) / devicePixelRatio
 	user_content[[selected_row, selected_col]] = keygetter.value
 	ctx.restore()
 }
@@ -635,15 +655,26 @@ function sync_canvas_and_keygetter() {
 
 keygetter.addEventListener('input', sync_canvas_and_keygetter)
 
-
+let program_cache = new WeakMap()
 function apply_program(program, sigma){
 	if(!program) return '';
+
+	if(!program_cache.has(program)) program_cache.set(program, new Map())
+	
+	let res = program_cache.get(program),
+		key = JSON.stringify(sigma)
+
+	if(res.has(key)) return res.get(key)
+
 	try {
-		return program.apply(sigma)
+
+		let val = program.apply(sigma)
+		res.set(key, val)
+
+		return val
 	} catch (err) {
 		return ''
 	}
-	
 }
 
 function get_sigma(row, col){
@@ -666,6 +697,7 @@ function cell_text(r, c){
 
 	return ''
 }
+
 
 
 function numerical_simple(numsigma, numoutputs){
@@ -724,11 +756,15 @@ function sample_program(examples){
 			numoutputs = outputs.map(k => +k),
 			numexamples = _.zip(numsigma, numoutputs)
 
-		var lp = numerical_simple(numsigma, numoutputs);
-		if(lp) return { apply: sigma => lp(input_to_vec(sigma)) + '' };
+		try{
+			var lp = numerical_simple(numsigma, numoutputs);
+			if(lp) return { apply: sigma => lp(input_to_vec(sigma)) + '' };				
+		} catch(e){}
 
-		let wolo = regress(numsigma, numoutputs)
-		if(wolo) return { apply: sigma => wolo(input_to_vec(sigma)) + '' };
+		try{
+			let wolo = regress(numsigma, numoutputs)
+			if(wolo) return { apply: sigma => wolo(input_to_vec(sigma)) + '' };
+		} catch(e){}
 	}
 
 	var pset = lazy_generate_intersect_multidags(inputs, outputs);
@@ -757,7 +793,7 @@ function auto_fill(){
 		let max_col_height = _.max(col_ids.slice(0, i).map(k => 
 			_.max(_.flatten(cols[k].map(e => +e.split(',')[0])))))
 
-		if(max_col_height && cols[i].length >= max_col_height) continue;
+		if(max_col_height && cols[col].length >= max_col_height) continue;
 
 		// TODO: make sure most recently edited thing is part of the sample
 		// alternatively, don't sample and use everything... 
@@ -993,7 +1029,7 @@ document.addEventListener('dblclick', function(e){
 			let result = evaluate(text)
 			let combined = (text == result) ? text : (text + ' ' + result);
 			if(combined.length > 1){
-				max_width = Math.max(max_width, ctx.measureText(combined).width)
+				max_width = Math.max(max_width, measure_text(combined).width)
 			}
 		}
 		col_widths[col_divider] = max_width + cell_left_padding * 2
@@ -1204,6 +1240,20 @@ function start_typing(){
 	sync_canvas_and_keygetter()
 }
 
+let measure_text_cache = {}
+function measure_text(text){
+	
+	if(! measure_text_cache[text]){
+		ctx.save()
+		ctx.font = content_font
+		measure_text_cache[text] = ctx.measureText(text)
+		ctx.restore()		
+	}
+
+	return measure_text_cache[text]
+
+}
+
 
 function defined(x){
 	return typeof x != 'undefined'
@@ -1215,7 +1265,7 @@ function defined(x){
 
 //     for (var i = 1; i < words.length; i++) {
 //         var word = words[i];
-//         var width = ctx.measureText(currentLine + " " + word).width;
+//         var width = measure_text(currentLine + " " + word).width;
 //         if (width < maxWidth) {
 //             currentLine += " " + word;
 //         } else {
