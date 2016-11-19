@@ -217,10 +217,10 @@
 			<div id='login'>Login</div>
 		</div>
 		<div id='tabs'>
-			<a href="spreadsheet.html?sheet1" target="spreadsheet" class='tab active'>Sheet 1</a>
-			<a href="spreadsheet.html?sheet2" target="spreadsheet" class='tab'>Sheet 2</a>
-			<a href="spreadsheet.html?sheet3" target="spreadsheet" class='tab'>Sheet 3</a>
-			<a href="spreadsheet.html?sheet4" target="spreadsheet" id='new-sheet' class='tab'>+ New Sheet</a>
+			<a onclick="loadSheet(this.dataset.sheet)" data-sheet="sheet1" class='tab active'>Sheet 1</a>
+			<a onclick="loadSheet(this.dataset.sheet)" data-sheet="sheet2" class='tab'>Sheet 2</a>
+			<a onclick="loadSheet(this.dataset.sheet)" data-sheet="sheet3" class='tab'>Sheet 3</a>
+			<a onclick="loadSheet(this.dataset.sheet)" data-sheet="sheet4" id='new-sheet' class='tab'>+ New Sheet</a>
 		</div>
 		<div id='buttons'>
 			<div class='button' id='import'>Import</div>
@@ -232,7 +232,7 @@
 			</div>
 		</div>
 	</div>
-	<iframe name='spreadsheet' id='spreadsheet' src="spreadsheet.html?sheet1" onload="updateTab(this)"></iframe>	
+	<iframe name='spreadsheet' id='spreadsheet' src="spreadsheet.html?sheet1"></iframe>	
 </div>
 
 <div id='modals'>
@@ -302,15 +302,23 @@
 </div>
 
 <script type="text/javascript">
-	function updateTab(){
+	function loadSheet(sheetName){
 		var tabs = document.querySelectorAll('#tabs a');
-		var sheetName = document.getElementById('spreadsheet').contentWindow.location.search.slice(1);
-
+		document.getElementById('spreadsheet').contentWindow.load(sheetName)
 		for(var i = 0; i < tabs.length; i++){
-			tabs[i].classList.toggle('active', tabs[i].href.replace(/^.*\?/, '') == sheetName)
-			
+			tabs[i].classList.toggle('active', tabs[i].dataset.sheet == sheetName)
 		}
 	}
+
+	// function updateTab(){
+	// 	var tabs = document.querySelectorAll('#tabs a');
+	// 	var sheetName = document.getElementById('spreadsheet').contentWindow.location.search.slice(1);
+
+	// 	for(var i = 0; i < tabs.length; i++){
+	// 		tabs[i].classList.toggle('active', tabs[i].href.replace(/^.*\?/, '') == sheetName)
+			
+	// 	}
+	// }
 	let focussheet = e => document.getElementById('spreadsheet').contentWindow.focus()
 	window.addEventListener("load", focussheet)
 	// chrome.addEventListener('click', focussheet)

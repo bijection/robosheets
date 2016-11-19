@@ -30,7 +30,6 @@ let user_content = {}
 // let autofill_content = {}
 var autofill_programs = {}
 var loading_programs = {}
-let autofilled_content = {}
 
 let hovered_col_divider
 let hovered_row_divider
@@ -38,123 +37,7 @@ let hovered_row_divider
 let mouse_x
 let mouse_y
 
-
-var sheetName = location.search.slice(1) || 'sheet1';
-
-try{
-	user_content = JSON.parse(localStorage[sheetName])
-} catch(e) {
-let data = `Elsie	Graham	2/6/1986
-Troy	Osborne	6/25/1967
-Jared	King	2/14/1985
-Evan	Cummings	8/10/1972
-Daisy	Cobb	6/9/1976
-Nora	Baldwin	4/28/1996
-Esther	Bailey	8/20/1958
-Christina	Aguilar	8/9/1980
-Gordon	Burns	5/6/1956
-Gary	Schneider	3/30/1987
-Randall	Burton	5/29/1972
-Cordelia	Vasquez	4/24/1982
-Verna	Walsh	10/21/1987
-Isabella	Parks	10/31/1985
-Eliza	Kelly	11/14/1984
-Lou	Luna	5/5/1955
-Louis	Poole	4/11/1964
-Terry	Perkins	3/17/1956
-Leonard	Russell	5/5/1996
-Elijah	Colon	3/27/1958
-Leo	McKinney	1/29/1997
-Tom	Rivera	9/23/1984
-Hettie	Ferguson	3/28/1984
-Sallie	Wheeler	6/13/1997
-Francis	Duncan	11/1/1972
-Myrtle	Francis	8/22/1965
-Mason	Franklin	4/28/1974
-Jeffrey	Thornton	3/1/1966
-Melvin	Castillo	12/10/1952
-Pauline	Maxwell	6/18/1996
-Jerome	Holt	8/3/1981
-Ellen	Romero	7/28/1995
-Lydia	Gordon	8/29/1963
-Lois	Brooks	10/18/1997
-Edward	Francis	6/23/1973
-Nelle	Pena	3/13/1965
-Edward	Welch	7/15/1970
-Helen	Simon	12/25/1976
-Marc	Love	2/18/1973
-Vera	Martinez	7/13/1996
-Eric	Wise	4/2/1990
-Winnie	Williamson	9/26/1990
-Adam	Reynolds	9/26/1954
-Alberta	Carter	5/9/1972
-Barry	Flores	12/28/1968
-Mathilda	Price	8/3/1995
-May	Maxwell	7/20/1980
-Jay	Frazier	6/2/1991
-Christian	Hardy	7/18/1994
-Ronnie	Terry	4/8/1965
-Teresa	Price	12/13/1953
-Olive	Matthews	9/13/1965
-Harold	Salazar	1/18/1967
-Connor	Brock	10/3/1963
-Kathryn	Lane	10/12/1988
-Katharine	Schneider	12/4/1995
-Emilie	Burgess	5/26/1991
-Lucile	Walker	4/21/1989
-Lewis	Lynch	3/20/1952
-Cornelia	Stephens	10/20/1988
-Jeremy	Owens	10/18/1974
-Eva	Smith	3/17/1987
-Jeremy	Harmon	9/27/1985
-William	Clarke	12/23/1994
-Frederick	Collins	6/23/1967
-Donald	Moore	2/15/1970
-Todd	Alvarado	8/31/1986
-Randy	Baldwin	9/11/1989
-Elijah	Hunt	5/5/1982
-Hattie	Fleming	5/2/1952
-Blake	Bennett	8/11/1970
-Myra	Simpson	11/4/1988
-Cynthia	Lowe	5/27/1971
-Ivan	Gonzalez	2/8/1986
-Rosetta	Carson	8/22/1960
-Tillie	Wilkerson	5/11/1993
-Luella	Alvarado	10/18/1952
-Louis	Hines	7/26/1958
-Roy	Fields	9/4/1983
-Lee	Walker	7/24/1987
-Bess	Fuller	8/14/1991
-Edna	Shaw	12/6/1993
-Connor	Soto	5/23/1957
-Phoebe	Alvarez	8/4/1952
-Katie	Perkins	5/28/1978
-Teresa	Martin	12/8/1968
-Benjamin	Welch	12/11/1974
-Micheal	Lynch	1/24/1994
-Mollie	Floyd	7/25/1971
-Sylvia	Caldwell	8/28/1975
-Wayne	Cortez	5/24/1997
-Jacob	Stokes	11/19/1983
-Elizabeth	Moran	1/25/1981
-Nettie	Bryant	3/14/1954
-Jean	Pope	7/28/1954
-Lena	Berry	7/30/1969
-Dale	Curtis	9/25/1964
-Rhoda	Floyd	10/23/1991
-Dale	Frank	11/23/1993
-Cody	Little	5/21/1954`
-	let row = selected_row
-	data.split('\n').forEach(line => {
-		let col = selected_col
-		let entries = line.split('\t');
-		entries.forEach(entry => {
-			user_content[[row, col]] = entry
-			col++
-		})
-		row++
-	})
-}
+let sheetName
 
 keygetter.style.display = 'none';
 
@@ -165,26 +48,26 @@ worker.onmessage = function({data}){
 
 	console.log('got', col)
 
-	function hydrate(frag){
-
-		if(!defined(frag)) return;
-
-		if(!frag.type) return frag
-
-		let greg = new language[frag.type]()
-
-		Object.keys(frag).forEach(key => {
-			if(Array.isArray(frag[key])) greg[key] = frag[key].map(hydrate)
-			else greg[key] = hydrate(frag[key])
-		})
-
-		return greg
-	}
-
 	autofill_programs[col] = hydrate(program)
 	delete loading_programs[col]
 }
 
+
+function hydrate(frag){
+
+	if(!defined(frag)) return;
+
+	if(!frag.type) return frag
+
+	let greg = new language[frag.type]()
+
+	Object.keys(frag).forEach(key => {
+		if(Array.isArray(frag[key])) greg[key] = frag[key].map(hydrate)
+		else greg[key] = hydrate(frag[key])
+	})
+
+	return greg
+}
 
 function render() {
 	canvas.width = innerWidth * devicePixelRatio
@@ -207,7 +90,7 @@ function render() {
 	draw_selected_cell()
 	draw_selection_region()
 
-	if(Math.random() < 1/60) localStorage[sheetName] = JSON.stringify(user_content)
+	if(Math.random() < 1/60) save()
 
 	// ctx.fillStyle = 'rgba(0,0,0,.1)'
 	// if(row > 0) ctx.fillRect(left_margin, top_margin, canvas.width, 10);
@@ -217,7 +100,160 @@ function render() {
 
 
 
+function save(){
+	localStorage[sheetName] = JSON.stringify({
+		user_content,
+		row,
+		col,
+		col_widths,
+		row_heights,
+		selected_row,
+		selected_col,
+		selected_end_row,
+		selected_end_col,
+		autofill_programs,
+	})
+}
 
+
+function load(sn){
+
+	sheetName = sn
+
+	if(!localStorage[sheetName]) return; //loadfake();
+
+	({
+		user_content,
+		row,
+		col,
+		col_widths,
+		row_heights,
+		selected_row,
+		selected_col,
+		selected_end_row,
+		selected_end_col,
+		autofill_programs,
+	} = JSON.parse(localStorage[sheetName]))
+
+	Object.keys(autofill_programs).forEach(key => {
+		autofill_programs[key] = hydrate(autofill_programs[key])
+	})
+	loading_programs = {}
+}
+
+
+function loadfake(){
+	let data = `Elsie	Graham	2/6/1986
+	Troy	Osborne	6/25/1967
+	Jared	King	2/14/1985
+	Evan	Cummings	8/10/1972
+	Daisy	Cobb	6/9/1976
+	Nora	Baldwin	4/28/1996
+	Esther	Bailey	8/20/1958
+	Christina	Aguilar	8/9/1980
+	Gordon	Burns	5/6/1956
+	Gary	Schneider	3/30/1987
+	Randall	Burton	5/29/1972
+	Cordelia	Vasquez	4/24/1982
+	Verna	Walsh	10/21/1987
+	Isabella	Parks	10/31/1985
+	Eliza	Kelly	11/14/1984
+	Lou	Luna	5/5/1955
+	Louis	Poole	4/11/1964
+	Terry	Perkins	3/17/1956
+	Leonard	Russell	5/5/1996
+	Elijah	Colon	3/27/1958
+	Leo	McKinney	1/29/1997
+	Tom	Rivera	9/23/1984
+	Hettie	Ferguson	3/28/1984
+	Sallie	Wheeler	6/13/1997
+	Francis	Duncan	11/1/1972
+	Myrtle	Francis	8/22/1965
+	Mason	Franklin	4/28/1974
+	Jeffrey	Thornton	3/1/1966
+	Melvin	Castillo	12/10/1952
+	Pauline	Maxwell	6/18/1996
+	Jerome	Holt	8/3/1981
+	Ellen	Romero	7/28/1995
+	Lydia	Gordon	8/29/1963
+	Lois	Brooks	10/18/1997
+	Edward	Francis	6/23/1973
+	Nelle	Pena	3/13/1965
+	Edward	Welch	7/15/1970
+	Helen	Simon	12/25/1976
+	Marc	Love	2/18/1973
+	Vera	Martinez	7/13/1996
+	Eric	Wise	4/2/1990
+	Winnie	Williamson	9/26/1990
+	Adam	Reynolds	9/26/1954
+	Alberta	Carter	5/9/1972
+	Barry	Flores	12/28/1968
+	Mathilda	Price	8/3/1995
+	May	Maxwell	7/20/1980
+	Jay	Frazier	6/2/1991
+	Christian	Hardy	7/18/1994
+	Ronnie	Terry	4/8/1965
+	Teresa	Price	12/13/1953
+	Olive	Matthews	9/13/1965
+	Harold	Salazar	1/18/1967
+	Connor	Brock	10/3/1963
+	Kathryn	Lane	10/12/1988
+	Katharine	Schneider	12/4/1995
+	Emilie	Burgess	5/26/1991
+	Lucile	Walker	4/21/1989
+	Lewis	Lynch	3/20/1952
+	Cornelia	Stephens	10/20/1988
+	Jeremy	Owens	10/18/1974
+	Eva	Smith	3/17/1987
+	Jeremy	Harmon	9/27/1985
+	William	Clarke	12/23/1994
+	Frederick	Collins	6/23/1967
+	Donald	Moore	2/15/1970
+	Todd	Alvarado	8/31/1986
+	Randy	Baldwin	9/11/1989
+	Elijah	Hunt	5/5/1982
+	Hattie	Fleming	5/2/1952
+	Blake	Bennett	8/11/1970
+	Myra	Simpson	11/4/1988
+	Cynthia	Lowe	5/27/1971
+	Ivan	Gonzalez	2/8/1986
+	Rosetta	Carson	8/22/1960
+	Tillie	Wilkerson	5/11/1993
+	Luella	Alvarado	10/18/1952
+	Louis	Hines	7/26/1958
+	Roy	Fields	9/4/1983
+	Lee	Walker	7/24/1987
+	Bess	Fuller	8/14/1991
+	Edna	Shaw	12/6/1993
+	Connor	Soto	5/23/1957
+	Phoebe	Alvarez	8/4/1952
+	Katie	Perkins	5/28/1978
+	Teresa	Martin	12/8/1968
+	Benjamin	Welch	12/11/1974
+	Micheal	Lynch	1/24/1994
+	Mollie	Floyd	7/25/1971
+	Sylvia	Caldwell	8/28/1975
+	Wayne	Cortez	5/24/1997
+	Jacob	Stokes	11/19/1983
+	Elizabeth	Moran	1/25/1981
+	Nettie	Bryant	3/14/1954
+	Jean	Pope	7/28/1954
+	Lena	Berry	7/30/1969
+	Dale	Curtis	9/25/1964
+	Rhoda	Floyd	10/23/1991
+	Dale	Frank	11/23/1993
+	Cody	Little	5/21/1954`
+	let row = 0
+	data.split('\n').forEach(line => {
+		let col = 0
+		let entries = line.split('\t');
+		entries.forEach(entry => {
+			user_content[[row, col]] = entry
+			col++
+		})
+		row++
+	})
+}
 
 
 function draw_label_backgrounds(){
@@ -1434,4 +1470,5 @@ let tick = () => {
 }
 requestAnimationFrame(tick)
 
+load('sheet1')
 auto_fill()
