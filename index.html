@@ -36,6 +36,7 @@
 		padding: 5px 10px;
 	    border-radius: 3px;
 	    margin-right: 10px;
+	    cursor: pointer;
 	}
 	#import, #export{
 	    background: linear-gradient(#f9f9f9,#d2d2d2);
@@ -61,6 +62,8 @@
 		border: 1px solid #ddd;
 		border-bottom: 0;
 		margin-bottom: -1px;
+		cursor: pointer;
+		text-decoration: none;
 	}
 	.tab.active {
 		background: #f7f7f7;
@@ -214,10 +217,10 @@
 			<div id='login'>Login</div>
 		</div>
 		<div id='tabs'>
-			<div class='tab active'>Sheet 1</div>
-			<div class='tab'>Sheet 2</div>
-			<div class='tab'>Sheet 3</div>
-			<div id='new-sheet' class='tab'>+ New Sheet</div>
+			<a href="spreadsheet.html?sheet1" target="spreadsheet" class='tab active'>Sheet 1</a>
+			<a href="spreadsheet.html?sheet2" target="spreadsheet" class='tab'>Sheet 2</a>
+			<a href="spreadsheet.html?sheet3" target="spreadsheet" class='tab'>Sheet 3</a>
+			<a href="spreadsheet.html?sheet4" target="spreadsheet" id='new-sheet' class='tab'>+ New Sheet</a>
 		</div>
 		<div id='buttons'>
 			<div class='button' id='import'>Import</div>
@@ -229,7 +232,7 @@
 			</div>
 		</div>
 	</div>
-	<iframe id='spreadsheet' src="spreadsheet.html"></iframe>	
+	<iframe name='spreadsheet' id='spreadsheet' src="spreadsheet.html?sheet1" onload="updateTab(this)"></iframe>	
 </div>
 
 <div id='modals'>
@@ -299,7 +302,16 @@
 </div>
 
 <script type="text/javascript">
-	let focussheet = e => spreadsheet.contentWindow.focus()
+	function updateTab(){
+		var tabs = document.querySelectorAll('#tabs a');
+		var sheetName = document.getElementById('spreadsheet').contentWindow.location.search.slice(1);
+
+		for(var i = 0; i < tabs.length; i++){
+			tabs[i].classList.toggle('active', tabs[i].href.replace(/^.*\?/, '') == sheetName)
+			
+		}
+	}
+	let focussheet = e => document.getElementById('spreadsheet').contentWindow.focus()
 	window.addEventListener("load", focussheet)
 	// chrome.addEventListener('click', focussheet)
 	window.CRISP_READY_TRIGGER = function() {
