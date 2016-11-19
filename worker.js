@@ -7,7 +7,7 @@ importScripts(
 	'generate.js',
 	'transformations.js',
 	'experiments/minimize.js',
-	'experiments/numfill.js',
+	'experiments/numfill.js'//,
 	// 'experiments/proxy.js'
 )
 
