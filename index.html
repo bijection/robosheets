@@ -79,6 +79,129 @@
 	    background: #1cd081;
 		color: #fff;
 	}
+	#nag {
+	    display: flex;
+	    position: absolute;
+	    align-items: center;
+	    right: 10px;
+	}
+	#pricing, #login {
+		padding: 10px;
+		cursor: pointer;
+	}
+	#modals {
+		position: absolute;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		display: none;
+		justify-content: space-around;
+		align-items: center;
+		background: rgba(0,0,0,.6)
+	}
+	#pricing-modal-plans {
+		/*background: #fff;*/
+		/*border-radius: 10px;*/
+		/*box-shadow: 0 2px 50px rgba(0,0,0,.2);*/
+		/*padding: 10px 10px;*/
+		display: flex;
+		justify-content: space-around;
+		align-items: flex-end;
+	}
+	.plan {
+		/*width: 200px;*/
+		/*height: 500px;*/
+		background: #fff;
+		box-shadow: 0 1px 10px rgba(0,0,0,.2);
+		/*border: 1px solid #eee;*/
+		border-radius: 3px;
+		text-align: center;
+		margin: 10px;
+		color: #fff;
+		overflow: hidden;
+		/*padding: 10px;*/
+	}
+	.plan-name {
+	    margin: 0;
+	    /* background: red; */
+	    font-size: 30px;
+	    font-weight: bold;
+	    padding: 15px;
+	    background: rgba(0, 0, 0, 0.06);
+	}
+	.plan-desc {
+		text-align: left;
+		position: relative;
+		padding: 10px 0;
+	}
+	.plan-desc-item {
+		margin: 0 20px;	
+		line-height: 30px;
+	}
+/*	.plan-desc-item::before {
+		content: '•';
+		left: 0;
+		text-align: center;
+		width: 20px;
+		position: absolute;
+	}
+*/	.plan-price {
+	    font-size: 30px;
+	    /* margin: 10px; */
+	    padding: 20px;
+	    background: rgba(0, 0, 0, 0.73);
+	    color: #fff;
+	    /* box-shadow: 0 1px 10px rgba(0,0,0,.2); */
+	    /* border-radius: 3px; */
+	    cursor: pointer;
+	}
+	#basic {
+		background: #7caafb
+	}
+	#advanced {
+		background: #48f
+	}
+	#enterprise {
+		background: #2053ad
+	}
+	#pricing-modal-plan-free {
+		text-align: center;
+		margin: 20px 0;
+		color: rgba(255, 255, 255, 0.41);
+	}
+	#pricing-intro {
+		margin-bottom: 20px;
+		color: rgba(255, 255, 255, 0.8);
+		background: rgba(0,0,0,.1);
+		padding: 20px;
+		border-radius: 3px;
+		text-align: center;
+	}
+	#pricing-title {
+		color: #fff;
+		font-size: 50px;
+		margin-bottom: 20px;
+		text-align: center;
+	}
+	#sign-up {
+		color: #fff;
+		text-shadow: 0 1px 4px #000;
+		font-weight: bold;
+	}
+	.mo {
+		font-size: 60%;
+		display: inline-block;
+		opacity: .6;
+		margin-left: 2px;
+		/*width: 0;*/
+	}
+	.plan-name-sub {
+	    font-size: initial;
+	    font-weight: initial;
+	    /* margin-top: 10px; */
+	    color: rgba(255, 255, 255, 0.6);
+	    margin-bottom: -10px;
+	}
 /*	.crisp-59 > .crisp-60 > .crisp-116 {
 	    display: none !important;
 	}
@@ -86,6 +209,10 @@
 </style>
 <div id='app'>
 	<div id='chrome'>
+		<div id='nag'>
+			<div id='pricing'>Pricing</div>
+			<div id='login'>Login</div>
+		</div>
 		<div id='tabs'>
 			<div class='tab active'>Sheet 1</div>
 			<div class='tab'>Sheet 2</div>
@@ -100,11 +227,77 @@
 			<div id='instructions-wrap'>
 				<div class="button" id='instructions'>Instructions</div>
 			</div>
-			
 		</div>
 	</div>
 	<iframe id='spreadsheet' src="spreadsheet.html"></iframe>	
 </div>
+
+<div id='modals'>
+	<div id='pricing-modal'>
+		<div id='pricing-title'>Pricing</div>
+		<div id='pricing-intro'>
+			<!-- <div>We're glad you like robosheets!</div> -->
+			<div id='sign-up'>Sign up to export your work!</div>
+
+		</div>
+		<div id='pricing-modal-plans'>
+			<!--<div class='plan'>
+				<div class='plan-name'>Free :)</div>
+				<div class='plan-price'>$0</div>
+				<div class='plan-desc'>
+					<div class='plan-desc-item'>Exactly what you already have</div>
+				</div>
+			</div>-->
+			<div class='plan' id='basic'>
+				<div class='plan-name'>
+					Prole
+					<div class='plan-name-sub'>Individual Seat</div>
+				</div>
+					<!-- <div class='plan-desc-item'></div> -->
+				<div class="plan-desc">
+					<div class='plan-desc-item'>Paste into other spreadsheets</div>
+					<div class='plan-desc-item'>Up to <b>3</b> sheets at a time</div>
+					<div class='plan-desc-item'>Up to <b>1000</b> rows per sheet</div>
+				</div>	
+				<div class='plan-price'>$5<span class='mo'>/mo</span>
+				</div>
+			</div>
+			<div class='plan' id='advanced'>
+				<div class='plan-name'>
+					Party Member
+					<div class='plan-name-sub'>Individual Seat</div>
+				</div>
+				<div class="plan-desc">
+					<div class='plan-desc-item'>Paste into other spreadsheets</div>
+					<div class='plan-desc-item'>Up to <b>5</b> sheets at a time</div>
+					<div class='plan-desc-item'>Up to <b>1000</b> rows per sheet</div>
+					<div class='plan-desc-item'>Up to <b>200</b> columns per sheet</div>
+				</div>
+				<div class='plan-price'>$15<span class='mo'>/mo</span>
+				</div>
+				
+			</div>
+			<div class='plan' id='enterprise'>
+				<div class='plan-name'>
+					Big Brother
+					<div class='plan-name-sub'>Unlimited Seats</div>
+				</div>
+				<div class="plan-desc">
+					<div class='plan-desc-item'>Paste into other spreadsheets</div>
+					<div class='plan-desc-item'><b>Unlimited</b> sheets</div>
+					<div class='plan-desc-item'><b>Unlimited</b> rows per sheet</div>
+					<div class='plan-desc-item'><b>Unlimited</b> columns per sheet</div>
+					<div class='plan-desc-item'>Custom Subdomain</div>
+				</div>
+				<div class='plan-price'>Contact Us!</div>
+			</div>
+		</div>
+		<div id='pricing-modal-plan-free'>
+			Or keep using the free plan
+		</div>
+	</div>
+</div>
+
 <script type="text/javascript">
 	let focussheet = e => spreadsheet.contentWindow.focus()
 	window.addEventListener("load", focussheet)
@@ -112,6 +305,16 @@
 	window.CRISP_READY_TRIGGER = function() {
 		$crisp.on("chat:closed", focussheet)
 	};
+	document.getElementById('pricing').addEventListener('click', () => {
+		document.getElementById('app').style.filter = 'blur(5px)';
+		document.getElementById('modals').style.display = 'flex';
+		function hidemodals(){
+			document.getElementById('app').style.filter = '';
+			document.getElementById('modals').style.display = 'none';
+			document.getElementById('modals').removeEventListener('click', hidemodals)
+		}
+		document.getElementById('modals').addEventListener('click', hidemodals)
+	})
 </script>
 <script type="text/javascript">CRISP_WEBSITE_ID = "711dddb2-aba7-4f43-ae55-1d4643bb3c7a";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.im/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();
 </script>

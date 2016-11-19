@@ -238,7 +238,7 @@ function generate_substring(sigma, s){
                 for(var k = 0; k < indices.length; k++){
                     var y1 = get_set(indices[k][0]),
                         y2 = get_set(indices[k][0] + indices[k][1]);
-                    result.push(new ExtdSubStrSet(new SubStrSet(i, y1, y2), t.transform))
+                    result.push(new ExtdSubStrSet(new SubStrSet(i, y1, y2), t.type))
                 }
             }
         })
@@ -514,7 +514,7 @@ function lazy_generate_intersect_multidags(inputs, outputs){
 
 function intersect_extdsubstrsets(s1, s2){
     let int = intersect_substrsets(s1.substrset, s2.substrset)
-    if(int && s1.f.type == s2.f.type) return new ExtdSubStrSet(int, s1.f)
+    if(int && s1.f == s2.f) return new ExtdSubStrSet(int, s1.f)
 }
 
 

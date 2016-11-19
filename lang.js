@@ -1,6 +1,7 @@
 // Switch((b1, e1), ⋅⋅, (b𝑛, e𝑛))
 class Switch {
     constructor(...clauses){
+        this.type = 'Switch'
         // assert isinstance(clauses, tuple)
         this.clauses = clauses
     }
@@ -24,6 +25,7 @@ class Switch {
 // Bool b := d1 ∨ ⋅ ⋅ ∨ d𝑛
 class Or {
     constructor(...d){
+        this.type = 'Or'
         this.d = d
     }
 
@@ -39,6 +41,7 @@ class Or {
 // Conjunct d := 𝜋1 ∧⋅⋅∧𝜋𝑛
 class And {
     constructor(...p){
+        this.type = 'And'
         this.p = p
     }
 
@@ -53,6 +56,7 @@ class And {
 
 class Not {
     constructor(m){
+        this.type = 'Not'
         // assert instanceof(m, Match)
         this.m = m     
     }
@@ -74,6 +78,7 @@ class Not {
 
 class Match {
     constructor(vi, r, k = 1){
+        this.type = 'Match'
         // assert isinstance(vi, int)
         // assert isinstance(k, int)
 
@@ -103,6 +108,7 @@ class Match {
 // [Concatenate(f1, ⋅⋅ fn)] = Concatenate([f1] 𝜎, ⋅⋅, [f𝑛] 𝜎)
 class Concatenate {
     constructor(...exprs){
+        this.type = 'Concatenate'
         // assert isinstance(exprs, tuple)
         this.exprs = exprs
     }
@@ -124,6 +130,7 @@ class Concatenate {
 
 class Loop {
     constructor(w, fn){
+        this.type = 'Loop'
         this.w = w
         this.fn = fn
     }
@@ -152,6 +159,7 @@ function LoopR(w, fn, k, sigma, bindings){
 
 class BoundVar {
     constructor(w, k1 = 1, k2 = 0){
+        this.type = 'BoundVar'
         this.w = w
         this.k1 = k1
         this.k2 = k2
@@ -178,6 +186,7 @@ class BoundVar {
 
 class SubStr {
     constructor(vi, p1, p2){
+        this.type = 'SubStr'
         // assert isinstance(vi, int)
         // assert isinstance(p1, (Pos, CPos))
         // assert isinstance(p2, (Pos, CPos))
@@ -201,12 +210,13 @@ class SubStr {
 
 class ExtdSubStr {
     constructor(substring, f){
+        this.type = 'ExtdSubStr'
         this.substring = substring
         this.f = f
     }
 
     apply(sigma, bindings){
-        return this.f(this.substring.apply(sigma, bindings))
+        return NamedTransformations[this.f].transform(this.substring.apply(sigma, bindings))
     }
 
     toString(){
@@ -228,6 +238,7 @@ function SubStr2(vi, r, c){
 
 class ConstStr {
     constructor(s){
+        this.type = 'ConstStr'
         // assert isinstance(s, str)
 
         this.s = s
@@ -251,6 +262,7 @@ class ConstStr {
 
 class CPos {
     constructor(k){
+        this.type = 'CPos'
         // assert isinstance(k, int)
 
         this.k = k
@@ -282,6 +294,7 @@ class CPos {
 
 class Pos {
     constructor(r1, r2, c){
+        this.type = 'Pos'
         // regular expressions
         this.r1 = r1
         this.r2 = r2
@@ -308,3 +321,18 @@ class Pos {
     }
 }
 
+let language = {
+    Switch,
+    Or,
+    And,
+    Not,
+    Match,
+    Concatenate,
+    Loop,
+    BoundVar,
+    SubStr,
+    ExtdSubStr,
+    ConstStr,
+    CPos,
+    Pos,
+}

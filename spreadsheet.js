@@ -29,6 +29,8 @@ let selected_end_col;
 let user_content = {}
 // let autofill_content = {}
 var autofill_programs = {}
+var loading_programs = {}
+let autofilled_content = {}
 
 let hovered_col_divider
 let hovered_row_divider
@@ -42,6 +44,33 @@ try{
 } catch(e) {}
 
 keygetter.style.display = 'none';
+
+let worker = new Worker('worker.js')
+
+worker.onmessage = function({data}){
+	let {program, col} = data
+
+	console.log('got', col)
+
+	function hydrate(frag){
+
+		if(!defined(frag)) return;
+
+		if(!frag.type) return frag
+
+		let greg = new language[frag.type]()
+
+		Object.keys(frag).forEach(key => {
+			if(Array.isArray(frag[key])) greg[key] = frag[key].map(hydrate)
+			else greg[key] = hydrate(frag[key])
+		})
+
+		return greg
+	}
+
+	autofill_programs[col] = hydrate(program)
+	delete loading_programs[col]
+}
 
 
 function render() {
@@ -221,13 +250,13 @@ function draw_cell_text(row, col){
 	let [r, y, height] = row
 	let [c, x, width] = col
 
-	let drawing_suggestiong_text = false
+	let drawing_suggestion_text = false
 	// let text = user_content[[r, c]]//|| [r, c].toString()
 	let text = cell_text(r, c)
 
 	if(!user_content[[r, c]]){
 		// text = autofill_content[[r,c]]
-		drawing_suggestiong_text = true
+		drawing_suggestion_text = true
 	}
 	
 	if(!text) return;
@@ -246,14 +275,14 @@ function draw_cell_text(row, col){
 	function draw_normal_text(){
 		let cropped_text = text.slice(0, 5 + text.length * text_width / measured_text)
 		ctx.textAlign = 'start'
-		ctx.fillStyle = drawing_suggestiong_text ? suggestion_color : '#222'
+		ctx.fillStyle = drawing_suggestion_text ? suggestion_color : '#222'
 		ctx.fillText(cropped_text, x + cell_left_padding, y + height/2 )
 	}
 
 	function draw_offset_text(){
 		let cropped_text = text.slice(-Math.floor(text.length * (text_width - result_width) / measured_text))
 		ctx.textAlign = 'end'
-		ctx.fillStyle = drawing_suggestiong_text ? suggestion_color : '#222'
+		ctx.fillStyle = drawing_suggestion_text ? suggestion_color : '#222'
 
 
 		var gradient = ctx.createLinearGradient(x,0,x+30,0);
@@ -294,7 +323,8 @@ function draw_cell_text(row, col){
 		// 	        && sscol <= c && c <= secol
 		// }
 
-		if(selected || !drawing_suggestiong_text){
+
+		if(selected || !drawing_suggestion_text){
 			draw_result()
 			if(result_width + measured_text < text_width){
 				draw_normal_text()
@@ -304,7 +334,21 @@ function draw_cell_text(row, col){
 		} else {
 			draw_result_solo()
 		}
-	}else{
+	}else if(loading_programs[c] && drawing_suggestion_text){
+		
+		// console.log('asdf')
+
+		const now = (Date.now() / 100) % (Math.PI * 2)
+
+		ctx.save()
+		ctx.beginPath()
+		ctx.lineWidth = 4
+		ctx.strokeStyle = '#48f'
+		ctx.arc(x + width / 2, y + height / 2, 10, now, now + Math.PI*2* 3/4)
+		ctx.stroke()
+		ctx.restore()
+
+	} else {
 		draw_normal_text()
 	}
 	
@@ -690,7 +734,7 @@ function cell_text(r, c){
 		return user_content[[r, c]];
 	}
 	
-	if(autofill_programs[c]){
+	if(autofill_programs[c]) {
 		let program = autofill_programs[c];
 		return apply_program(program, get_sigma(r, c))
 	}
@@ -808,21 +852,25 @@ function auto_fill(){
 		// if the previously cached program still works, use that
 		// and don't do the expensive recomputation
 
-		let cached_program = autofill_programs[col]
-		if(cached_program){
-			if(_.every(examples.map(([sigma, out]) => 
-				apply_program(cached_program, sigma) == out))){
-				continue
-			}
-		}
+		worker.postMessage({examples, col})
+		console.log('filling', col)
+		loading_programs[col] = true
 
-		// intersect_programs
-		let program = sample_program(examples);
-		if(program){
-			autofill_programs[col] = program;
-		}else{
-			delete autofill_programs[col]
-		}
+		// let cached_program = autofill_programs[col]
+		// if(cached_program){
+		// 	if(_.every(examples.map(([sigma, out]) => 
+		// 		apply_program(cached_program, sigma) == out))){
+		// 		continue
+		// 	}
+		// }
+
+		// // intersect_programs
+		// let program = sample_program(examples);
+		// if(program){
+		// 	autofill_programs[col] = program;
+		// }else{
+		// 	delete autofill_programs[col]
+		// }
 
 	}
 }
