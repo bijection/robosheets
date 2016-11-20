@@ -100,7 +100,7 @@
 		display: none;
 		justify-content: space-around;
 		align-items: center;
-		background: rgba(0,0,0,.6)
+		background: rgba(0,0,0,.5)
 	}
 	#pricing-modal-plans {
 		/*background: #fff;*/
@@ -135,11 +135,11 @@
 	.plan-desc {
 		text-align: left;
 		position: relative;
-		padding: 10px 0;
+		padding: 30px;
 	}
 	.plan-desc-item {
-		margin: 0 20px;	
-		line-height: 30px;
+		/*margin: 0 20px;	*/
+		line-height: 40px;
 	}
 /*	.plan-desc-item::before {
 		content: '•';
@@ -162,7 +162,8 @@
 		background: #7caafb
 	}
 	#advanced {
-		background: #48f
+		background: #48f;
+		border: 1px solid #ffb100;
 	}
 	#enterprise {
 		background: #2053ad
@@ -253,7 +254,7 @@
 			</div>-->
 			<div class='plan' id='basic'>
 				<div class='plan-name'>
-					Prole
+					Nano Bot
 					<div class='plan-name-sub'>Individual Seat</div>
 				</div>
 					<!-- <div class='plan-desc-item'></div> -->
@@ -266,8 +267,9 @@
 				</div>
 			</div>
 			<div class='plan' id='advanced'>
+				<!-- <div id='popular'>Most Popular</div> -->
 				<div class='plan-name'>
-					Party Member
+					Roomba
 					<div class='plan-name-sub'>Individual Seat</div>
 				</div>
 				<div class="plan-desc">
@@ -282,7 +284,7 @@
 			</div>
 			<div class='plan' id='enterprise'>
 				<div class='plan-name'>
-					Big Brother
+					Gundam
 					<div class='plan-name-sub'>Unlimited Seats</div>
 				</div>
 				<div class="plan-desc">
@@ -326,7 +328,7 @@
 		$crisp.on("chat:closed", focussheet)
 	};
 	document.getElementById('pricing').addEventListener('click', () => {
-		document.getElementById('app').style.filter = 'blur(5px)';
+		document.getElementById('app').style.filter = 'blur(10px)';
 		document.getElementById('modals').style.display = 'flex';
 		function hidemodals(){
 			document.getElementById('app').style.filter = '';
