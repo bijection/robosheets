@@ -16,6 +16,9 @@ const selection_color = '#48f'
 
 const content_font = default_row_height - 20 +'px Helvetica'
 
+let max_row = 50
+let max_col = 10
+
 let col_widths = {}
 let row_heights = {}
 
@@ -334,7 +337,7 @@ function draw_horizontal_lines_and_labels(){
 
 
 
-
+const colname = c => c.toString(26).split('').map(c => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'['0123456789abcdefghijklmnop'.indexOf(c)]).join('')
 
 
 function draw_vertical_lines_and_labels(){
@@ -355,9 +358,10 @@ function draw_vertical_lines_and_labels(){
 			ctx.fillRect(rendered_width, 0, width, top_margin)
 		}
 		ctx.fillStyle = '#222'
-		let letters = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase()
-		let b26 = '0123456789abcdefghijklmnop'
-		let text = col.toString(26).split('').map(c => letters[b26.indexOf(c)]).join('')
+		// let letters = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase()
+		// let b26 = '0123456789abcdefghijklmnop'
+		// let text = col.toString(26).split('').map(c => letters[b26.indexOf(c)]).join('')
+		let text = colname(col)
 		ctx.fillText(text, rendered_width + width / 2, top_margin / 2)
 
 		ctx.beginPath()
@@ -381,10 +385,9 @@ function draw_vertical_lines_and_labels(){
 
 
 
-const cell_left_padding = 6
+const cell_horizontal_padding = 6
 const cell_bottom_padding = 14
 let suggestion_color = '#08c773'//'hsl(134, 50%, 50%)'
-
 
 
 function draw_cell_text(row, col){
@@ -399,37 +402,64 @@ function draw_cell_text(row, col){
 	let [r, y, height] = row
 	let [c, x, width] = col
 
-	let drawing_suggestion_text = false
-	// let text = user_content[[r, c]]//|| [r, c].toString()
+	let drawing_suggestion_text = !user_content[[r, c]]
 	let text = cell_text(r, c)
-
-	if(!user_content[[r, c]]){
-		// text = autofill_content[[r,c]]
-		drawing_suggestion_text = true
-	}
 	
 	if(!text) return;
 
 	let editing_this_cell = is_typing() && selected_row == r && selected_col == c
 	let [edit_width, display_width] = cell_text_display_width(r, c)
-	let text_width = editing_this_cell
+	let cell_width = editing_this_cell
 		? edit_width
 		: display_width
 
-	ctx.clearRect(x+1, y+1, text_width, height - 2)
+	ctx.clearRect(x+1, y+1, cell_width, height - 2)
 
-	let measured_text = measure_text(text).width;
+	let text_width = measure_text(text).width;
 
+	let result = evaluate(text);
+	let drawing_result = result != text
+
+	let result_width = measure_text(result).width + cell_horizontal_padding * 2
+
+	let drawing_upgrade_text = !editable(r,c)
 	
 	function draw_normal_text(){
-		let cropped_text = text.slice(0, 5 + text.length * text_width / measured_text)
+		let cropped_text = text.slice(0, 5 + text.length * cell_width / text_width)
 		ctx.textAlign = 'start'
-		ctx.fillStyle = drawing_suggestion_text ? suggestion_color : '#222'
-		ctx.fillText(cropped_text, x + cell_left_padding, y + height/2 )
+		ctx.fillStyle = drawing_suggestion_text
+			? suggestion_color
+			: '#222'
+		ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height/2 )
 	}
 
-	function draw_offset_text(){
-		let cropped_text = text.slice(-Math.floor(text.length * (text_width - result_width) / measured_text))
+	function draw_upgrade_text(){
+		let cropped_text = text.slice(0, 5 + text.length * cell_width / text_width)
+		ctx.textAlign = 'start'
+		// let n = (1 - 1/Math.log((r*r + c*c)/100))
+		// ctx.fillStyle = 'rgba(0,0,0,'+n+')'
+		// if(Math.random() > .99) console.log(ctx.fillStyle, n)
+		ctx.fillStyle = '#eee'
+		ctx.fillRect(x+1, y+1, cell_width - 2, height - 2)
+		ctx.fillStyle =  '#ccc'
+
+		// let dr = r - max_row
+		// let dc = c - max_col
+
+		// let d = Math.min(Math.max(dr,dc)/20, 1)
+
+		// let wavex = cell_horizontal_padding * (Math.sin(Date.now() / 500 + r) ) * d
+		// let wavey = cell_horizontal_padding * (Math.cos(Date.now() / 500 + c) ) * d
+
+		ctx.fillText(
+			cropped_text, 
+			x + cell_horizontal_padding, //+ wavex,
+			y + height/2 //+ wavey
+		)
+	}
+
+	function draw_squished_text(){
+		let cropped_text = text.slice(-Math.floor(text.length * (cell_width - result_width) / text_width))
 		ctx.textAlign = 'end'
 		ctx.fillStyle = drawing_suggestion_text ? suggestion_color : '#222'
 
@@ -438,25 +468,22 @@ function draw_cell_text(row, col){
 		gradient.addColorStop(0.5,"rgba(255, 255, 255, 1)");
 		gradient.addColorStop(1,"rgba(255, 255, 255, 0)");
 
-		ctx.fillText(cropped_text, x+cell_left_padding + text_width - result_width, y + height/2 )
+		ctx.fillText(cropped_text, x+cell_horizontal_padding + cell_width - result_width, y + height/2 )
 
 		ctx.fillStyle = gradient
 		ctx.fillRect(x+1, y + 1, 30, height - 2);
 	}
 
 	function draw_result(){
-		// ctx.clearRect(x+1+text_width - result_width, y+1, result_width, height - 2)
+		// ctx.clearRect(x+1+cell_width - result_width, y+1, result_width, height - 2)
 		ctx.textAlign = 'end'
 		ctx.fillStyle = (result === 'ERROR') ? 'red' : '#007fff'
-		ctx.fillText(result, x + text_width - cell_left_padding, y + height / 2)
+		ctx.fillText(result, x + cell_width - cell_horizontal_padding, y + height / 2)
 	}
 
-	var result = evaluate(text);
-	var result_width = measure_text(result).width + cell_left_padding * 2
-	
 
-	if(result != text){
-		let selected = c == selected_col //&& r == selected_row
+	if(drawing_result){
+		// let selected = c == selected_col //&& r == selected_row
 		
 		// let region = get_selection_region()		
 		// if(region){
@@ -466,16 +493,15 @@ function draw_cell_text(row, col){
 		// }
 
 		draw_result()
-		if(result_width + measured_text < text_width){
+		if(result_width + text_width < cell_width){
 			draw_normal_text()
 		}else{
-			draw_offset_text()
-		}			
+			draw_squished_text()
+		}
 	
 	}else if(loading_programs[c] && drawing_suggestion_text){
 		
 		// console.log('asdf')
-
 		const now = (Date.now() / 100) % (Math.PI * 2)
 
 		ctx.save()
@@ -486,14 +512,16 @@ function draw_cell_text(row, col){
 		ctx.stroke()
 		ctx.restore()
 
+	} else if(drawing_upgrade_text){
+		draw_upgrade_text()
 	} else {
 		draw_normal_text()
 	}
 	
 
 	ctx.beginPath()
-	ctx.moveTo(x + text_width, y)
-	ctx.lineTo(x + text_width, y+height)
+	ctx.moveTo(x + cell_width, y)
+	ctx.lineTo(x + cell_width, y+height)
 	ctx.stroke()
 	
 	ctx.restore()
@@ -525,20 +553,20 @@ function draw_cells_text(){
 function cell_text_display_width(r, c) {
 	ctx.font = content_font
 	let text = cell_text(r, c)
-	var desired_width = measure_text(text).width + cell_left_padding;
+	var desired_width = measure_text(text).width + cell_horizontal_padding;
 
 	let result = evaluate(text)
 	if(result != text){
 		text += result;
-		desired_width += measure_text(result).width + cell_left_padding
+		desired_width += measure_text(result).width + cell_horizontal_padding
 	}
 
-	let display_width = col_widths[c] || default_col_width
+	let display_width = col_width(c)
 	let edit_width = display_width
 	let next_col = c + 1
 	let hit_filled_cell = false
 	while(edit_width < desired_width){
-		let next_col_width = col_widths[next_col] || default_col_width
+		let next_col_width = col_width(next_col)
 	
 		if(!cell_text(r, next_col) && !hit_filled_cell) display_width += next_col_width
 		else hit_filled_cell = true;
@@ -577,7 +605,7 @@ function draw_selected_cell(){
 	let [edit_width] = cell_text_display_width(selected_row, selected_col)
 	let width = is_typing()
 		? edit_width
-		: col_widths[selected_col] || default_col_width
+		: col_width(selected_col)
 
 	let height = row_heights[selected_row] || default_row_height
 	let [selected_x, selected_y] = cell_x_y(selected_row, selected_col)
@@ -689,9 +717,9 @@ canvas.addEventListener('wheel', e => {
 	scrollX += e.deltaX *x_speed
 	scrollY += e.deltaY *y_speed
 	
-	let width = col_widths[col] || default_col_width
+	let width = col_width(col)
 	let height = row_heights[row] || default_row_height
-	let prev_width = col_widths[col-1] || default_col_width
+	let prev_width = col_width(col - 1)
 	let prev_height = row_heights[row-1] || default_row_height
 	
 	while(scrollX > width){
@@ -726,7 +754,7 @@ document.addEventListener('paste', function(e){
 		data.split(/\r\n|\r|\n/).forEach(line => {
 			let col = selected_col
 			line.split('\t').forEach(entry => {
-				user_content[[row, col]] = entry
+				if(editable(row, col)) user_content[[row, col]] = entry
 				col++
 			})
 			row++
@@ -829,7 +857,7 @@ function sync_canvas_and_keygetter() {
 	ctx.save()
 	ctx.font = content_font
 	let desired_width = measure_text(keygetter.value).width
-	keygetter.style.width = (measure_text(keygetter.value).width + cell_left_padding + 2) / devicePixelRatio
+	keygetter.style.width = (measure_text(keygetter.value).width + cell_horizontal_padding + 2) / devicePixelRatio
 	user_content[[selected_row, selected_col]] = keygetter.value
 	ctx.restore()
 }
@@ -867,6 +895,12 @@ function get_sigma(row, col){
 }
 
 function cell_text(r, c){
+
+
+	let teaser = colname(c) + (r+1) + ': upgrade to unlock this cell! '
+	// let t = Math.floor(Date.now()/1000 * r * c ) % teaser.length
+
+	if(r >= max_row || c >= max_col) return teaser//teaser.slice(t) + teaser.slice(0, t)
 
 	if(user_content[[r, c]]){
 		return user_content[[r, c]];
@@ -1121,7 +1155,7 @@ canvas.addEventListener('mousedown', e => {
 
 	} else if(defined(clicked_col) && defined(col_divider)){
 
-		let start_col_width = col_widths[col_divider] || default_col_width
+		let start_col_width = col_width(col_divider)
 		hovered_col_divider = col_divider
 
 		function move(e){
@@ -1207,8 +1241,8 @@ document.addEventListener('dblclick', function(e){
 	if(defined(row) && defined(col) && !is_typing()){
 		start_typing()
 	} else if(defined(col_divider)) {
-		let max_width = default_col_width - cell_left_padding * 2
-		let max_row = _.max(Object.keys(user_content).map(k => +k.split(',')[0]))
+		let max_width = default_col_width - cell_horizontal_padding * 2
+		let max_row = Math.max(...Object.keys(user_content).map(k => +k.split(',')[0]), last_visible_row()[0])
 		
 		for(var r = 0; r < max_row; r++){
 			let text = cell_text(r, col_divider)
@@ -1218,7 +1252,7 @@ document.addEventListener('dblclick', function(e){
 				max_width = Math.max(max_width, measure_text(combined).width)
 			}
 		}
-		col_widths[col_divider] = max_width + cell_left_padding * 2
+		col_widths[col_divider] = max_width + cell_horizontal_padding * 2
 	} 
 
 	ctx.restore()
@@ -1278,6 +1312,9 @@ function get_hovered_row_divider(){
 |*|
 \*/
 
+const editable = (r, c) => r < max_row && c < max_col
+const col_width = c => col_widths[c] || (c < max_col ? default_col_width : 440)
+
 function is_typing() {
 	return document.activeElement === keygetter
 }
@@ -1286,7 +1323,7 @@ function *visible_cols(){
 	let rendered_width = left_margin
 	let cur_col = col
 	while(rendered_width <= canvas.width){
-		let width = col_widths[cur_col] || default_col_width
+		let width = col_width(cur_col)
 		yield [cur_col++, rendered_width, width]
 		rendered_width += width
 	}
@@ -1411,6 +1448,8 @@ function scroll_into_view(r, c){
 function start_typing(){
 	console.log('start typing')
 
+	if(!editable(selected_row, selected_col)) return
+
 	selected_end_col = undefined
 	selected_end_row = undefined
 	
@@ -1420,7 +1459,7 @@ function start_typing(){
 	let [x, y] = cell_x_y(selected_row, selected_col)
 	keygetter.style.top = y / devicePixelRatio + 'px'
 	keygetter.style.left = x / devicePixelRatio + 'px'
-	keygetter.style['padding-left'] = cell_left_padding / devicePixelRatio + 'px'
+	keygetter.style['padding-left'] = cell_horizontal_padding / devicePixelRatio + 'px'
 	keygetter.style.height = (row_heights[selected_row] || default_row_height) / devicePixelRatio + 'px'
 	keygetter.style['font-size'] = (default_row_height - 20) / devicePixelRatio +'px'
 	sync_canvas_and_keygetter()
