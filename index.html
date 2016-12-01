@@ -41,12 +41,13 @@
 		padding: 5px 10px;
 	    border-radius: 3px;
 	    margin-right: 10px;
+        user-select: none;
 	}
 	#import, #export {
 	    color: #1a6dff;
 	    border: 1px solid #4488ff;
 	    cursor: pointer;
-	    background: #d7e5ff;
+	    background: #ecf2ff;
 	}
 	#import:hover, #export:hover {
 	    background: #b3cdff;
@@ -76,6 +77,8 @@
 		border-radius: 3px 3px 0 0;
 		text-shadow: 0 1px 0 white;
 		opacity: .7;
+        user-select: none;
+
 		/*transition: .2s;*/
 	}
 	.tab:hover{
@@ -121,6 +124,7 @@
 	    position: absolute;
 	    align-items: center;
 	    right: 10px;
+        user-select: none;
 	}
 	#pricing, #login {
 		padding: 10px;
@@ -134,7 +138,7 @@
 		display: none;
 		justify-content: space-around;
 		align-items: center;
-		background: rgba(0,0,0,.5)
+		background: rgba(255, 255, 255, 0.5)
 	}
 	#pricing-modal-plans {
 		/*background: #fff;*/
@@ -205,25 +209,25 @@
 	#pricing-modal-plan-free {
 		text-align: center;
 		margin: 20px 0;
-		color: rgba(255, 255, 255, 0.41);
+		color: rgba(0, 0, 0, 0.41);
 	}
 	#pricing-intro {
 		margin-bottom: 20px;
 		color: rgba(255, 255, 255, 0.8);
-		background: rgba(0,0,0,.1);
+		background: rgba(0, 0, 0, 0.04);
 		padding: 20px;
 		border-radius: 3px;
 		text-align: center;
 	}
 	#pricing-title {
-		color: #fff;
+		color: rgba(0, 0, 0, 0.4);
 		font-size: 50px;
 		margin-bottom: 20px;
 		text-align: center;
 	}
 	#sign-up {
-		color: #fff;
-		text-shadow: 0 1px 4px #000;
+		color: rgba(0, 0, 0, 0.41);
+		/*text-shadow: 0 1px 4px #000;*/
 		font-weight: bold;
 	}
 	.mo {
@@ -428,7 +432,7 @@
 		$crisp.on("chat:closed", focussheet)
 	};
 	const show_pricing = () => {
-		document.getElementById('app').style.filter = 'blur(10px)';
+		document.getElementById('app').style.filter = 'blur(5px)';
 		document.getElementById('pricing-modal-wrap').style.display = 'flex';
 		function hidemodals(e){
 			if(e.target != document.getElementById('pricing-modal-wrap')) return;
