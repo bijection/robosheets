@@ -1,13 +1,13 @@
 importScripts(
-	'lodash.js',
-	'utils.js',
-	'tokens.js',
-	'lang.js',
-	'langsets.js',
-	'generate.js',
-	'transformations.js',
-	'experiments/minimize.js',
-	'experiments/numfill.js'//,
+	'../lib/lodash.js',
+	'./utils.js',
+	'./tokens.js',
+	'./lang.js',
+	'./langsets.js',
+	'./generate.js',
+	'./transformations.js',
+	'../experiments/minimize.js',
+	'../experiments/numfill.js'//,
 	// 'experiments/proxy.js'
 )
 

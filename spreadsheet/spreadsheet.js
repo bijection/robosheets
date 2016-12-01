@@ -44,7 +44,7 @@ let sheetName
 
 keygetter.style.display = 'none';
 
-let worker = new Worker('worker.js')
+let worker = new Worker('../magic/worker.js')
 
 worker.onmessage = function({data}){
 	let {program, col} = data

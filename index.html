@@ -1,5 +1,10 @@
 <title>RoboSheets | Our Spreadsheets Work for You</title>
-<style type="text/css">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#4488ff">
+<meta name="theme-color" content="#ffffff"><style type="text/css">
 	body, #app {
 		position: absolute;
 		margin: 0;
@@ -251,7 +256,7 @@
 			</div>
 		</div>
 	</div>
-	<iframe name='spreadsheet' id='spreadsheet' src="spreadsheet.html?sheet1"></iframe>	
+	<iframe name='spreadsheet' id='spreadsheet' src="spreadsheet.html"></iframe>	
 </div>
 
 <div id='pricing-modal-wrap'>
@@ -322,9 +327,13 @@
 </div>
 
 <script type="text/javascript">
+	const first_sheet_name = 'Sheet1'
+
 	function addSheet(name){
 		let s = sheets()
-		let newsheetname = name || 'Sheet' + (s.length+1)
+		let n = s.length+1
+		let newsheetname = name || 'Sheet' + n
+		if(!name) while(s.indexOf(newsheetname) >=0) newsheetname = 'Sheet' + n++
 		console.log('adding', newsheetname)
 		s.push(newsheetname)
 		sheets(s)
@@ -332,18 +341,18 @@
 		focussheet[newsheetname]()
 	}
 
-	let focusSheet = {}
+	let show_sheet = {}
 
 	function loadSheet(newsheetname){
 		console.log(newsheetname)
 		let a = document.createElement('a')
-		focussheet[newsheetname] = () => {
+		show_sheet[newsheetname] = () => {
 			var tabs = document.querySelectorAll('#tabs a');
 			document.getElementById('spreadsheet').contentWindow.load(newsheetname)
 			tabs.forEach(tab => tab.classList.toggle('active', tab === a))
 			active_sheet(newsheetname)
 		}
-		a.addEventListener('click', focussheet[newsheetname])
+		a.addEventListener('click', show_sheet[newsheetname])
 		a.innerHTML = newsheetname
 		a.className = 'tab'
 		document.getElementById('tabs').insertBefore(a, document.getElementById('new-sheet'))
@@ -351,19 +360,19 @@
 
 	function active_sheet(v){
 		if(typeof v !== 'undefined') localStorage.activeSheet = v
-		else return 'activeSheet' in localStorage ? localStorage.activeSheet : 'Sheet1'
+		else return 'activeSheet' in localStorage ? localStorage.activeSheet : first_sheet_name
 	}
 	
 	function sheets(v){
 		if(typeof v !== 'undefined') localStorage.sheets = JSON.stringify(v)
-		else return 'sheets' in localStorage ? JSON.parse(localStorage.sheets) : ['Sheet1']
+		else return 'sheets' in localStorage ? JSON.parse(localStorage.sheets) : [first_sheet_name]
 	}
 
 	document.getElementById('spreadsheet')
 	.contentWindow
 	.addEventListener('DOMContentLoaded', () => {
 		sheets().forEach(loadSheet)
-		focussheet[active_sheet()]()
+		show_sheet[active_sheet()]()
 	})
 
 
