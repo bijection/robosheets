@@ -829,15 +829,17 @@ document.addEventListener('paste', function(e){
 
 function filled_region(region){
 	let [start_row, start_col, end_row, end_col] = region
-	let real_end_row = 0, real_end_col = 0
+	let real_end_row = start_row, real_end_col = start_col
 
 	Object.keys(user_content).forEach(k => {
 		let [r, c] = k.split(',')
-		if(r >= start_row && r <= end_row) real_end_row = Math.max(real_end_row, r);
-		if(c >= start_col && c <= end_col) real_end_col = Math.max(real_end_col, c);
+		real_end_row = Math.max(real_end_row, r);
+		real_end_col = Math.max(real_end_col, c);
 	})
 
-	return [start_row, start_col, real_end_row, real_end_col]
+	return [start_row, start_col,
+		end_row == Infinity ? real_end_row : end_row,
+		end_col == Infinity ? real_end_col : end_col]
 }
 
 
