@@ -1,7 +1,7 @@
 <title>RoboSheets | Our Spreadsheets Work for You</title>
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
-<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?1">
+<link rel="icon" type="image/png" href="/favicon-32x32.png?1" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png?1" sizes="16x16">
 <link rel="manifest" href="/manifest.json">
 <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#4488ff">
 <meta name="theme-color" content="#ffffff"><style type="text/css">
@@ -81,6 +81,17 @@
 	.tab:hover{
 		opacity: 1;
 		color: #888;
+	}
+	.tab-after {
+	    margin-right: -5px;
+	    display: inline-block;
+	    position: relative;
+	    left: 6px;
+	    text-align: center;
+	    opacity: .5;
+	}
+	.tab-after:hover {
+		opacity: 1;
 	}
 	.tab.active {
 	    background: #f7f7f7;
@@ -338,24 +349,59 @@
 		s.push(newsheetname)
 		sheets(s)
 		loadSheet(newsheetname)
-		focussheet[newsheetname]()
+		show_sheet[newsheetname]()
 	}
 
 	let show_sheet = {}
 
-	function loadSheet(newsheetname){
-		console.log(newsheetname)
+	function loadSheet(name){
+		console.log(name)
 		let a = document.createElement('a')
-		show_sheet[newsheetname] = () => {
+		show_sheet[name] = () => {
 			var tabs = document.querySelectorAll('#tabs a');
-			document.getElementById('spreadsheet').contentWindow.load(newsheetname)
+			document.getElementById('spreadsheet').contentWindow.load(name)
 			tabs.forEach(tab => tab.classList.toggle('active', tab === a))
-			active_sheet(newsheetname)
+			active_sheet(name)
 		}
-		a.addEventListener('click', show_sheet[newsheetname])
-		a.innerHTML = newsheetname
+		a.addEventListener('click', e=> {
+			if(e.target == a) show_sheet[name]()
+		})
+		a.tabname = name
+		a.innerHTML = name
 		a.className = 'tab'
 		document.getElementById('tabs').insertBefore(a, document.getElementById('new-sheet'))
+
+		let d = document.createElement('div')
+		d.className = 'tab-after'
+		d.innerHTML = '\u00D7'
+		a.appendChild(d)
+
+		d.addEventListener('click', () => {
+			deleteSheet(name)
+		})
+	}
+
+	function deleteSheet(name){
+
+		document.getElementById('spreadsheet').contentWindow.clear(name)
+
+		delete show_sheet[name]
+
+		document.querySelectorAll('#tabs a').forEach(tab => {
+			if(tab.tabname == name) document.querySelector('#tabs').removeChild(tab)
+		})
+
+		let s = []
+		sheets()
+		.filter(sheet => sheet != name)
+		.forEach(sheet => s.push(sheet))
+
+		sheets(s)
+
+		if(!sheets().length) addSheet()
+
+		if(active_sheet() == name) active_sheet(sheets()[sheets().length - 1])
+		show_sheet[active_sheet()]()
 	}
 
 	function active_sheet(v){

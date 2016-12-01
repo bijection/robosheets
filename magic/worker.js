@@ -6,8 +6,8 @@ importScripts(
 	'./langsets.js',
 	'./generate.js',
 	'./transformations.js',
-	'../experiments/minimize.js',
-	'../experiments/numfill.js'//,
+	'./minimize.js',
+	'./numfill.js'//,
 	// 'experiments/proxy.js'
 )
 

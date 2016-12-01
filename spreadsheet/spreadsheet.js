@@ -118,6 +118,10 @@ function save(){
 	})
 }
 
+function clear(sn){
+	delete localStorage[sn]
+}
+
 
 function load(sn){
 
