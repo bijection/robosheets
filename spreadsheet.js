@@ -34,8 +34,8 @@ let user_content = {}
 var autofill_programs = {}
 var loading_programs = {}
 
-let hovered_col_divider
-let hovered_row_divider
+let dragging_col_divider
+let dragging_row_divider
 
 let mouse_x
 let mouse_y
@@ -284,19 +284,23 @@ function draw_hovered_divider(){
 	ctx.save()
 	ctx.fillStyle = selection_color
 
-	let col_divider = defined(hovered_col_divider) 
-		? hovered_col_divider
+	let col_divider = defined(dragging_col_divider) 
+		? dragging_col_divider
 		: get_hovered_col_divider()
-	let row_divider = defined(hovered_row_divider)
-		? hovered_row_divider
+	let row_divider = defined(dragging_row_divider)
+		? dragging_row_divider
 		: get_hovered_row_divider()
 
+	document.body.style.cursor = 'default'
+
 	if(defined(col_divider) && col_divider >= 0){
+		document.body.style.cursor = 'col-resize'
 		let [,x,width] = visible_col_n(col_divider)
 		ctx.fillRect(x + width - resize_handle_drawn_width / 2, 0, resize_handle_drawn_width, top_margin)
 	}
 
 	if(defined(row_divider) && row_divider >= 0){
+		document.body.style.cursor = 'row-resize'
 		let [,y, height] = visible_row_n(row_divider)
 		ctx.fillRect(0, y + height - resize_handle_drawn_width / 2, left_margin, resize_handle_drawn_width)
 	}
@@ -1195,7 +1199,7 @@ canvas.addEventListener('mousedown', e => {
 	} else if(defined(clicked_row) && defined(row_divider)){
 
 		let start_row_height = row_heights[row_divider] || default_row_height
-		hovered_row_divider = row_divider
+		dragging_row_divider = row_divider
 
 		function move(e){
 			let dy = e.clientY * devicePixelRatio - start_y
@@ -1203,13 +1207,13 @@ canvas.addEventListener('mousedown', e => {
 		}
 
 		function up() {
-			hovered_row_divider = undefined
+			dragging_row_divider = undefined
 		}
 
 	} else if(defined(clicked_col) && defined(col_divider)){
 
 		let start_col_width = col_width(col_divider)
-		hovered_col_divider = col_divider
+		dragging_col_divider = col_divider
 
 		function move(e){
 			let dx = e.clientX * devicePixelRatio - start_x
@@ -1217,7 +1221,7 @@ canvas.addEventListener('mousedown', e => {
 		}
 
 		function up() {
-			hovered_col_divider = undefined
+			dragging_col_divider = undefined
 		}
 
 	} else if(defined(clicked_col)){
