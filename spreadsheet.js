@@ -123,9 +123,9 @@ function load(sn){
 
 	sheetName = sn
 
-	if(!localStorage[sheetName]) return; //loadfake();
+	// if(!localStorage[sheetName]) return; //loadfake();
 
-	({
+	;({
 		user_content,
 		row,
 		col,
@@ -136,14 +136,24 @@ function load(sn){
 		selected_end_row,
 		selected_end_col,
 		autofill_programs,
-	} = JSON.parse(localStorage[sheetName]))
+	} = Object.assign({
+		user_content:{
+			"0,0": ""
+		},
+		row:0,
+		col:0,
+		col_widths:{},
+		row_heights:{},
+		selected_row:0,
+		selected_col:0,
+		autofill_programs:{}
+	}, JSON.parse(localStorage[sheetName] || '{}')))	
 
 	Object.keys(autofill_programs).forEach(key => {
 		autofill_programs[key] = hydrate(autofill_programs[key])
 	})
 	loading_programs = {}
 }
-
 
 function loadfake(){
 	let data = `Elsie	Graham	2/6/1986
@@ -439,23 +449,64 @@ function draw_cell_text(row, col){
 		// let n = (1 - 1/Math.log((r*r + c*c)/100))
 		// ctx.fillStyle = 'rgba(0,0,0,'+n+')'
 		// if(Math.random() > .99) console.log(ctx.fillStyle, n)
-		ctx.fillStyle = '#eee'
+
+		let dr = r - max_row
+		let dc = c - max_col
+
+		let d = Math.min(Math.max(dr,dc)/20, 1)
+		let now = Date.now() / 500
+
+		let wave_colors = false
+		if(wave_colors){
+			let t = (Math.sin(now + (dr*dr + dc*dc * 30) / 100) + 1) / 2
+			ctx.fillStyle = 'rgba(100, 100,'+Math.round(100 + t*155)+',1)'			
+		} else {
+
+			const perlin = (a,b) => {
+				const rand = x => {
+					for (let i = 0; i < 3; i++) x = (x * 16807 % 2147483647) - 1
+					return x / 2147483646
+				}
+
+				let sum = 0
+				for (var i = 0; i < 5; i++){
+					a = a >> 1
+					b = b >> 1
+					sum += rand(1/2 * (a+b) * (a+b+1) + b)
+				}
+
+				return sum / i	
+			}
+
+			const blurlin = (a,b) => (perlin(a,b) +
+							perlin(a+1,b) +  
+							perlin(a,b+1) /2 +  
+							perlin(a-1,b) +  
+							perlin(a,b-1) /2 )/4
+
+			// let h = blurlin(r,c*5)
+			// if( h > .7) ctx.fillStyle = 'rgba(0,100,0,'+h+')'
+			// else if( h > .6) ctx.fillStyle = 'rgba(120,100,0,'+h+')'
+			// else if( h > .6) ctx.fillStyle = '#ddca92'
+			// else ctx.fillStyle = 'rgba(0,0,255,'+(1-h)+')'
+			ctx.fillStyle = 'rgba(0,0,0,.05)'
+		}
+
 		ctx.fillRect(x+1, y+1, cell_width - 2, height - 2)
-		ctx.fillStyle =  '#ccc'
+		ctx.fillStyle =  'rgba(0,0,0,.3)'
 
-		// let dr = r - max_row
-		// let dc = c - max_col
-
-		// let d = Math.min(Math.max(dr,dc)/20, 1)
-
-		// let wavex = cell_horizontal_padding * (Math.sin(Date.now() / 500 + r) ) * d
-		// let wavey = cell_horizontal_padding * (Math.cos(Date.now() / 500 + c) ) * d
-
-		ctx.fillText(
-			cropped_text, 
-			x + cell_horizontal_padding, //+ wavex,
-			y + height/2 //+ wavey
-		)
+		let wave_pos = false
+		if(wave_pos){
+			let wavex = cell_horizontal_padding * Math.sin( now + r ) * d
+			let wavey = cell_horizontal_padding * Math.cos( now + c ) * d
+			ctx.fillText(
+				cropped_text, 
+				x + cell_horizontal_padding + wavex,
+				y + height/2 + wavey
+			)
+		} else {
+			ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height/2)
+		}
 	}
 
 	function draw_squished_text(){
@@ -482,7 +533,11 @@ function draw_cell_text(row, col){
 	}
 
 
-	if(drawing_result){
+	if(drawing_upgrade_text){
+		
+		draw_upgrade_text()
+
+	} else if(drawing_result){
 		// let selected = c == selected_col //&& r == selected_row
 		
 		// let region = get_selection_region()		
@@ -512,8 +567,6 @@ function draw_cell_text(row, col){
 		ctx.stroke()
 		ctx.restore()
 
-	} else if(drawing_upgrade_text){
-		draw_upgrade_text()
 	} else {
 		draw_normal_text()
 	}

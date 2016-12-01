@@ -36,13 +36,16 @@
 		padding: 5px 10px;
 	    border-radius: 3px;
 	    margin-right: 10px;
-	    cursor: pointer;
 	}
 	#import, #export{
 	    background: linear-gradient(#f9f9f9,#d2d2d2);
 	    color: #464646;
 	    border: 1px solid #c5c5c5;
 	    text-shadow: 0 1px white;
+	    cursor: pointer;
+	}
+	#import:active, #export:active {
+		background: linear-gradient(#eee,#d2d2d2);
 	}
 	#copy, #paste{
 		color: #888;
@@ -64,6 +67,7 @@
 		margin-bottom: -1px;
 		cursor: pointer;
 		text-decoration: none;
+		margin-right: 4px;
 	}
 	.tab.active {
 		background: #f7f7f7;
@@ -92,7 +96,7 @@
 		padding: 10px;
 		cursor: pointer;
 	}
-	#modals {
+	#pricing-modal-wrap {
 		position: absolute;
 		top: 0;
 		width: 100%;
@@ -204,7 +208,9 @@
 	    font-weight: initial;
 	    /* margin-top: 10px; */
 	    color: rgba(255, 255, 255, 0.6);
-	    margin-bottom: -10px;
+	}
+	#hidden-picker {
+		display: none;
 	}
 /*	.crisp-59 > .crisp-60 > .crisp-116 {
 	    display: none !important;
@@ -218,13 +224,11 @@
 			<div id='login'>Login</div>
 		</div>
 		<div id='tabs'>
-			<a onclick="loadSheet(this.dataset.sheet)" data-sheet="sheet1" class='tab active'>Sheet 1</a>
-			<a onclick="loadSheet(this.dataset.sheet)" data-sheet="sheet2" class='tab'>Sheet 2</a>
-			<a onclick="loadSheet(this.dataset.sheet)" data-sheet="sheet3" class='tab'>Sheet 3</a>
-			<a onclick="loadSheet(this.dataset.sheet)" data-sheet="sheet4" id='new-sheet' class='tab'>+ New Sheet</a>
+ 			<a onclick="addSheet()" data-sheet="sheet4" id='new-sheet' class='tab'>+ New Sheet</a>
 		</div>
 		<div id='buttons'>
-			<div class='button' id='import'>Import</div>
+			<label class='button' id='import' for='hidden-picker'>Import</label>
+			<input type='file' id='hidden-picker'></input>
 			<div class='button' id='export'>Export</div>
 			<div class='button' id='copy'>Ctrl-C to Copy</div>
 			<div class='button' id='paste'>Ctrl-V to Paste</div>
@@ -236,7 +240,7 @@
 	<iframe name='spreadsheet' id='spreadsheet' src="spreadsheet.html?sheet1"></iframe>	
 </div>
 
-<div id='modals'>
+<div id='pricing-modal-wrap'>
 	<div id='pricing-modal'>
 		<div id='pricing-title'>Pricing</div>
 		<div id='pricing-intro'>
@@ -304,39 +308,69 @@
 </div>
 
 <script type="text/javascript">
-	function loadSheet(sheetName){
-		var tabs = document.querySelectorAll('#tabs a');
-		document.getElementById('spreadsheet').contentWindow.load(sheetName)
-		for(var i = 0; i < tabs.length; i++){
-			tabs[i].classList.toggle('active', tabs[i].dataset.sheet == sheetName)
-		}
+	function addSheet(name){
+		let s = sheets()
+		let newsheetname = name || 'Sheet' + (s.length+1)
+		console.log('adding', newsheetname)
+		s.push(newsheetname)
+		sheets(s)
+		loadSheet(newsheetname)
+		focussheet[newsheetname]()
 	}
 
-	// function updateTab(){
-	// 	var tabs = document.querySelectorAll('#tabs a');
-	// 	var sheetName = document.getElementById('spreadsheet').contentWindow.location.search.slice(1);
+	let focusSheet = {}
 
-	// 	for(var i = 0; i < tabs.length; i++){
-	// 		tabs[i].classList.toggle('active', tabs[i].href.replace(/^.*\?/, '') == sheetName)
-			
-	// 	}
-	// }
+	function loadSheet(newsheetname){
+		console.log(newsheetname)
+		let a = document.createElement('a')
+		focussheet[newsheetname] = () => {
+			var tabs = document.querySelectorAll('#tabs a');
+			document.getElementById('spreadsheet').contentWindow.load(newsheetname)
+			tabs.forEach(tab => tab.classList.toggle('active', tab === a))
+			active_sheet(newsheetname)
+		}
+		a.addEventListener('click', focussheet[newsheetname])
+		a.innerHTML = newsheetname
+		a.className = 'tab'
+		document.getElementById('tabs').insertBefore(a, document.getElementById('new-sheet'))
+	}
+
+	function active_sheet(v){
+		if(typeof v !== 'undefined') localStorage.activeSheet = v
+		else return 'activeSheet' in localStorage ? localStorage.activeSheet : 'Sheet1'
+	}
+	
+	function sheets(v){
+		if(typeof v !== 'undefined') localStorage.sheets = JSON.stringify(v)
+		else return 'sheets' in localStorage ? JSON.parse(localStorage.sheets) : ['Sheet1']
+	}
+
+	document.getElementById('spreadsheet')
+	.contentWindow
+	.addEventListener('DOMContentLoaded', () => {
+		sheets().forEach(loadSheet)
+		focussheet[active_sheet()]()
+	})
+
+
 	let focussheet = e => document.getElementById('spreadsheet').contentWindow.focus()
 	window.addEventListener("load", focussheet)
-	// chrome.addEventListener('click', focussheet)
 	window.CRISP_READY_TRIGGER = function() {
 		$crisp.on("chat:closed", focussheet)
 	};
-	document.getElementById('pricing').addEventListener('click', () => {
+	const show_pricing = () => {
 		document.getElementById('app').style.filter = 'blur(10px)';
-		document.getElementById('modals').style.display = 'flex';
-		function hidemodals(){
+		document.getElementById('pricing-modal-wrap').style.display = 'flex';
+		function hidemodals(e){
+			if(e.target != document.getElementById('pricing-modal-wrap')) return;
 			document.getElementById('app').style.filter = '';
-			document.getElementById('modals').style.display = 'none';
-			document.getElementById('modals').removeEventListener('click', hidemodals)
+			document.getElementById('pricing-modal-wrap').style.display = 'none';
+			document.getElementById('pricing-modal-wrap').removeEventListener('click', hidemodals)
 		}
-		document.getElementById('modals').addEventListener('click', hidemodals)
-	})
+		document.getElementById('pricing-modal-wrap').addEventListener('click', hidemodals)
+	}
+	document.getElementById('pricing').addEventListener('click', show_pricing)
+	document.getElementById('export').addEventListener('click', show_pricing)
 </script>
 <script type="text/javascript">CRISP_WEBSITE_ID = "711dddb2-aba7-4f43-ae55-1d4643bb3c7a";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.im/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();
 </script>
