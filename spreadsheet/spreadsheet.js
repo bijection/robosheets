@@ -28,11 +28,15 @@ let selected_col = 0
 let selected_end_row;
 let selected_end_col;
 
+let command_down = false;
 
 let user_content = {}
 // let autofill_content = {}
 var autofill_programs = {}
 var loading_programs = {}
+
+let undo_actions = []
+let redo_actions = []
 
 let dragging_col_divider
 let dragging_row_divider
@@ -807,19 +811,38 @@ canvas.addEventListener('wheel', e => {
 
 
 
+function paste(text, region = [selected_row, selected_col]){
+	let row = region[0]
+	text.split(/\r\n|\r|\n/).forEach(line => {
+		let col = region[1]
+		line.split('\t').forEach(entry => {
+			if(editable(row, col)) user_content[[row, col]] = entry
+			col++
+		})
+		row++
+	})
+}
+
+
+
+
 document.addEventListener('paste', function(e){
 	let data = e.clipboardData.getData('text/plain')
 	if(data.includes('\n') || data.includes('\t') || !is_typing()){
 		e.preventDefault()
 		let row = selected_row
-		data.split(/\r\n|\r|\n/).forEach(line => {
-			let col = selected_col
-			line.split('\t').forEach(entry => {
-				if(editable(row, col)) user_content[[row, col]] = entry
-				col++
-			})
-			row++
-		})
+		let lines = data.split(/\r\n|\r|\n/).map(line => line.split('\t'))
+
+		let region = [
+			selected_row,
+			selected_col,
+			selected_row + lines.length,
+			selected_col + Math.max(...lines.map(line => line.length))
+		]
+
+		add_undo_action(region)
+
+		paste(data)
 	}
 })
 
@@ -844,12 +867,12 @@ function filled_region(region){
 
 
 
-function to_text(region){
+function to_text(region, raw=false){
 	let [start_row, start_col, end_row, end_col] = filled_region(region)
 
 	return _.range(start_row, end_row+1)
 	.map(row => _.range(start_col, end_col+1)
-	 			.map(col => evaluate(cell_text(row, col)))
+	 			.map(col => raw ? user_content[[row, col]] : evaluate(cell_text(row, col)))
 	 			.join('\t'))
 	.join('\n')
 }
@@ -861,14 +884,8 @@ document.addEventListener('copy', function(e){
 
 	e.preventDefault()
 
-	let data
-	let region = get_selection_region()
-
-	if(region){
-		data = to_text(region)
-	} else {
-		data = evaluate(cell_text(selected_row, selected_col))
-	}
+	let region = get_selection_region() || [selected_row, selected_col, selected_row, selected_col]
+	let data = to_text(region)
 
 	e.clipboardData.setData('text/plain', data);
 
@@ -879,16 +896,10 @@ document.addEventListener('cut', e => {
 	if(is_typing()) return;
 	e.preventDefault()
 
-	let data
-	let region = get_selection_region()
+	let region = get_selection_region() || [selected_row, selected_col, selected_row, selected_col]
 
-	if(region){
-		data = to_text(region)
-		delete_region(region)
-	} else {
-		data = evaluate(cell_text(selected_row, selected_col))
-		user_content[[selected_row, selected_col]] = ''
-	}
+	let data = to_text(region)
+	delete_region(region)
 
 	e.clipboardData.setData('text/plain', data);
 })
@@ -896,6 +907,8 @@ document.addEventListener('cut', e => {
 
 function delete_region(region){
 	let [start_row, start_col, end_row, end_col] = filled_region(region)
+
+	add_undo_action(region)
 
 	_.range(start_row, end_row+1)
 	.forEach(row =>
@@ -1112,36 +1125,43 @@ function auto_fill(){
 
 
 let handle_keydown = e=> {
-	if([8,9,13,37,38,39,40,46].includes(e.keyCode)){
-		if(e.keyCode == 9) {
-			e.preventDefault()
-			auto_fill()
-			e.shiftKey
-				? bump_selected(0, -1)
-				: bump_selected(0, 1)
-		}
-		if(e.keyCode == 13 && is_typing()){
-			auto_fill()
-			bump_selected(1, 0)
-		} else if(e.keyCode == 13 && !is_typing()) start_typing()
-		var bump = e.shiftKey ? bump_selected_end : bump_selected
-		if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump(0, -1)
-		if(e.keyCode == 38) bump(-1, 0)
-		if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump(0, 1)
-		if(e.keyCode == 40) bump( 1, 0)
+	if(e.keyCode == 9) {
+		e.preventDefault()
+		auto_fill()
+		e.shiftKey
+			? bump_selected(0, -1)
+			: bump_selected(0, 1)
+	}
+	
+	if(e.keyCode == 13 && is_typing()){
+		auto_fill()
+		bump_selected(1, 0)
+	} else if(e.keyCode == 13 && !is_typing()) start_typing()
+	
+	var bump = e.shiftKey ? bump_selected_end : bump_selected
+	if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump(0, -1)
+	if(e.keyCode == 38) bump(-1, 0)
+	if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump(0, 1)
+	if(e.keyCode == 40) bump( 1, 0)
 
 
-		if((e.keyCode == 8 || e.keyCode == 46) && !is_typing()) {
-			let region = get_selection_region()
-			if(region){
-				delete_region(region)
-			}else{
-				delete user_content[[selected_row, selected_col]]
-				cleanup_autofill()
-			} 
-		}
+	if((e.keyCode == 8 || e.keyCode == 46) && !is_typing()) {
+		let region = get_selection_region() || [selected_row, selected_col, selected_row, selected_col]
+		delete_region(region)
+	}
+
+	if([17, 91].includes(e.keyCode)) command_down = true
+
+	if(e.keyCode == 90 && command_down && !is_typing()){
+		e.preventDefault()
+		if(e.shiftKey) redo()
+		else undo()
 	}
 }
+
+document.addEventListener('keyup', e => {
+	if([17, 91].includes(e.keyCode)) command_down = false
+})
 
 function cleanup_autofill(){
 	var nonempty_columns = _.uniq(
@@ -1513,6 +1533,8 @@ function start_typing(){
 
 	if(!editable(selected_row, selected_col)) return
 
+	add_undo_action([selected_row, selected_col, selected_row, selected_col])
+
 	selected_end_col = undefined
 	selected_end_row = undefined
 	
@@ -1546,24 +1568,51 @@ function measure_text(text){
 function defined(x){
 	return typeof x != 'undefined'
 }
-// function getLines(ctx, text, maxWidth) {
-//     var words = text.split(" ");
-//     var lines = [];
-//     var currentLine = words[0];
 
-//     for (var i = 1; i < words.length; i++) {
-//         var word = words[i];
-//         var width = measure_text(currentLine + " " + word).width;
-//         if (width < maxWidth) {
-//             currentLine += " " + word;
-//         } else {
-//             lines.push(currentLine);
-//             currentLine = word;
-//         }
-//     }
-//     lines.push(currentLine);
-//     return lines;
-// }
+const action = region => ({
+	region,
+	data: to_text(region, true),
+	row, col,
+	selected_row, selected_col, 
+	selected_end_row, selected_end_col
+}) 
+
+function add_undo_action(region, clear_redo = true){
+	if(clear_redo) redo_actions = []
+	undo_actions.push(action(region))
+}
+
+function add_redo_action(region){
+	redo_actions.push(action(region))
+}
+
+function execute(action){
+	;({
+		row, col,
+		selected_row, selected_col, 
+		selected_end_row, selected_end_col
+	} = action)
+	paste(action.data, action.region)
+}
+
+function undo(){
+	let action = undo_actions.pop()
+	if(!action) return;
+
+	add_redo_action(action.region)
+	execute(action)
+}
+
+
+function redo(){
+	let action = redo_actions.pop()
+
+	if(!action) return;
+
+	add_undo_action(action.region, false)
+	execute(action)
+}
+
 
 
 let tick = () => {
