@@ -1,4 +1,5 @@
 <title>RoboSheets | Our Spreadsheets Work for You</title>
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?1">
 <link rel="icon" type="image/png" href="/favicon-32x32.png?1" sizes="32x32">
 <link rel="icon" type="image/png" href="/favicon-16x16.png?1" sizes="16x16">
@@ -27,9 +28,10 @@
 		display: flex;
 		flex-direction: column;
 		border-bottom: 1px solid #ddd;
-	   	background: #f7f7f7;
 	}
 	#buttons {
+	   	background: #f7f7f7;
+	    border-top: 1px solid #ddd; 
 	   	padding: 0 10px;
 		flex: 1;
 		display: flex;
@@ -59,10 +61,12 @@
     	pointer-events: none;
 	}
 	#tabs {
-		background: #fff;
-		padding: 10px;
-		padding-bottom: 0;
-		border-bottom: 1px solid #ddd;
+	    padding: 10px;
+	    padding-bottom: 0;
+	    margin-right: 130px;
+	    overflow-x: scroll;
+	    white-space: nowrap;
+	    margin-bottom: -1px;
 	}
 	.tab {
 		display: inline-block;
@@ -70,7 +74,6 @@
 		color: #adadad;
 		border: 1px solid #ddd;
 		border-bottom: 0;
-		margin-bottom: -1px;
 		cursor: pointer;
 		text-decoration: none;
 		margin-right: 4px;
@@ -124,7 +127,10 @@
 	    position: absolute;
 	    align-items: center;
 	    right: 10px;
-        user-select: none;
+	    user-select: none;
+	    background: linear-gradient(90deg, rgba(255, 255, 255, 0), #ffffff 15%);
+	    z-index: 2;
+	    padding-left: 20px;
 	}
 	#pricing, #login {
 		padding: 10px;
@@ -246,6 +252,23 @@
 	#hidden-picker {
 		display: none;
 	}
+	@media (max-width: 500px){
+		#copy, #paste {
+			display: none
+		}
+	}
+
+	#loading {
+	    text-align: center;
+	    color: #dedede;
+	    font-size: 40px;
+	}
+	#loading-wrap {
+	    height: 100%;
+	    display: flex;
+	    flex-direction: column;
+	    justify-content: space-around;
+	}
 /*	.crisp-59 > .crisp-60 > .crisp-116 {
 	    display: none !important;
 	}
@@ -272,6 +295,10 @@
 		</div>
 	</div>
 	<iframe name='spreadsheet' id='spreadsheet' src="spreadsheet.html"></iframe>	
+</div>
+
+<div id='loading-wrap'>
+	<div id='loading'>Loading...</div>	
 </div>
 
 <div id='pricing-modal-wrap'>
@@ -423,6 +450,7 @@
 	.addEventListener('DOMContentLoaded', () => {
 		sheets().forEach(loadSheet)
 		show_sheet[active_sheet()]()
+		document.getElementById('spreadsheet').style.background = '#fff'
 	})
 
 

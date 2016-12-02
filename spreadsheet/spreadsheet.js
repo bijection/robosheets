@@ -3,18 +3,19 @@ let ctx = canvas.getContext('2d')
 let row = 0
 let col = 0
 
-const default_col_width = 200
-const default_row_height = 50
+const DEFAULT_COL_WIDTH = 200
+const DEFAULT_ROW_HEIGHT = 50
 
-const left_margin = 60
-const top_margin = 40
+const LEFT_MARGIN = 60
+const TOP_MARGIN = 40
 
-const resize_handle_width = 20
-const resize_handle_drawn_width = 4
+const RESIZE_HANDLE_WIDTH = 20
+const RESIZE_HANDLE_DRAWN_WIDTH = 4
 
-const selection_color = '#48f'
+const SELECTION_COLOR = '#48f'
 
-const content_font = default_row_height - 20 +'px Helvetica'
+const CONTENT_FONT = DEFAULT_ROW_HEIGHT - 20 +'px Helvetica'
+const SCALE = 2
 
 let max_row = 50
 let max_col = 10
@@ -77,8 +78,8 @@ function hydrate(frag){
 }
 
 function render() {
-	canvas.width = innerWidth * devicePixelRatio
-	canvas.height = innerHeight * devicePixelRatio
+	canvas.width = innerWidth * SCALE
+	canvas.height = innerHeight * SCALE
 
 	canvas.style.width = innerWidth+'px'
 	canvas.style.height = innerHeight+'px'
@@ -100,8 +101,8 @@ function render() {
 	if(Math.random() < 1/60) save()
 
 	// ctx.fillStyle = 'rgba(0,0,0,.1)'
-	// if(row > 0) ctx.fillRect(left_margin, top_margin, canvas.width, 10);
-	// if(col > 0) ctx.fillRect(left_margin, top_margin, 10, canvas.height);
+	// if(row > 0) ctx.fillRect(LEFT_MARGIN, TOP_MARGIN, canvas.width, 10);
+	// if(col > 0) ctx.fillRect(LEFT_MARGIN, TOP_MARGIN, 10, canvas.height);
 
 }
 
@@ -280,8 +281,8 @@ function loadfake(){
 function draw_label_backgrounds(){
 	ctx.save()
 	ctx.fillStyle = '#eee'
-	ctx.fillRect(0,0,canvas.width, top_margin)
-	ctx.fillRect(0,0,left_margin, canvas.height)
+	ctx.fillRect(0,0,canvas.width, TOP_MARGIN)
+	ctx.fillRect(0,0,LEFT_MARGIN, canvas.height)
 	ctx.fillStyle = '#222'
 	ctx.restore()
 }
@@ -290,7 +291,7 @@ function draw_label_backgrounds(){
 
 function draw_hovered_divider(){
 	ctx.save()
-	ctx.fillStyle = selection_color
+	ctx.fillStyle = SELECTION_COLOR
 
 	let col_divider = defined(dragging_col_divider) 
 		? dragging_col_divider
@@ -304,13 +305,13 @@ function draw_hovered_divider(){
 	if(defined(col_divider) && col_divider >= 0){
 		document.body.style.cursor = 'col-resize'
 		let [,x,width] = visible_col_n(col_divider)
-		ctx.fillRect(x + width - resize_handle_drawn_width / 2, 0, resize_handle_drawn_width, top_margin)
+		ctx.fillRect(x + width - RESIZE_HANDLE_DRAWN_WIDTH / 2, 0, RESIZE_HANDLE_DRAWN_WIDTH, TOP_MARGIN)
 	}
 
 	if(defined(row_divider) && row_divider >= 0){
 		document.body.style.cursor = 'row-resize'
 		let [,y, height] = visible_row_n(row_divider)
-		ctx.fillRect(0, y + height - resize_handle_drawn_width / 2, left_margin, resize_handle_drawn_width)
+		ctx.fillRect(0, y + height - RESIZE_HANDLE_DRAWN_WIDTH / 2, LEFT_MARGIN, RESIZE_HANDLE_DRAWN_WIDTH)
 	}
 	ctx.restore()
 }
@@ -334,10 +335,10 @@ function draw_horizontal_lines_and_labels(){
 			&& row <= Math.max(selected_end_row, selected_row)
 			&& row >= Math.min(selected_end_row, selected_row))){
 			ctx.fillStyle = '#ddd'
-			ctx.fillRect(0, rendered_height, left_margin, height)
+			ctx.fillRect(0, rendered_height, LEFT_MARGIN, height)
 		}
 		ctx.fillStyle = '#222'
-		ctx.fillText(row + 1, left_margin - 10, rendered_height + height / 2)
+		ctx.fillText(row + 1, LEFT_MARGIN - 10, rendered_height + height / 2)
 
 		ctx.beginPath()
 		ctx.moveTo(0, rendered_height)
@@ -377,14 +378,14 @@ function draw_vertical_lines_and_labels(){
 			&& col <= Math.max(selected_end_col, selected_col)
 			&& col >= Math.min(selected_end_col, selected_col))){
 			ctx.fillStyle = '#ddd'
-			ctx.fillRect(rendered_width, 0, width, top_margin)
+			ctx.fillRect(rendered_width, 0, width, TOP_MARGIN)
 		}
 		ctx.fillStyle = '#222'
 		// let letters = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase()
 		// let b26 = '0123456789abcdefghijklmnop'
 		// let text = col.toString(26).split('').map(c => letters[b26.indexOf(c)]).join('')
 		let text = colname(col)
-		ctx.fillText(text, rendered_width + width / 2, top_margin / 2)
+		ctx.fillText(text, rendered_width + width / 2, TOP_MARGIN / 2)
 
 		ctx.beginPath()
 		ctx.moveTo(rendered_width, 0)
@@ -415,7 +416,7 @@ let suggestion_color = '#08c773'//'hsl(134, 50%, 50%)'
 function draw_cell_text(row, col){
 	ctx.save()
 
-	ctx.font = content_font
+	ctx.font = CONTENT_FONT
 	ctx.textAlign = 'left'
 	ctx.textBaseline = 'middle'
 	ctx.lineWidth = 1
@@ -616,7 +617,7 @@ function draw_cells_text(){
 
 
 function cell_text_display_width(r, c) {
-	ctx.font = content_font
+	ctx.font = CONTENT_FONT
 	let text = cell_text(r, c)
 	var desired_width = measure_text(text).width + cell_horizontal_padding;
 
@@ -672,13 +673,13 @@ function draw_selected_cell(){
 		? edit_width
 		: col_width(selected_col)
 
-	let height = row_heights[selected_row] || default_row_height
+	let height = row_heights[selected_row] || DEFAULT_ROW_HEIGHT
 	let [selected_x, selected_y] = cell_x_y(selected_row, selected_col)
 
-	ctx.strokeStyle = selection_color
+	ctx.strokeStyle = SELECTION_COLOR
 	ctx.lineWidth = 4
 	ctx.strokeRect(selected_x, selected_y, width, height)
-	// ctx.fillStyle = selection_color
+	// ctx.fillStyle = SELECTION_COLOR
 	// ctx.strokeStyle = '#fff'
 	// ctx.strokeRect(selected_x + width - 4, selected_y + height - 4, 8,8)
 	// ctx.fillRect(selected_x + width - 4, selected_y + height - 4, 8,8)
@@ -721,7 +722,7 @@ function draw_blue_box(start_row, start_col, end_row, end_col) {
 	let [, y, height] = end_row
 
 	ctx.lineWidth = 1
-	ctx.strokeStyle = selection_color
+	ctx.strokeStyle = SELECTION_COLOR
 	ctx.strokeRect(start_x, start_y, x+width - start_x, y+height -start_y)
 	
 	ctx.fillStyle = 'rgba(80, 150, 255, .1)'
@@ -783,9 +784,9 @@ canvas.addEventListener('wheel', e => {
 	scrollY += e.deltaY *y_speed
 	
 	let width = col_width(col)
-	let height = row_heights[row] || default_row_height
+	let height = row_heights[row] || DEFAULT_ROW_HEIGHT
 	let prev_width = col_width(col - 1)
-	let prev_height = row_heights[row-1] || default_row_height
+	let prev_height = row_heights[row-1] || DEFAULT_ROW_HEIGHT
 	
 	while(scrollX > width){
 	 	scrollX -= width
@@ -843,6 +844,7 @@ document.addEventListener('paste', function(e){
 		add_undo_action(region)
 
 		paste(data)
+		auto_fill()
 	}
 })
 
@@ -918,12 +920,15 @@ function delete_region(region){
 		}))
 
 	// delete all empty columns
-	cleanup_autofill()
+	// cleanup_autofill()
+	auto_fill()
+
 }
 
 
 keygetter.addEventListener('blur', e=> {
 	keygetter.style.display = 'none';
+	auto_fill()
 	// if(user_content[[selected_row, selected_col]] && user_content[[selected_row, selected_col]].length === 0)
 	// 	delete user_content[[selected_row, selected_col]]
 })
@@ -931,9 +936,9 @@ keygetter.addEventListener('blur', e=> {
 
 function sync_canvas_and_keygetter() {
 	ctx.save()
-	ctx.font = content_font
+	ctx.font = CONTENT_FONT
 	let desired_width = measure_text(keygetter.value).width
-	keygetter.style.width = (measure_text(keygetter.value).width + cell_horizontal_padding + 2) / devicePixelRatio
+	keygetter.style.width = (measure_text(keygetter.value).width + cell_horizontal_padding + 2) / SCALE
 	user_content[[selected_row, selected_col]] = keygetter.value
 	ctx.restore()
 }
@@ -1074,6 +1079,9 @@ function sample_program(examples){
 
 
 function auto_fill(){
+
+	cleanup_autofill()
+
 	var nonempty = Object.keys(user_content).filter(k => user_content[k]);
 	var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
 	var col_ids = _.sortBy(Object.keys(cols), k => +k);
@@ -1127,14 +1135,14 @@ function auto_fill(){
 let handle_keydown = e=> {
 	if(e.keyCode == 9) {
 		e.preventDefault()
-		auto_fill()
+		// auto_fill()
 		e.shiftKey
 			? bump_selected(0, -1)
 			: bump_selected(0, 1)
 	}
 	
 	if(e.keyCode == 13 && is_typing()){
-		auto_fill()
+		// auto_fill()
 		bump_selected(1, 0)
 	} else if(e.keyCode == 13 && !is_typing()) start_typing()
 	
@@ -1152,10 +1160,16 @@ let handle_keydown = e=> {
 
 	if([17, 91].includes(e.keyCode)) command_down = true
 
-	if(e.keyCode == 90 && command_down && !is_typing()){
+	if(e.keyCode == 90 && command_down && !is_typing()){ //z
 		e.preventDefault()
 		if(e.shiftKey) redo()
 		else undo()
+		auto_fill()
+	}
+	if(e.keyCode == 65 && command_down && !is_typing()){ //a
+		set_selected(0,0)
+		selected_end_row = Infinity
+		selected_end_col = Infinity
 	}
 }
 
@@ -1187,14 +1201,14 @@ document.addEventListener('keypress', handle_keypress)
 
 
 document.addEventListener('mousemove', e => {
-	mouse_x = e.clientX * devicePixelRatio
-	mouse_y = e.clientY * devicePixelRatio
+	mouse_x = e.clientX * SCALE
+	mouse_y = e.clientY * SCALE
 })
 
 canvas.addEventListener('mousedown', e => {
 
-	let start_x = e.clientX * devicePixelRatio
-	let start_y = e.clientY * devicePixelRatio
+	let start_x = e.clientX * SCALE
+	let start_y = e.clientY * SCALE
 
 	let [clicked_row, clicked_col] = cell_row_col(start_x, start_y)
 	let col_divider = get_hovered_col_divider()
@@ -1224,12 +1238,12 @@ canvas.addEventListener('mousedown', e => {
 
 	} else if(defined(clicked_row) && defined(row_divider)){
 
-		let start_row_height = row_heights[row_divider] || default_row_height
+		let start_row_height = row_heights[row_divider] || DEFAULT_ROW_HEIGHT
 		dragging_row_divider = row_divider
 
 		function move(e){
-			let dy = e.clientY * devicePixelRatio - start_y
-			row_heights[row_divider] = Math.max(start_row_height + dy, default_row_height)
+			let dy = e.clientY * SCALE - start_y
+			row_heights[row_divider] = Math.max(start_row_height + dy, DEFAULT_ROW_HEIGHT)
 		}
 
 		function up() {
@@ -1242,8 +1256,8 @@ canvas.addEventListener('mousedown', e => {
 		dragging_col_divider = col_divider
 
 		function move(e){
-			let dx = e.clientX * devicePixelRatio - start_x
-			col_widths[col_divider] = Math.max(start_col_width + dx, default_col_width)
+			let dx = e.clientX * SCALE - start_x
+			col_widths[col_divider] = Math.max(start_col_width + dx, DEFAULT_COL_WIDTH)
 		}
 
 		function up() {
@@ -1313,18 +1327,18 @@ canvas.addEventListener('mousedown', e => {
 
 document.addEventListener('dblclick', function(e){
 	ctx.save()
-	ctx.font = content_font
+	ctx.font = CONTENT_FONT
 
 	let [row, col] = cell_row_col(
-		e.clientX * devicePixelRatio, 
-		e.clientY * devicePixelRatio)
+		e.clientX * SCALE, 
+		e.clientY * SCALE)
 	
 	let col_divider = get_hovered_col_divider()
 
 	if(defined(row) && defined(col) && !is_typing()){
 		start_typing()
 	} else if(defined(col_divider)) {
-		let max_width = default_col_width - cell_horizontal_padding * 2
+		let max_width = DEFAULT_COL_WIDTH - cell_horizontal_padding * 2
 		let max_row = Math.max(...Object.keys(user_content).map(k => +k.split(',')[0]), last_visible_row()[0])
 		
 		for(var r = 0; r < max_row; r++){
@@ -1353,8 +1367,8 @@ function get_hovered_col_divider(){
 		let [,prev_x,width] = visible_col_n(col)
 		let next_x = prev_x + width
 
-		if(mouse_x - prev_x <= resize_handle_width / 2) return col - 1
-		if(next_x - mouse_x <= resize_handle_width / 2) return col
+		if(mouse_x - prev_x <= RESIZE_HANDLE_WIDTH / 2) return col - 1
+		if(next_x - mouse_x <= RESIZE_HANDLE_WIDTH / 2) return col
 
 	}
 }
@@ -1367,8 +1381,8 @@ function get_hovered_row_divider(){
 		let [,prev_y,height] = visible_row_n(row)
 		let next_y = prev_y + height
 
-		if(mouse_y - prev_y <= resize_handle_width / 2) return row - 1
-		if(next_y - mouse_y <= resize_handle_width / 2) return row
+		if(mouse_y - prev_y <= RESIZE_HANDLE_WIDTH / 2) return row - 1
+		if(next_y - mouse_y <= RESIZE_HANDLE_WIDTH / 2) return row
 
 	}
 }
@@ -1396,14 +1410,14 @@ function get_hovered_row_divider(){
 \*/
 
 const editable = (r, c) => r < max_row && c < max_col
-const col_width = c => col_widths[c] || (c < max_col ? default_col_width : 440)
+const col_width = c => col_widths[c] || (c < max_col ? DEFAULT_COL_WIDTH : 440)
 
 function is_typing() {
 	return document.activeElement === keygetter
 }
 
 function *visible_cols(){
-	let rendered_width = left_margin
+	let rendered_width = LEFT_MARGIN
 	let cur_col = col
 	while(rendered_width <= canvas.width){
 		let width = col_width(cur_col)
@@ -1413,10 +1427,10 @@ function *visible_cols(){
 }
 
 function *visible_rows(){
-	let rendered_height = top_margin
+	let rendered_height = TOP_MARGIN
 	let cur_row = row
 	while(rendered_height <= canvas.height){
-		let height = row_heights[cur_row] || default_row_height
+		let height = row_heights[cur_row] || DEFAULT_ROW_HEIGHT
 		yield [cur_row ++, rendered_height, height]
 		rendered_height += height
 	}
@@ -1542,11 +1556,11 @@ function start_typing(){
 	keygetter.focus()
 	keygetter.value = user_content[[selected_row, selected_col]] || ''
 	let [x, y] = cell_x_y(selected_row, selected_col)
-	keygetter.style.top = y / devicePixelRatio + 'px'
-	keygetter.style.left = x / devicePixelRatio + 'px'
-	keygetter.style['padding-left'] = cell_horizontal_padding / devicePixelRatio + 'px'
-	keygetter.style.height = (row_heights[selected_row] || default_row_height) / devicePixelRatio + 'px'
-	keygetter.style['font-size'] = (default_row_height - 20) / devicePixelRatio +'px'
+	keygetter.style.top = y / SCALE + 'px'
+	keygetter.style.left = x / SCALE + 'px'
+	keygetter.style['padding-left'] = cell_horizontal_padding / SCALE + 'px'
+	keygetter.style.height = (row_heights[selected_row] || DEFAULT_ROW_HEIGHT) / SCALE + 'px'
+	keygetter.style['font-size'] = (DEFAULT_ROW_HEIGHT - 20) / SCALE +'px'
 	sync_canvas_and_keygetter()
 }
 
@@ -1555,7 +1569,7 @@ function measure_text(text){
 	
 	if(! measure_text_cache[text]){
 		ctx.save()
-		ctx.font = content_font
+		ctx.font = CONTENT_FONT
 		measure_text_cache[text] = ctx.measureText(text)
 		ctx.restore()		
 	}
@@ -1593,6 +1607,7 @@ function execute(action){
 		selected_end_row, selected_end_col
 	} = action)
 	paste(action.data, action.region)
+	// auto_fill()
 }
 
 function undo(){
