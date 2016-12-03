@@ -51,14 +51,17 @@ keygetter.style.display = 'none';
 
 let worker = new Worker('../magic/worker.js')
 
-worker.onmessage = function({data}){
+function getWorkerMessage({data}){
 	let {program, col} = data
 
 	console.log('got', col)
 
 	autofill_programs[col] = hydrate(program)
+	clearTimeout(loading_programs[col])
 	delete loading_programs[col]
 }
+
+worker.onmessage = getWorkerMessage
 
 
 function hydrate(frag){
@@ -550,6 +553,19 @@ function draw_cell_text(row, col){
 		
 		draw_upgrade_text()
 
+	}else if(defined(loading_programs[c]) && drawing_suggestion_text){
+		
+		// console.log('asdf')
+		const now = (Date.now() / 100) % (Math.PI * 2)
+
+		ctx.save()
+		ctx.beginPath()
+		ctx.lineWidth = 4
+		ctx.strokeStyle = '#48f'
+		ctx.arc(x + width / 2, y + height / 2, 10, now, now + Math.PI*2* 3/4)
+		ctx.stroke()
+		ctx.restore()
+
 	} else if(drawing_result){
 		// let selected = c == selected_col //&& r == selected_row
 		
@@ -567,19 +583,6 @@ function draw_cell_text(row, col){
 			draw_squished_text()
 		}
 	
-	}else if(loading_programs[c] && drawing_suggestion_text){
-		
-		// console.log('asdf')
-		const now = (Date.now() / 100) % (Math.PI * 2)
-
-		ctx.save()
-		ctx.beginPath()
-		ctx.lineWidth = 4
-		ctx.strokeStyle = '#48f'
-		ctx.arc(x + width / 2, y + height / 2, 10, now, now + Math.PI*2* 3/4)
-		ctx.stroke()
-		ctx.restore()
-
 	} else {
 		draw_normal_text()
 	}
@@ -1110,7 +1113,13 @@ function auto_fill(){
 
 		worker.postMessage({examples, col})
 		console.log('filling', col)
-		loading_programs[col] = true
+		loading_programs[col] = setTimeout(() => {
+			console.log('killing worker due to timeout')
+			worker.terminate()
+			worker = new Worker('../magic/worker.js')
+			worker.onmessage = getWorkerMessage
+			delete loading_programs[col]
+		}, 5000)
 
 		// let cached_program = autofill_programs[col]
 		// if(cached_program){
