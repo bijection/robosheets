@@ -47,6 +47,16 @@ let mouse_y
 
 let sheetName
 
+let paused = false
+
+function pause(){
+	paused = true;
+}
+
+function resume(){
+	paused = false;
+}
+
 keygetter.style.display = 'none';
 
 let worker = new Worker('../magic/worker.js')
@@ -81,6 +91,9 @@ function hydrate(frag){
 }
 
 function render() {
+
+	if(paused) return;
+
 	canvas.width = innerWidth * SCALE
 	canvas.height = innerHeight * SCALE
 
@@ -971,12 +984,37 @@ function apply_program(program, sigma){
 	}
 }
 
-function get_sigma(row, col){
+let resets = []
+
+function frame_memo(f){
+	let cache = {}
+	resets.push(() => cache = {})
+	return (...args) => {
+		let a = JSON.stringify(args)
+
+		if(a in cache) return cache[a]
+
+		let b = f(...args)
+		cache[a] = b
+		return b
+	}
+}
+
+function _get_sigma(row, col){
 	var sigma = _.range(+col)
 		.map(c => 
 			evaluate(cell_text(row, c)))
-	return [row + ''].concat(sigma);
+
+	let ret = [
+		+row+1 + '',
+		+row > 0 ? evaluate(cell_text(row-1, col)) : '',
+		+row > 1 ? evaluate(cell_text(row-2, col)) : ''
+	]
+
+	return ret.concat(sigma);
 }
+
+let get_sigma = frame_memo(_get_sigma)
 
 function cell_text(r, c){
 
@@ -1102,11 +1140,17 @@ function auto_fill(){
 		// alternatively, don't sample and use everything... 
 		// if we can make intersect_lazy_whatever_generate_something 
 		// sufficiently speedy
-		let examples = _.sampleSize(row_ids, 5)
-			.map(k => {
-				var row_prefix = k.split(',')[0];
-				return [get_sigma(row_prefix, col), user_content[k]]
-			})
+
+		const is_formula = r => cell_text(+r, col).trim().endsWith('=')
+
+		let _examples = _.sampleSize(row_ids, 5)
+		
+		let has_formula = _examples.some(e => is_formula(e.split(',')[0]))
+
+		let examples = _examples.map(k => {
+			var row_prefix = k.split(',')[0];
+			if(!has_formula || is_formula(row_prefix)) return [get_sigma(row_prefix, col), user_content[k]]
+		}).filter(x=>x)
 
 		// if the previously cached program still works, use that
 		// and don't do the expensive recomputation
@@ -1118,6 +1162,8 @@ function auto_fill(){
 			worker.terminate()
 			worker = new Worker('../magic/worker.js')
 			worker.onmessage = getWorkerMessage
+
+			clearTimeout(loading_programs[col])
 			delete loading_programs[col]
 		}, 5000)
 
@@ -1637,13 +1683,11 @@ function redo(){
 	execute(action)
 }
 
-
-
 let tick = () => {
 	requestAnimationFrame(tick)
+	resets.forEach(r => r())
 	render()
 }
 requestAnimationFrame(tick)
 
-load('sheet1')
 auto_fill()
