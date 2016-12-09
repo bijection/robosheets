@@ -104,13 +104,16 @@
 	    color: #222;
 	    opacity: 1;
 	}
+	.spacer {
+		flex: 1;
+	}
 	#new-sheet {
 		border: 0;
 		padding: 5px;
 		color: #888
 	}
 	#instructions-wrap {
-		flex: 1;
+		/*flex: 1;*/
 		text-align: right;
 	}
 	#instructions  {
@@ -269,10 +272,51 @@
 	    flex-direction: column;
 	    justify-content: space-around;
 	}
-/*	.crisp-59 > .crisp-60 > .crisp-116 {
+	/*.crisp-59 > .crisp-60 > .crisp-116 {
 	    display: none !important;
+	}*/
+
+
+	#instructions-modal:hover {
+		opacity: 1;
+	    pointer-events: initial;
 	}
-*/
+
+	#instructions-wrap:hover #instructions-modal  {
+	    pointer-events: initial;
+	}
+
+	#instructions-modal-wrap {
+		pointer-events: none;
+	    position: absolute;
+	    top: 0;
+	    left: 0;
+	    width: 100%;
+	    height: 100%;
+	    padding: 20px;
+	    padding-top: 56px;
+	    box-sizing: border-box;
+	    display: flex;
+	    justify-content: flex-end;
+	}
+
+	#instructions-modal {
+		/*pointer-events: all;*/
+	    /*max-width: 100%;*/
+	    width: 900px;
+	    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.27);
+	    border-radius: 3px;
+	    overflow: hidden;
+	    opacity: 0;
+	    transition: .2s;
+	    background: #fff;
+	    /*background: #b1ffde;*/
+	}
+
+	#instructions-modal > iframe {
+		width: 100%;
+		height: 100%;
+	}
 </style>
 <div id='app'>
 	<div id='chrome'>
@@ -289,12 +333,18 @@
 			<div class='button' id='export'>Export</div>
 			<div class='button' id='copy'>Ctrl-C to Copy</div>
 			<div class='button' id='paste'>Ctrl-V to Paste</div>
+			<div class='spacer'></div>
 			<div id='instructions-wrap'>
 				<div class="button" id='instructions'>Instructions</div>
+				<div id='instructions-modal-wrap'>
+					<div id='instructions-modal'>
+						<iframe src="instructions.html"></iframe>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
-	<iframe name='spreadsheet' id='spreadsheet' src="spreadsheet.html"></iframe>	
+	<iframe name='spreadsheet' id='spreadsheet' src="spreadsheet.html"></iframe>
 </div>
 
 <div id='loading-wrap'>
@@ -452,6 +502,9 @@
 		sheets().forEach(loadSheet)
 		show_sheet[active_sheet()]()
 		document.getElementById('spreadsheet').style.background = '#fff'
+		// document.getElementById('spreadsheet')
+		// .contentWindow
+		// .pause()
 	})
 
 
