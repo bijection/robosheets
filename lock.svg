@@ -1,0 +1,20 @@
+<svg width="30" height="41" viewBox="0 0 30 41" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:figma="http://www.figma.com/figma/ns">
+<title>Group</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(33 112)" figma:type="canvas">
+<g id="Group" style="mix-blend-mode:normal;" figma:type="frame">
+<g id="Group" style="mix-blend-mode:normal;" figma:type="frame">
+<g id="Vector" style="mix-blend-mode:normal;" figma:type="vector">
+<use xlink:href="#path0_fill" transform="translate(-28.85 -111.1)" fill="#231F20" style="mix-blend-mode:normal;"/>
+</g>
+</g>
+<g id="Vector" style="mix-blend-mode:normal;" figma:type="vector">
+<use xlink:href="#path1_fill" transform="translate(-32.85 -93.9)" fill="#231F20" style="mix-blend-mode:normal;"/>
+</g>
+</g>
+</g>
+<defs>
+<path id="path0_fill" d="M 21.8 22.4L 0 22.4L 0 10.9C 0 4.9 4.9 0 10.9 0C 16.9 0 21.8 4.9 21.8 10.9L 21.8 22.4ZM 6 16.4L 15.8 16.4L 15.8 10.9C 15.8 8.2 13.6 6 10.9 6C 8.2 6 6 8.2 6 10.9L 6 16.4Z"/>
+<path id="path1_fill" d="M 28.3 22L 1.4 22C 0.6 22 0 21.4 0 20.6L 0 1.4C 0 0.6 0.6 7.62939e-07 1.4 7.62939e-07L 28.3 7.62939e-07C 29.1 7.62939e-07 29.7 0.6 29.7 1.4L 29.7 20.5C 29.7 21.3 29.1 22 28.3 22Z"/>
+</defs>
+</svg>
