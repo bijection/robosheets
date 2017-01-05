@@ -102,7 +102,7 @@ function sample_program(examples){
 	try {
 		var program = pset.sample()
 	} catch (err) { 
-		console.log('sample error', pset, err)
+		// console.log('sample error', pset, err)
 	}
 	
 	// console.log(inputs, outputs, pset, program)
@@ -120,12 +120,22 @@ onmessage = function onmessage(message){
 
 	let {examples, col} = data
 
+	// console.log(JSON.stringify(examples), col)
+
 	let cached_program = autofill_programs[col]
 	if(cached_program){
 		if(_.every(examples.map(([sigma, out]) => 
 			apply_program(cached_program, sigma) == out))){
 			return pm({program: cached_program, col})
 		}
+	}
+
+	if(examples.length > 3) {
+		let program = sample_program(examples.slice(0, 3));
+		if(!program){
+			delete autofill_programs[col]
+			return pm({program, col})
+		} 
 	}
 
 	let program = sample_program(examples);

@@ -75,6 +75,18 @@ let NamedTransformations = {
 		}
 	},
 
+	reverse: {
+		transform(s){
+			return s.split('').reverse().join('')
+		},
+		inverse_transform(s){
+			return s.split('').reverse().join('')
+		},
+		could_produce(s){
+			return true
+		}		
+	},
+
 
 	zeroPad2: zeroPadTransForm(2),
 	zeroPad3: zeroPadTransForm(3),

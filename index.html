@@ -145,9 +145,13 @@
 		width: 100%;
 		height: 100%;
 		display: none;
+
 		justify-content: space-around;
-		align-items: center;
-		background: rgba(255, 255, 255, 0.5)
+		align-items: stretch;
+		flex-direction: column;
+
+		background: rgba(255, 255, 255, 0.5);
+		overflow: scroll;
 	}
 	#pricing-modal-plans {
 		/*background: #fff;*/
@@ -157,6 +161,9 @@
 		display: flex;
 		justify-content: space-around;
 		align-items: flex-end;
+		 max-width: 900px;
+	    margin-left: auto;
+	    margin-right: auto;
 	}
 	.plan {
 		/*width: 200px;*/
@@ -169,7 +176,14 @@
 		margin: 10px;
 		color: #fff;
 		overflow: hidden;
+	    cursor: pointer;
+	    border: 1px solid transparent;
 		/*padding: 10px;*/
+	}
+	.plan:hover {
+		box-shadow: 0 1px 10px rgba(0,0,0,.6);
+		/*box-shadow: 0 10px 40px rgba(0,0,0,.4);*/
+		border-color: #00c
 	}
 	.plan-name {
 	    margin: 0;
@@ -203,14 +217,13 @@
 	    color: #fff;
 	    /* box-shadow: 0 1px 10px rgba(0,0,0,.2); */
 	    /* border-radius: 3px; */
-	    cursor: pointer;
 	}
 	#basic {
 		background: #7caafb
 	}
 	#advanced {
 		background: #48f;
-		border: 1px solid #ffb100;
+		/*border: 1px solid #ffb100;*/
 	}
 	#enterprise {
 		background: #2053ad
@@ -220,18 +233,21 @@
 		margin: 20px 0;
 		color: rgba(0, 0, 0, 0.41);
 	}
+	#pricing-modal {
+		overflow: scroll;
+	}
 	#pricing-intro {
 		margin-bottom: 20px;
 		color: rgba(255, 255, 255, 0.8);
 		background: rgba(0, 0, 0, 0.04);
 		padding: 20px;
-		border-radius: 3px;
+		/*border-radius: 3px;*/
 		text-align: center;
 	}
 	#pricing-title {
 		color: rgba(0, 0, 0, 0.4);
 		font-size: 50px;
-		margin-bottom: 20px;
+		margin: 20px 0;
 		text-align: center;
 	}
 	#sign-up {
@@ -317,6 +333,128 @@
 		width: 100%;
 		height: 100%;
 	}
+
+	.signup-question {
+		/*height: 70%;*/
+		padding: 0 100px;
+		max-width: 900px;
+		margin-left: auto;
+		margin-right: auto;
+		box-sizing: border-box;
+		font-size: 25px;
+    	/*opacity: .3;*/
+	}
+
+	.signup-question.secure .signup-label::before {
+		/*position: absolute;*/
+		/*background: red;*/
+        content: ' ';
+	    padding: 0 10px;
+	    background: url(lock.svg);
+	    background-repeat: no-repeat;
+	    background-position: center;
+	    background-size: 16px;
+	    padding-top: 3px;
+	    opacity: .8;
+	    margin-right: 5px;
+	}
+
+	.signup-input {
+	    width: 100%;
+	    box-sizing: border-box;
+	    padding: 0;
+	    border: 0;
+	    font-size: 30px;
+	    outline: none;
+	    color: #284e90;
+	    border-radius: 3px;
+	    padding: 10px;
+	    margin: 0 -10px;
+	    border: 3px dashed rgba(0, 0, 0, 0);
+	    background: transparent;
+	    font-weight: 200;
+	}
+
+	.signup-input:hover {
+	    border: 3px dashed rgba(0, 0, 0, 0.05);
+	}
+
+	.signup-input:focus {
+	    border: 3px dashed rgba(0, 0, 0, 0);
+	}
+
+	.signup-input:focus + .signup-confirm {
+		opacity: 1
+	}
+
+	.signup-confirm {
+		opacity: 0;
+	    display: inline-block;
+	    border: 1px solid rgba(0, 0, 0, 0.12);
+	    padding: 4px;
+	    padding-right: 10px;
+	    border-radius: 5px;
+	    background: rgba(0, 0, 0, 0.06);
+	    color: rgba(0, 0, 0, 0.48);
+	    font-size: 10px;
+	    margin: 6px 0;
+	}
+
+	.signup-month {
+	    display: inline-block;
+	    border: 1px solid rgba(0, 0, 0, 0.12);
+	    padding: 4px;
+	    padding-right: 10px;
+	    border-radius: 5px;
+	    background: rgba(0, 0, 0, 0.06);
+	    color: rgba(0, 0, 0, 0.48);		
+	}
+	
+	.signup-ok {
+	    display: inline-block;
+	    padding: 5px 15px;
+	    background: #4488ff;
+	    color: #fff;
+	    margin-right: 10px;
+	    border-radius: 5px;
+	    font-size: 20px;
+	    vertical-align: middle;
+	}
+
+	.signup-label {
+	    margin-bottom: 30px;
+	}
+
+	#signup {
+		padding: 300px 0;
+	}
+
+	#signup-header-wrap {
+	    position: fixed;
+	    top: 0;
+	    width: 100%;
+	    box-sizing: border-box;
+	    background: #7caafb;
+	    color: #fff;
+	    font-size: 20px;
+	    z-index: 2;
+	}
+
+	#signup-header {
+	    padding: 50px 100px;
+	    max-width: 900px;
+	    margin-left: auto;
+	    margin-right: auto;
+	    box-sizing: border-box;
+	}
+
+	#signup-submit {
+	    display: inline-block;
+	    background: #48f;
+	    color: #fff;
+	    padding: 10px 20px;
+	    border-radius: 5px;
+	}
 </style>
 <div id='app'>
 	<div id='chrome'>
@@ -378,7 +516,7 @@
 					<div class='plan-desc-item'>Up to <b>3</b> sheets at a time</div>
 					<div class='plan-desc-item'>Up to <b>1000</b> rows per sheet</div>
 				</div>	
-				<div class='plan-price'>$5<span class='mo'>/mo</span>
+				<div class='plan-price'>$4.58<span class='mo'>/mo</span>
 				</div>
 			</div>
 			<div class='plan' id='advanced'>
@@ -393,7 +531,7 @@
 					<div class='plan-desc-item'>Up to <b>1000</b> rows per sheet</div>
 					<div class='plan-desc-item'>Up to <b>200</b> columns per sheet</div>
 				</div>
-				<div class='plan-price'>$15<span class='mo'>/mo</span>
+				<div class='plan-price'>$14.87<span class='mo'>/mo</span>
 				</div>
 				
 			</div>
@@ -414,6 +552,49 @@
 		</div>
 		<div id='pricing-modal-plan-free'>
 			Or keep using the free plan
+		</div>
+		<div id='signup'>
+			<div id='signup-header-wrap'>
+				<div id='signup-header'>
+					You're subscribing under the <b>Roomba</b> plan for <b>$5.00</b> a month. Great choice!
+				</div>
+			</div>
+			<div class='signup-question'>
+				<!-- <div class='signup-label'>Where should we send your activation <b>email</b>?</div> -->
+				<div class='signup-label'>What <b>email address</b> should we use to set up your account?</div>
+				<input class='signup-input'></input>
+				<div class='signup-confirm'><div class='signup-ok'>Ok</div>press <b>ENTER</b></div>
+			</div>
+			<div class='signup-question secure'>
+				<div class='signup-label'>Please enter your <b>Credit</b> or <b>Debit Card</b> number:</div>
+				<input class='signup-input'></input>
+				<div class='signup-confirm'><div class='signup-ok'>Ok</div>press <b>ENTER</b></div>
+			</div>
+			<div class='signup-question secure'>
+				<div class='signup-label'>The <b>CVC</b> number:</div>
+				<input class='signup-input'></input>
+				<div class='signup-confirm'><div class='signup-ok'>Ok</div>press <b>ENTER</b></div>
+			</div>
+			<div class='signup-question secure'>
+				<div class='signup-label'>The <b>name</b> on your card:</div>
+				<input class='signup-input'></input>
+				<div class='signup-confirm'><div class='signup-ok'>Ok</div>press <b>ENTER</b></div>
+			</div>
+			<div class='signup-question secure'>
+				<div class='signup-label'>Your card's <b>expiration month</b>:</div>
+				<input class='signup-input'></input>
+				<div class='signup-confirm'><div class='signup-ok'>Ok</div>press <b>ENTER</b></div>
+			</div>
+			<div class='signup-question secure'>
+				<div class='signup-label'>Your card's <b>expiration year</b>:</div>
+				<input class='signup-input'></input>
+				<div class='signup-confirm'><div class='signup-ok'>Ok</div>press <b>ENTER</b></div>
+			</div>		
+			<div class='signup-question'>
+				<div class='signup-label'>You're done!</div>
+				<div class='signup-label'>After you submit, we'll send you a link to set up your account.</div>
+				<div id='signup-submit'>Submit</div>
+			</div>			
 		</div>
 	</div>
 </div>
@@ -527,7 +708,9 @@
 	document.getElementById('pricing').addEventListener('click', show_pricing)
 	document.getElementById('export').addEventListener('click', show_pricing)
 </script>
-<script type="text/javascript">CRISP_WEBSITE_ID = "711dddb2-aba7-4f43-ae55-1d4643bb3c7a";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.im/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();
+<script type="text/javascript">CRISP_WEBSITE_ID = "711dddb2-aba7-4f43-ae55-1d4643bb3c7a";(function(){d=document;s=d.createElement("script");
+	s.src="crispy/load.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();
+	// s.src="//client.crisp.im/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();
 </script>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

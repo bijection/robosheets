@@ -85,8 +85,8 @@ function cartesian_product2(...arrays) {
 
 function cross(as, bs){
     let res = []
-    as.forEach(a => {
-        bs.forEach(b => {
+    bs.forEach(b => {
+        as.forEach(a => {
             res.push([a, b])
         })
     })

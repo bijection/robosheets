@@ -459,8 +459,12 @@ function lazy_generate_intersect_multidags(inputs, outputs){
 
     let edge_frags = {}
     let get_edge_frag = (i, start, end) => {
-        let key = [i,start,end]
+
+        // console.log(i,start,end)
+
+        // let key = [i,start,end]
         let part = substring(outputs[i], start, end)
+        let key = [i, part]
         if(!edge_frags[key]){
             edge_frags[key] = generate_substring(inputs[i], part)
             edge_frags[key].push(new ConstStrSet(part))
@@ -468,24 +472,35 @@ function lazy_generate_intersect_multidags(inputs, outputs){
         return edge_frags[key]
     }
 
-
+    let visited_nodes = {}
     function helper(node){
+        
+        // console.log(node)
+
+        if(node in visited_nodes) return visited_nodes[node]
+
         if(_.isEqual(node, target)) return true;
 
         // var sv = outputs.map((output, i) => k.edges.filter(e => _.isEqual(e[0], node[i])));
-        var sv = outputs.map((output, i) => _.range(node[i]+1, output.length + 1).map(end => [node[i], end]).reverse());
-        for(var ev of cartesian_product(...sv)){
-            var edge = [node, ev.map(k => k[1])];
+        var output_ranges = outputs.map((output, i) => 
+            _.range(node[i]+1, output.length + 1)
+            .map(end => [node[i], end])
+            .reverse());
 
-            // var last = dags[0].W[JSON.stringify(ev[0])]
-            // var last = generate_substr(inputs[0], substring(outputs[0],...ev[0]))
-            var last = get_edge_frag(0,...ev[0])
+        // console.log(node, output_ranges, outputs)
+        for(var output_range of cartesian_product(...output_ranges)){
+            var edge = [node, output_range.map(k => k[1])];
 
-            for(var i = 1; last.length > 0 && i < ev.length; i++){
+            // var last = dags[0].W[JSON.stringify(output_range[0])]
+            // var last = generate_substr(inputs[0], substring(outputs[0],...output_range[0]))
+            // console.log('last')
+            var last = get_edge_frag(0,...output_range[0])
+
+            for(var i = 1; last.length > 0 && i < output_range.length; i++){
                 var intersection = []
-                // cross(last, dags[i].W[JSON.stringify(ev[i])])
-                // cross(last, generate_substr(inputs[i], substring(outputs[i],...ev[i])))
-                cross(last, get_edge_frag(i, ...ev[i]))
+                // cross(last, dags[i].W[JSON.stringify(output_range[i])])
+                // cross(last, generate_substr(inputs[i], substring(outputs[i],...output_range[i])))
+                cross(last, get_edge_frag(i, ...output_range[i]))
                 .forEach(([f1, f2]) => {
                     var int = intersect(f1, f2)
                     if(int) intersection.push(int);
@@ -499,9 +514,11 @@ function lazy_generate_intersect_multidags(inputs, outputs){
                 W[JSON.stringify(edge)] = last;
                 edges.push(edge)
                 
+                visited_nodes[node] = true
                 return true
             }
         }
+        visited_nodes[node] = false
     }
 
     helper(source);

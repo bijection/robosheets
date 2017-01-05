@@ -64,7 +64,7 @@ let worker = new Worker('../magic/worker.js')
 function getWorkerMessage({data}){
 	let {program, col} = data
 
-	console.log('got', col)
+	// console.log('got', col)
 
 	autofill_programs[col] = hydrate(program)
 	clearTimeout(loading_programs[col])
@@ -870,27 +870,37 @@ document.addEventListener('paste', function(e){
 
 function filled_region(region){
 	let [start_row, start_col, end_row, end_col] = region
-	let real_end_row = start_row, real_end_col = start_col
 
-	Object.keys(user_content).forEach(k => {
-		let [r, c] = k.split(',')
-		real_end_row = Math.max(real_end_row, r);
-		real_end_col = Math.max(real_end_col, c);
-	})
+	if(end_row == Infinity){ // copy ot end of allowed region if finite
+		let finite_end_row = max_row == Infinity ? start_row : max_row
+		let finite_end_col = max_col == Infinity ? start_col : max_col
+		
+		Object.keys(user_content).forEach(k => {
+			let [r, c] = k.split(',')
+			finite_end_row = Math.max(finite_end_row, r);
+			finite_end_col = Math.max(finite_end_col, c);
+		})
 
-	return [start_row, start_col,
-		end_row == Infinity ? real_end_row : end_row,
-		end_col == Infinity ? real_end_col : end_col]
+		end_row = finite_end_row
+		end_col = finite_end_col
+	}
+
+	return [start_row, start_col, end_row, end_col]
 }
 
 
 
-function to_text(region, raw=false){
+function to_text(region, method='computed'){
 	let [start_row, start_col, end_row, end_col] = filled_region(region)
 
 	return _.range(start_row, end_row+1)
 	.map(row => _.range(start_col, end_col+1)
-	 			.map(col => raw ? user_content[[row, col]] : evaluate(cell_text(row, col)))
+	 			.map(col => {
+	 				if(method === 'computed') return evaluate(cell_text(row, col))
+	 				else if(method === 'autofilled') return cell_text(row, col)
+	 				else if(method === 'input') return user_content[[row, col]]
+	 				else throw 'on no!'
+	 			})
 	 			.join('\t'))
 	.join('\n')
 }
@@ -903,7 +913,7 @@ document.addEventListener('copy', function(e){
 	e.preventDefault()
 
 	let region = get_selection_region() || [selected_row, selected_col, selected_row, selected_col]
-	let data = to_text(region)
+	let data = e.shiftKey ? to_text(region, 'autofilled') : to_text(region, 'computed')
 
 	e.clipboardData.setData('text/plain', data);
 
@@ -1149,6 +1159,7 @@ function auto_fill(){
 
 		let examples = _examples.map(k => {
 			var row_prefix = k.split(',')[0];
+			// ignore non-formula inputs
 			if(!has_formula || is_formula(row_prefix)) return [get_sigma(row_prefix, col), user_content[k]]
 		}).filter(x=>x)
 
@@ -1156,12 +1167,12 @@ function auto_fill(){
 		// and don't do the expensive recomputation
 
 		worker.postMessage({examples, col})
-		console.log('filling', col)
+		// console.log('filling', col)
 		loading_programs[col] = setTimeout(() => {
-			console.log('killing worker due to timeout')
-			worker.terminate()
-			worker = new Worker('../magic/worker.js')
-			worker.onmessage = getWorkerMessage
+			// console.log('killing worker due to timeout')
+			// worker.terminate()
+			// worker = new Worker('../magic/worker.js')
+			// worker.onmessage = getWorkerMessage
 
 			clearTimeout(loading_programs[col])
 			delete loading_programs[col]
@@ -1214,6 +1225,12 @@ let handle_keydown = e=> {
 	}
 
 	if([17, 91].includes(e.keyCode)) command_down = true
+
+	// console.log(e.keyCode)
+	if(e.keyCode == 67 && command_down && !is_typing()){ //z
+		console.log('asdf')
+	}
+
 
 	if(e.keyCode == 90 && command_down && !is_typing()){ //z
 		e.preventDefault()
@@ -1544,7 +1561,25 @@ function cell_row_col(x, y){
 	return [r, c]
 }
 
+function display_help_message(message){
+	window.parent.$crisp.debug.Trigger.__action_message({}, {default: message})
+}
+
+let warned = false
+
 function set_selected(row, col){
+
+	let old_text = cell_text(selected_row, selected_col)
+	if(old_text.startsWith('=')){
+
+		console.log(old_text)
+		if(!warned) {
+			warned = true
+			display_help_message('Sorry! Robosheets doesn\'t support excel-style formulas.')
+		}
+
+	}
+
 	row = Math.max(row, 0)
 	col = Math.max(col, 0)
 
@@ -1598,7 +1633,7 @@ function scroll_into_view(r, c){
 
 
 function start_typing(){
-	console.log('start typing')
+	// console.log('start typing')
 
 	if(!editable(selected_row, selected_col)) return
 
@@ -1640,7 +1675,7 @@ function defined(x){
 
 const action = region => ({
 	region,
-	data: to_text(region, true),
+	data: to_text(region, 'input'),
 	row, col,
 	selected_row, selected_col, 
 	selected_end_row, selected_end_col
