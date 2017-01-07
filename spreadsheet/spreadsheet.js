@@ -92,8 +92,6 @@ function hydrate(frag){
 
 function render() {
 
-	if(paused) return;
-
 	canvas.width = innerWidth * SCALE
 	canvas.height = innerHeight * SCALE
 
@@ -109,7 +107,7 @@ function render() {
 
 	draw_hovered_divider()
 
-	draw_cells_text()
+	if(!paused) draw_cells_text()
 
 	draw_selected_cell()
 	draw_selection_region()
