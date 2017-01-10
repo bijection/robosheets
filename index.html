@@ -366,18 +366,48 @@
     	/*opacity: .3;*/
 	}
 
-	.signup-question.secure .signup-label::before {
-		/*position: absolute;*/
-		/*background: red;*/
-        content: ' ';
-	    padding: 0 10px;
+	/*.signup-question.secure .signup-label::before*/
+	/*{
+	    content: 'Secured by Stripe';
+	    padding: 0 4px;
 	    background: url(lock.svg);
 	    background-repeat: no-repeat;
-	    background-position: center;
-	    background-size: 16px;
+	    background-position: 97% 50%;
+	    background-size: 9px;
 	    padding-top: 3px;
 	    opacity: .8;
 	    margin-right: 5px;
+	    padding-right: 16px;
+	    border: 1px solid rgba(0, 0, 0, 0.32);
+	    border-radius: 3px;
+	    font-size: 13px;
+	    color: #0a0a0a;
+	}*/
+
+	.signup-question.secure {
+		padding: 0;
+	}
+
+	#secure-title::after
+	{
+	    content: 'Secured by';
+	    padding: 6px 10px;
+	    background: url(stripe.svg);
+	    background-repeat: no-repeat;
+	    background-position: 92% 50%;
+	    background-size: 38px;
+	    opacity: .2;
+	    margin-right: 5px;
+	    padding-right: 50px;
+	    border: 1px solid rgb(0, 0, 0);
+	    border-radius: 3px;
+	    font-size: 13px;
+	    color: #000000;
+	    vertical-align: middle;
+	    margin-left: 20px;
+	    position: absolute;
+	    right: 10px;
+	    top: 40px;
 	}
 
 	.signup-input {
@@ -488,6 +518,34 @@
 	    padding: 10px 20px;
 	    border-radius: 5px;
 	}
+
+	#secure {
+	    max-width: 700px;
+	    margin: 0 auto;
+	    margin-bottom: 30px;
+	    border-radius: 5px;
+	    overflow: hidden;
+	    /*height: 282px;*/
+	    color: rgba(0,0,0,.4);
+	    padding: 0 30px;
+	    transition: .2s;
+	}
+
+	#secure.expanded {
+	    background: rgba(231, 242, 255, 0.5);
+	    /*box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);*/
+		color: #000;
+	}
+
+	#secure-title {
+		padding: 20px 0;
+		font-size: 60px;
+		position: relative;
+	}
+
+	#secure.expanded #secure-title::after {
+		opacity: .5;
+	}	
 </style>
 <div id='app'>
 	<div id='chrome'>
@@ -599,39 +657,38 @@
 				<!-- <div class='signup-label'>Where should we send your activation <b>email</b>?</div> -->
 				<div class='signup-label'><b class='selected-name'></b>, a great choice!</div>
 				<div class='signup-label'>What <b>email address</b> should we use to set up your account?</div>
-				<input class='signup-input' type='text'></input>
+				<input class='signup-input' type='text' placeholder="iron@giant.com"></input>
 				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>
+			<div id='secure'>
+			<div id='secure-title'>Payment Info</div>
+
 			<div class='signup-question secure'>
 				<div class='signup-label'>Please enter your <b>Credit</b> or <b>Debit Card</b> number:</div>
-				<input class='signup-input' type='text'></input>
+				<input class='signup-input' type='text' placeholder="**** **** **** 4242"	></input>
 				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>
 			<div class='signup-question secure'>
 				<div class='signup-label'>The <b>CVC</b> number:</div>
-				<input class='signup-input' type='text'></input>
+				<input class='signup-input' type='text' placeholder="123"></input>
 				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>
 			<div class='signup-question secure'>
 				<div class='signup-label'>The <b>name</b> on your card:</div>
-				<input class='signup-input' type='text'></input>
+				<input class='signup-input' type='text' placeholder="Iron Giant"></input>
 				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>
 			<div class='signup-question secure'>
-				<div class='signup-label'>Your card's <b>expiration month</b>:</div>
-				<input class='signup-input' type='text'></input>
+				<div class='signup-label'>Your card's <b>expiration date</b>:</div>
+				<input class='signup-input' type='text' placeholder="MM/YY"></input>
 				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>
-			<div class='signup-question secure'>
-				<div class='signup-label'>Your card's <b>expiration year</b>:</div>
-				<input class='signup-input' type='text'></input>
-				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>		
 			<div class='signup-question'>
 				<div class='signup-label'>You're done!</div>
 				<div class='signup-label'>After you submit, we'll email you a link to set up your <b class='selected-name'></b> Account.</div>
 				<div id='signup-submit'>Submit</div>
-			</div>			
+			</div>	
 		</div>
 		</div>
 	</div>
@@ -765,6 +822,7 @@
 
 		let input = q.querySelector('.signup-input')
 		if (input) input.focus()
+		else ungray_question(signup_questions.indexOf(q))
 	}))
 
 	signup_inputs.forEach((input, i) => {
@@ -790,10 +848,13 @@
 	function ungray_question(i){
 		signup_questions.forEach(q => q.classList.add('gray'))
 		signup_questions[i].classList.remove('gray')
+
+		if( i > 0 && i < signup_questions.length - 1) $('#secure').classList.add('expanded')
+		else $('#secure').classList.remove('expanded')
 	}
 
 	function activate_input(i){
-		if( i < 0 ||  i > signup_questions.length) return;
+		if( i < 0 ||  i > signup_questions.length - 1) return;
 
 		let q = signup_questions[i],
 			rect = q.getBoundingClientRect(),
@@ -804,13 +865,14 @@
 		let input = q.querySelector('.signup-input')
 		if (!input) ungray_question(i)
 
-		scrollTo(pm, pm.scrollTop + rect.top - innerHeight / 2 + rect.height / 2, 200, () => {
+		scrollTo(pm, pm.scrollTop + rect.top - innerHeight / 2 + rect.height / 2, 300, () => {
 			if(input
 				&& input.getBoundingClientRect().bottom < innerHeight
 				&& input.getBoundingClientRect().top > 0
 				){
 				input.focus()
 			}
+			else q.focus()
 		})
 
 	}
