@@ -1,3 +1,30 @@
+import {
+    substring,
+    is_substr_at,
+    all_matches,
+    to_regex_string,
+    cartesian_product,
+    cross,
+    list_intersection
+} from '../shared/utils'
+
+import Transformations from '../shared/transformations'
+
+import {
+    CPosSet,
+    PosSet,
+    SubStrSet,
+    ExtdSubStrSet,
+    ConstStrSet,
+    DAG,
+} from '../shared/langsets'
+
+import {
+    TokenNames,
+    TokenRegexesG,
+    TokenStrings
+} from '../shared/tokens'
+
 let IPartsCache = {}
 function IParts(str) {
     if(IPartsCache[str]) return IPartsCache[str]
@@ -448,7 +475,7 @@ function lazy_intersect_multidags(...dags){
 }
 
 
-function lazy_generate_intersect_multidags(inputs, outputs){
+export default function lazy_generate_intersect_multidags(inputs, outputs){
 
     if(inputs.length === 1) return generate_str(inputs[0], outputs[0])
     

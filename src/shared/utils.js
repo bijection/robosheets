@@ -1,4 +1,7 @@
-function all_matches(s, re) {
+import {TokenStrings} from './tokens'
+import {BoundVar} from './lang'
+
+export function all_matches(s, re) {
     var m, matches = [];
     var lastI;
     re.lastIndex = 0
@@ -9,7 +12,7 @@ function all_matches(s, re) {
     return matches;
 }
 
-function array_index(arr, index){
+export function array_index(arr, index){
     if(index < 0){
         return arr[arr.length + index]
     }else{
@@ -17,31 +20,32 @@ function array_index(arr, index){
     }
 }
 
-function unbind_integer(c, bindings){
+export function unbind_integer(c, bindings){
     return c instanceof BoundVar
     ?   c.unbind(bindings)
     :   c
 }
 
-function substring(s, i, j){
+export function substring(s, i, j){
     return s.substring(i, j)
 }
 
-function regex(tokseq) {
+export function regex(tokseq) {
     return new RegExp(tokseq.map(t => '(' + TokenStrings[t] + ')').join(''), 'g')
 }
 
-let to_regex_string = seq => seq.map(t => TokenStrings[t]).join('')
+export var to_regex_string = seq => seq.map(t => TokenStrings[t]).join('')
 
-function sample(arr){
-    return arr[Math.floor(Math.random()*arr.length)]
+export function sample(arr){
+    return arr[0]
+    // return arr[Math.floor(Math.random()*arr.length)]
 }
 
 RegExp.escape = function(s) {
     return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 };
 
-function is_substr_at(str, substr){
+export function is_substr_at(str, substr){
     let m, indices = [];
     let re = substr instanceof RegExp
         ? substr
@@ -54,7 +58,7 @@ function is_substr_at(str, substr){
 }
 
 
-function* cartesian_product(...arrays) {
+export function* cartesian_product(...arrays) {
     function* doCartesian(i, prod) {
         if (i == arrays.length) {
             yield prod;
@@ -83,7 +87,7 @@ function cartesian_product2(...arrays) {
     return _inner(...arrays, [[]]);
 };
 
-function cross(as, bs){
+export function cross(as, bs){
     let res = []
     bs.forEach(b => {
         as.forEach(a => {
@@ -97,7 +101,7 @@ function cross(as, bs){
 // technically O(n*m) but
 // empirically faster than O(n+m) associative array technique
 
-function list_intersection(x, y){
+export function list_intersection(x, y){
     var ret = [];
     for (var i = 0; i < x.length; i++) {
         for (var z = 0; z < y.length; z++) {

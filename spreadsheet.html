@@ -11,7 +11,6 @@
 		font-family: Helvetica;
 		outline: 0;
 		background: rgba(255,0,0,0);
-		/*top: -1000px;*/
 	}
 </style>
 <div id='spreadsheet'>
@@ -19,14 +18,7 @@
 	<canvas id='canvas'></canvas>	
 </div>
 
-<script type="text/javascript" src='lib/lodash.js'></script>
-<script type="text/javascript" src='magic/lang.js'></script>
-<script type="text/javascript" src='magic/transformations.js'></script>
-<script type="text/javascript" src='magic/utils.js'></script>
-<script type="text/javascript" src='magic/tokens.js'></script>
-
-
-<!-- <script type="text/javascript" src='magic/langtest.js'></script> -->
-<!-- <script type="text/javascript" src='magic/generatetest.js'></script> -->
-
-<script type="text/javascript" src='spreadsheet/spreadsheet.js'></script>
+<script type="text/javascript">
+	window.workerpath = 'dist/worker.bundle.js'
+</script>
+<script type="text/javascript" src='dist/browser.bundle.js'></script>

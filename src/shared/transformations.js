@@ -50,7 +50,7 @@ function inverseListPlaceTransform(list){
 	}
 }
 
-let NamedTransformations = {
+export var NamedTransformations = {
 	UPPER: {
 		transform(s){
 			return s.toUpperCase()
@@ -118,3 +118,5 @@ let Transformations = Object.keys(NamedTransformations).map(name => {
 	t.transform.type = name
 	return t
 })
+
+export default Transformations

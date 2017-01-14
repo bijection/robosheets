@@ -1,5 +1,16 @@
+import {
+    all_matches,
+    array_index,
+    substring,
+    unbind_integer,
+    to_regex_string,
+    regex
+} from './utils'
+
+import {NamedTransformations} from './transformations'
+
 // Switch((b1, e1), ⋅⋅, (b𝑛, e𝑛))
-class Switch {
+export class Switch {
     constructor(...clauses){
         this.type = 'Switch'
         // assert isinstance(clauses, tuple)
@@ -23,7 +34,7 @@ class Switch {
 }
 
 // Bool b := d1 ∨ ⋅ ⋅ ∨ d𝑛
-class Or {
+export class Or {
     constructor(...d){
         this.type = 'Or'
         this.d = d
@@ -39,7 +50,7 @@ class Or {
 }
 
 // Conjunct d := 𝜋1 ∧⋅⋅∧𝜋𝑛
-class And {
+export class And {
     constructor(...p){
         this.type = 'And'
         this.p = p
@@ -54,7 +65,7 @@ class And {
     }
 }
 
-class Not {
+export class Not {
     constructor(m){
         this.type = 'Not'
         // assert instanceof(m, Match)
@@ -76,7 +87,7 @@ class Not {
 
 // We often denote Match(𝑣𝑖,r) by simply Match(𝑣𝑖 , r, 1).
 
-class Match {
+export class Match {
     constructor(vi, r, k = 1){
         this.type = 'Match'
         // assert isinstance(vi, int)
@@ -106,7 +117,7 @@ class Match {
 }
 
 // [Concatenate(f1, ⋅⋅ fn)] = Concatenate([f1] 𝜎, ⋅⋅, [f𝑛] 𝜎)
-class Concatenate {
+export class Concatenate {
     constructor(...exprs){
         this.type = 'Concatenate'
         // assert isinstance(exprs, tuple)
@@ -128,7 +139,7 @@ class Concatenate {
 // define more interesting termination conditions (based on position expression, 
 // or predicates), but we leave out details for lack of space.
 
-class Loop {
+export class Loop {
     constructor(w, fn){
         this.type = 'Loop'
         this.w = w
@@ -157,7 +168,7 @@ function LoopR(w, fn, k, sigma, bindings){
     return t + LoopR(w, fn, k + 1, sigma, bindings)
 }
 
-class BoundVar {
+export class BoundVar {
     constructor(w, k1 = 1, k2 = 0){
         this.type = 'BoundVar'
         this.w = w
@@ -184,7 +195,7 @@ class BoundVar {
 // If either of p1 or p2 refer to an index that is outside the range of 
 // string 𝑣𝑖, then the SubStr constructor returns ⊥.
 
-class SubStr {
+export class SubStr {
     constructor(vi, p1, p2){
         this.type = 'SubStr'
         // assert isinstance(vi, int)
@@ -208,7 +219,7 @@ class SubStr {
 }
 
 
-class ExtdSubStr {
+export class ExtdSubStr {
     constructor(substring, f){
         this.type = 'ExtdSubStr'
         this.substring = substring
@@ -236,7 +247,7 @@ function SubStr2(vi, r, c){
 
 
 
-class ConstStr {
+export class ConstStr {
     constructor(s){
         this.type = 'ConstStr'
         // assert isinstance(s, str)
@@ -260,7 +271,7 @@ class ConstStr {
 // from the left side (or right side), if the integer constant 𝑘 is 
 // non-negative (or negative).
 
-class CPos {
+export class CPos {
     constructor(k){
         this.type = 'CPos'
         // assert isinstance(k, int)
@@ -292,7 +303,7 @@ class CPos {
 
 // import re
 
-class Pos {
+export class Pos {
     constructor(r1, r2, c){
         this.type = 'Pos'
         // regular expressions
@@ -319,20 +330,4 @@ class Pos {
     toString(){
         return `new Pos( ${JSON.stringify(this.r1)}, ${JSON.stringify(this.r2)}, ${this.c})`
     }
-}
-
-let language = {
-    Switch,
-    Or,
-    And,
-    Not,
-    Match,
-    Concatenate,
-    Loop,
-    BoundVar,
-    SubStr,
-    ExtdSubStr,
-    ConstStr,
-    CPos,
-    Pos,
 }

@@ -1,3 +1,7 @@
+import 'babel-polyfill'
+import 'lodash'
+import * as language from '../shared/lang'
+
 let ctx = canvas.getContext('2d')
 
 let row = 0
@@ -57,16 +61,20 @@ function resume(){
 	paused = false;
 }
 
+window.pause = pause
+window.resume = resume
+
 keygetter.style.display = 'none';
 
-let worker = new Worker('../magic/worker.js')
+let worker = new Worker(window.workerpath)
 
 function getWorkerMessage({data}){
 	let {program, col} = data
 
-	// console.log('got', col)
+	console.log('got', col, program)
 
 	autofill_programs[col] = hydrate(program)
+
 	clearTimeout(loading_programs[col])
 	delete loading_programs[col]
 }
@@ -136,11 +144,12 @@ function save(){
 		autofill_programs,
 	})
 }
+window.save = save
 
 function clear(sn){
 	delete localStorage[sn]
 }
-
+window.clear = clear
 
 function load(sn){
 
@@ -177,6 +186,8 @@ function load(sn){
 	})
 	loading_programs = {}
 }
+
+window.load = load
 
 function loadfake(){
 	let data = `Elsie	Graham	2/6/1986
@@ -470,70 +481,74 @@ function draw_cell_text(row, col){
 		ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height/2 )
 	}
 
+	// function draw_fancy_upgrade_text(){
+	// 	let cropped_text = text.slice(0, 5 + text.length * cell_width / text_width)
+	// 	ctx.textAlign = 'start'
+	// 	// let n = (1 - 1/Math.log((r*r + c*c)/100))
+	// 	// ctx.fillStyle = 'rgba(0,0,0,'+n+')'
+	// 	// if(Math.random() > .99) console.log(ctx.fillStyle, n)
+
+	// 	let dr = r - max_row
+	// 	let dc = c - max_col
+
+	// 	let d = Math.min(Math.max(dr,dc)/20, 1)
+	// 	let now = Date.now() / 500
+
+
+	// 	const perlin = (a,b) => {
+	// 		const rand = x => {
+	// 			for (let i = 0; i < 3; i++) x = (x * 16807 % 2147483647) - 1
+	// 			return x / 2147483646
+	// 		}
+
+	// 		let sum = 0
+	// 		for (var i = 0; i < 5; i++){
+	// 			a = a >> 1
+	// 			b = b >> 1
+	// 			sum += rand(1/2 * (a+b) * (a+b+1) + b)
+	// 		}
+
+	// 		return sum / i	
+	// 	}
+
+	// 	const blurlin = (a,b) => (perlin(a,b) +
+	// 					perlin(a+1,b) +  
+	// 					perlin(a,b+1) /2 +  
+	// 					perlin(a-1,b) +  
+	// 					perlin(a,b-1) /2 )/4
+
+	// 	let h = blurlin(r,c*5)
+	// 	if( h > .7) ctx.fillStyle = 'rgba(0,100,0,'+h+')'
+	// 	else if( h > .6) ctx.fillStyle = 'rgba(120,100,0,'+h+')'
+	// 	else if( h > .6) ctx.fillStyle = '#ddca92'
+	// 	else ctx.fillStyle = 'rgba(0,0,255,'+(1-h)+')'
+
+	// 	ctx.fillRect(x+1, y+1, cell_width - 2, height - 2)
+	// 	ctx.fillStyle =  'rgba(0,0,0,.3)'
+
+	// 	let wavex = cell_horizontal_padding * Math.sin( now + r ) * d
+	// 	let wavey = cell_horizontal_padding * Math.cos( now + c ) * d
+	// 	ctx.fillText(
+	// 		cropped_text, 
+	// 		x + cell_horizontal_padding + wavex,
+	// 		y + height/2 + wavey
+	// 	)
+	// }
+
+
+
 	function draw_upgrade_text(){
+
+		// if(r != selected_row || c != selected_col) return;
+
 		let cropped_text = text.slice(0, 5 + text.length * cell_width / text_width)
 		ctx.textAlign = 'start'
-		// let n = (1 - 1/Math.log((r*r + c*c)/100))
-		// ctx.fillStyle = 'rgba(0,0,0,'+n+')'
-		// if(Math.random() > .99) console.log(ctx.fillStyle, n)
-
-		let dr = r - max_row
-		let dc = c - max_col
-
-		let d = Math.min(Math.max(dr,dc)/20, 1)
-		let now = Date.now() / 500
-
-		let wave_colors = false
-		if(wave_colors){
-			let t = (Math.sin(now + (dr*dr + dc*dc * 30) / 100) + 1) / 2
-			ctx.fillStyle = 'rgba(100, 100,'+Math.round(100 + t*155)+',1)'			
-		} else {
-
-			const perlin = (a,b) => {
-				const rand = x => {
-					for (let i = 0; i < 3; i++) x = (x * 16807 % 2147483647) - 1
-					return x / 2147483646
-				}
-
-				let sum = 0
-				for (var i = 0; i < 5; i++){
-					a = a >> 1
-					b = b >> 1
-					sum += rand(1/2 * (a+b) * (a+b+1) + b)
-				}
-
-				return sum / i	
-			}
-
-			const blurlin = (a,b) => (perlin(a,b) +
-							perlin(a+1,b) +  
-							perlin(a,b+1) /2 +  
-							perlin(a-1,b) +  
-							perlin(a,b-1) /2 )/4
-
-			// let h = blurlin(r,c*5)
-			// if( h > .7) ctx.fillStyle = 'rgba(0,100,0,'+h+')'
-			// else if( h > .6) ctx.fillStyle = 'rgba(120,100,0,'+h+')'
-			// else if( h > .6) ctx.fillStyle = '#ddca92'
-			// else ctx.fillStyle = 'rgba(0,0,255,'+(1-h)+')'
-			ctx.fillStyle = 'rgba(0,0,0,.05)'
-		}
+		ctx.fillStyle = 'rgba(0,0,0,.05)'
 
 		ctx.fillRect(x+1, y+1, cell_width - 2, height - 2)
 		ctx.fillStyle =  'rgba(0,0,0,.3)'
 
-		let wave_pos = false
-		if(wave_pos){
-			let wavex = cell_horizontal_padding * Math.sin( now + r ) * d
-			let wavey = cell_horizontal_padding * Math.cos( now + c ) * d
-			ctx.fillText(
-				cropped_text, 
-				x + cell_horizontal_padding + wavex,
-				y + height/2 + wavey
-			)
-		} else {
-			ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height/2)
-		}
+		ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height/2)
 	}
 
 	function draw_squished_text(){
@@ -1038,6 +1053,7 @@ function cell_text(r, c){
 	
 	if(autofill_programs[c]) {
 		let program = autofill_programs[c];
+		// debugger
 		return apply_program(program, get_sigma(r, c))
 	}
 
@@ -1284,6 +1300,7 @@ canvas.addEventListener('mousedown', e => {
 	let col_divider = get_hovered_col_divider()
 	let row_divider = get_hovered_row_divider()
 
+	var move, up
 
 	if(defined(clicked_row) && defined(clicked_col)){
 		if(e.shiftKey){
@@ -1293,7 +1310,7 @@ canvas.addEventListener('mousedown', e => {
 			set_selected(clicked_row,clicked_col)
 		}
 
-		function move() {
+		move = function() {
 			scroll_into_view(selected_end_row, selected_end_col)
 			;[selected_end_row, selected_end_col] = cell_row_col(mouse_x, mouse_y)
 			if(!defined(selected_end_row)) selected_end_row = Math.max(row - 1, 0)
@@ -1302,7 +1319,7 @@ canvas.addEventListener('mousedown', e => {
 
 		let int = setInterval(move, 30)
 
-		function up() {
+		up = function() {
 			clearInterval(int)
 		}
 
@@ -1311,12 +1328,12 @@ canvas.addEventListener('mousedown', e => {
 		let start_row_height = row_heights[row_divider] || DEFAULT_ROW_HEIGHT
 		dragging_row_divider = row_divider
 
-		function move(e){
+		move = function(e){
 			let dy = e.clientY * SCALE - start_y
 			row_heights[row_divider] = Math.max(start_row_height + dy, DEFAULT_ROW_HEIGHT)
 		}
 
-		function up() {
+		up = function() {
 			dragging_row_divider = undefined
 		}
 
@@ -1325,12 +1342,12 @@ canvas.addEventListener('mousedown', e => {
 		let start_col_width = col_width(col_divider)
 		dragging_col_divider = col_divider
 
-		function move(e){
+		move = function(e){
 			let dx = e.clientX * SCALE - start_x
 			col_widths[col_divider] = Math.max(start_col_width + dx, DEFAULT_COL_WIDTH)
 		}
 
-		function up() {
+		up = function() {
 			dragging_col_divider = undefined
 		}
 
@@ -1342,7 +1359,7 @@ canvas.addEventListener('mousedown', e => {
 		selected_end_col = undefined
 		selected_end_row = undefined
 
-		function move(e){
+		move = function(e){
 			scroll_into_view(undefined, selected_end_col)
 			selected_end_row = Infinity
 			;[,selected_end_col] = cell_row_col(mouse_x, mouse_y)
@@ -1351,7 +1368,7 @@ canvas.addEventListener('mousedown', e => {
 
 		let int = setInterval(move, 30)
 
-		function up() {
+		up = function() {
 			clearInterval(int)
 		}
 
@@ -1363,7 +1380,7 @@ canvas.addEventListener('mousedown', e => {
 		selected_end_col = undefined
 		selected_end_row = undefined
 
-		function move(e){
+		move = function(e){
 			scroll_into_view(selected_end_row, undefined)
 			selected_end_col = Infinity
 			;[selected_end_row] = cell_row_col(mouse_x, mouse_y)
@@ -1372,15 +1389,10 @@ canvas.addEventListener('mousedown', e => {
 
 		let int = setInterval(move, 30)
 
-		function up() {
+		up = function() {
 			clearInterval(int)
 		}
 
-	}else{
-
-		function up() {
-			
-		}		
 	}
 
 	function onup() {

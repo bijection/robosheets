@@ -1,4 +1,21 @@
-class CPosSet {
+import {sample} from './utils'
+import {
+    Switch,
+    Or,
+    And,
+    Not,
+    Match,
+    Concatenate,
+    Loop,
+    BoundVar,
+    SubStr,
+    ExtdSubStr,
+    ConstStr,
+    CPos,
+    Pos
+} from './lang'
+
+export class CPosSet {
     constructor(pos){
         this.pos = pos
     }
@@ -15,7 +32,7 @@ class CPosSet {
 }
 
 
-class PosSet {
+export class PosSet {
     constructor(pre_regexes, post_regexes, places){
         this.pre_regexes = pre_regexes
         this.post_regexes = post_regexes
@@ -60,7 +77,7 @@ function optional_sample(x){
 }
 
 
-class LoopSet {
+export class LoopSet {
     constructor(w, fn){
         this.w = w
         this.fn = fn
@@ -70,7 +87,7 @@ class LoopSet {
     }
 }
 
-class BoundVarSet {
+export class BoundVarSet {
     constructor(w, k1 = 1, k2 = 0){
         this.w = w
         this.k1 = k1
@@ -82,7 +99,7 @@ class BoundVarSet {
     }
 }
 
-class SubStrSet {
+export class SubStrSet {
     constructor(vi, start_positions, end_positions){
         this.vi = vi
         this.start_positions = start_positions
@@ -129,7 +146,7 @@ class SubStrSet {
 }
 
 
-class ExtdSubStrSet {
+export class ExtdSubStrSet {
     constructor(substrset, f){
         this.substrset = substrset
         this.f = f
@@ -142,7 +159,7 @@ class ExtdSubStrSet {
 
 
 
-class ConstStrSet {
+export class ConstStrSet {
     constructor(s){
         this.s = s
     }
@@ -155,7 +172,7 @@ class ConstStrSet {
     size(){ return 1 }
 }
 
-class DAG {
+export class DAG {
     constructor(nodes, source, target, edges, map){
         this.nodes = nodes
         this.source = source

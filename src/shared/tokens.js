@@ -23,7 +23,7 @@
 // with the hyphen character.
 
 
-TokenStrings = {
+export var TokenStrings = {
     'AlphNumTok': '[a-zA-Z0-9]+',
     'AlphNumWsTok': '[a-zA-Z0-9 ]+',
     'AlphTok': '[a-zA-Z]+',
@@ -94,17 +94,17 @@ TokenStrings = {
 
 
 
-var TokenNames = Object.keys(TokenStrings)
+export var TokenNames = Object.keys(TokenStrings)
 
-var TokenRegexes = {}
+export var TokenRegexes = {}
 TokenNames.forEach(s => TokenRegexes[s] = new RegExp(TokenStrings[s]))
 
-var TokenRegexesG = {}
+export var TokenRegexesG = {}
 TokenNames.forEach(s => TokenRegexesG[s] = new RegExp(TokenStrings[s], 'g'))
 
-var TokenRegexesStart = {}
+export var TokenRegexesStart = {}
 TokenNames.forEach(s => TokenRegexesStart[s] = new RegExp('^' + TokenStrings[s]))
 
-var TokenRegexesSticky = {}
+export var TokenRegexesSticky = {}
 TokenNames.forEach(s => TokenRegexesSticky[s] = new RegExp(TokenStrings[s], 'y'))
 
