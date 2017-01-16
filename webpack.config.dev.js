@@ -4,12 +4,15 @@ var webpack = require('webpack');
 module.exports = {
   devtool: 'cheap-module-eval-source-map',
   entry: {
-    browser: [
-      'webpack-hot-middleware/client',
+    spreadsheet: [
       './src/browser/index.js'
     ],
     worker: [
       './src/worker/index.js'
+    ],
+    gui: [
+      'webpack-hot-middleware/client',
+      './src/gui/index.js'
     ]
   },
   output: {
