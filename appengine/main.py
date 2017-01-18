@@ -10,6 +10,7 @@ import stripe
 from Crypto.Protocol.KDF import PBKDF2
 stripe.api_key = "sk_test_WC3PTBnTi6hoFUJGiySjCcKg"
 # Live Secret Key: sk_live_OVLc65HvNWnGohkQwqNnXNCa
+import time
 
 from google.appengine.api import mail
 from google.appengine.ext import ndb
@@ -32,34 +33,34 @@ class HomeHandler(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
 
-        payload = {
-            'email': 'wayne.price@gmail.com'
-        }
-        token = jwt.encode(payload, salt, algorithm='HS256')
-        self.response.write(token)
+        self.response.write('hi wayne')
 
-        
-        # password = 'uSh{ei3aiV'
-        # key = PBKDF2(password, salt, dkLen=32, count=5000)
-        # self.response.write(base64.b64encode(key))
+from datetime import timedelta, datetime
 
 
-class EmailHandler(webapp2.RequestHandler):
+import string
+import random
+
+class PasswordResetHandler(webapp2.RequestHandler):
     def get(self):
-       mail.send_mail(sender="noreply@robosheets.appspotmail.com",
-                   to="Wayne Price <admin@robosheets.com>",
-                   subject="Your account has been approved",
-                   body="""Dear Wayne:
+        email = self.request.get('email')
+        user = Account.lookup(email)
+        if user is None:
+            self.response.write('no account exists with this email')
+            return
+        
+        user.reset = randstr()
+        user.reset_expire = datetime.now() + timedelta(hours=24)
+        user.put()
 
-Your example.com account has been approved.  You can now visit
-http://www.example.com/ and sign in using your Google Account to
-access new features.
+        mail.send_mail(sender="noreply@robosheets.appspotmail.com",
+                   to=email,
+                   subject="Reset Robosheets Rassword",
+                   body="""
+Here's your password reset token or something {reset}
 
-Please let us know if you have any questions.
-
-The example.com Team
-""")
-       self.response.write('chek yo inbox')
+""".format(reset=user.reset))
+        self.response.write('chek yo inbox')
 
 
 class Account(ndb.Model):
@@ -68,12 +69,30 @@ class Account(ndb.Model):
     password = ndb.StringProperty(indexed=False)
     date = ndb.DateTimeProperty(auto_now_add=True)
     plan = ndb.StringProperty(indexed=False)
+    
+    reset_token = ndb.StringProperty(indexed=True)
+    reset_expire = ndb.DateTimeProperty(auto_now_add=False)
+
+    @classmethod
+    def lookup(cls, email):
+        return cls.query(cls.email == email).get()
+
+    @classmethod
+    def lookup_reset(cls, reset):
+        return cls.query(cls.reset_token == reset).get()
 
     @classmethod
     def jwt(cls, token):
-        payload = jwt.decode(token, salt, algorithms=['HS256'])
+        try:
+            payload = jwt.decode(token, salt, algorithms=['HS256'])
+        except: 
+            return None
         email = payload['email']
-        return cls.query(cls.email == email).get()
+        return cls.lookup(email)
+        
+
+def randstr():
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(14))
 
 # - POST /signup
 #    creates an accountid and sends a link to setup the account to the email (edited)
@@ -88,9 +107,14 @@ class SignupHandler(webapp2.RequestHandler):
         plan = self.request.get('plan')
 
         customer = stripe.Customer.create(email=email, source=token)
-        account = Account(email = email, customerId = customer.id, plan = plan)
-        account.put()
-
+        user = Account(
+            email = email, 
+            customerId = customer.id, 
+            plan = plan,
+            reset_token = randstr(),
+            reset_expire = datetime.now() + timedelta(days=365)
+        )
+        user.put()
         mail.send_mail(sender="noreply@robosheets.appspotmail.com",
                    to=email,
                    subject="You signed up or something",
@@ -98,9 +122,12 @@ class SignupHandler(webapp2.RequestHandler):
 
 You signed up for {plan}. 
 
-Continue your setup at this link...
+Continue your setup thingy here
 
-""".format(plan=plan))
+
+https://robosheets.appspot.com/auth/setup?token={reset}
+
+""".format(plan=plan, reset=user.reset_token))
 
 
         self.response.write('chek yo mail dawg')
@@ -110,14 +137,45 @@ Continue your setup at this link...
 # - POST /setup
 #    sets password if none has been specified
 #    params
-#        accountid
+#        reset
 #        password
-class SetupHandler(webapp2.RequestHandler):
+class PasswordSetupHandler(webapp2.RequestHandler):
     def post(self):
-        account = self.request.get('account')
-        password = self.request.get('password')
-        self.response.write('setup')
 
+        reset = self.request.get('reset')
+        if len(reset) < 2:
+            self.response.write('reset token is required')
+            return
+        user = Account.lookup_reset(reset)
+        if user is None:
+            self.response.write('invalid reset token')
+            return
+
+        if user.reset_expire < datetime.now():
+            self.response.write('password reset token has already expired')
+            return
+
+        password = self.request.get('password').strip()
+        if len(password) < 3:
+            self.response.write('password must be at least 3 letters')
+            return
+
+        key = base64.b64encode(PBKDF2(password, salt, dkLen=32, count=5000))
+
+        user.reset_expire = datetime.now()
+        user.password = key
+        user.put()
+
+        self.response.write('changed password')
+
+    def get(self):
+        self.response.write("""
+            <form method="POST">
+                <input name="reset" type="hidden" value="{token}">
+                <label>New Password: <input name="password" type="password"></label>
+                <input type="submit">
+            </form>
+        """.format(token = self.request.get('token')))
 
 # - POST /login
 #    replies with a jwt containing email
@@ -127,8 +185,32 @@ class SetupHandler(webapp2.RequestHandler):
 class LoginHandler(webapp2.RequestHandler):
     def post(self):
         email = self.request.get('email')
+        user = Account.lookup(email)
+        if user is None:
+            self.response.write('could not find user account')
+            return
         password = self.request.get('password')
-        self.response.write('login')
+
+        key = base64.b64encode(PBKDF2(password, salt, dkLen=32, count=5000))
+
+        if user.password != key:
+            self.response.write('wrong password')
+            return
+
+        payload = {
+            'email': user.email
+        }
+        token = jwt.encode(payload, salt, algorithm='HS256')
+        self.response.write(token)
+    
+    def get(self):
+        self.response.write("""
+            <form method="POST">
+                <label>Email: <input name="email" type="email"></label>
+                <label>Password: <input name="password" type="password"></label>
+                <input type="submit">
+            </form>
+        """)
 
 # - POST /subscription
 #    params
@@ -144,33 +226,36 @@ class SubscriptionHandler(webapp2.RequestHandler):
         user = Account.jwt(self.request.get('jwt'))
         if user is None:
             self.response.write('user not found')
-        else:
-            self.response.write(user.plan)
+            return
+
+        self.response.write(user.plan)
             
 
     def post(self):
-        jwt = self.request.get('jwt')
         plan = self.request.get('plan')
-        self.response.write('subscription')
+        user = Account.jwt(self.request.get('jwt'))
+        if user is None:
+            self.response.write('user not found')
+            return
+
+        user.plan = plan
+        user.put()
+        
+        self.response.write('updated subscription')
 
 
-# - POST /unsubscribe
-#    params
-#        jwt
-class UnsubscribeHandler(webapp2.RequestHandler):
-    def post(self):
-        jwt = self.request.get('jwt')
-        self.response.write('unsubscribe')
 
 
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
-    ('/email', EmailHandler),
-    ('/signup', SignupHandler),
-    ('/setup', SetupHandler),
-    ('/login', LoginHandler),
-    ('/subscription', SubscriptionHandler),
-    ('/unsubscribe', UnsubscribeHandler)
+    
+    ('/auth/signup', SignupHandler),
+    ('/auth/setup', PasswordSetupHandler),
+    ('/auth/reset_password', PasswordResetHandler),
+    ('/auth/login', LoginHandler),
+
+    # ('/user/update_password', PasswordUpdateHandler),
+    ('/user/subscription', SubscriptionHandler),
 ], debug=True)
 
 
