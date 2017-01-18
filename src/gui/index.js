@@ -1,3 +1,7 @@
+import {payment, paymentHelpers} from './payment'
+// import X from 'xlsx'
+import 'lodash'
+
 const el = name => document.createElement(name)
 
 const $ = selector => selector.startsWith('#')
@@ -99,7 +103,7 @@ const show_pricing = () => {
     .pause()
 }
 $('#pricing').addEventListener('click', show_pricing)
-$('#export').addEventListener('click', show_pricing)
+// $('#export').addEventListener('click', show_pricing)
 
 
 function hidemodals(){
@@ -246,15 +250,83 @@ $('#signup-submit').addEventListener('click', e => {
 })
 
 
-function to_csv(workbook) {
+function load_as_csv(workbook) {
     var result = [];
-    workbook.SheetNames.forEach(function(sheetName) {
-        var csv = X.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+    workbook.SheetNames.forEach(sheetName => {
+        var csv = X.utils.sheet_to_csv(workbook.Sheets[sheetName], {FS: '\t'});
         if(csv.length > 0){
-            result.push("SHEET: " + sheetName);
-            result.push("");
-            result.push(csv);
+            console.log(csv)
+            $('#spreadsheet').contentWindow.insert_csv(csv)
         }
     });
     return result.join("\n");
 }
+
+$('#hidden-picker').addEventListener('change', e => {
+    let f = e.target.files[0]
+    console.log(f)
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        if(f.type === "text/csv"){
+            $('#spreadsheet').contentWindow.insert_csv(data)
+        } else {
+            var data = e.target.result;
+            let wb = X.read(data, {type: 'binary'});
+            load_as_csv(wb);            
+        }
+    };
+    reader.readAsBinaryString(f);
+});
+
+
+$('#export').addEventListener('click', e => {
+    // show_pricing()
+    $('#spreadsheet').contentWindow.save_csv()
+})
+
+
+payment.formatCardNumber($('#number'))
+payment.formatCardCVC($('#cvc'))
+payment.formatCardExpiry($('#date'))
+
+
+;['number', 'cvc', 'date', 'name'].forEach(field => {
+    let def = $('#summary-'+field).innerHTML
+    $('#'+field).addEventListener('blur', e => {
+        $('#summary-'+field).innerHTML = e.target.value || def
+    })
+})
+
+function addChangeListener(el, f){
+    el.addEventListener('keypress', f)
+    el.addEventListener('keydown', f)
+    el.addEventListener('change', f)
+    el.addEventListener('input', f)  
+}
+
+// [kerberos, number, exp, cvc, ringsize].forEach(function(el){
+//     addChangeListener(el, function(){
+//         wolo.fn.removeClass(el,'error')
+//     })
+// })
+
+var cardims = {
+    amex: "assets/cards/flat/amex.svg",
+    diners: "assets/cards/flat/diners.svg",
+    discover: "assets/cards/flat/discover.svg",
+    jcb: "assets/cards/flat/jcb.svg",
+    mastercard: "assets/cards/flat/mastercard.svg",
+    visa: "assets/cards/flat/visa.svg"
+}
+
+
+addChangeListener($('#number'), e => {
+    var cardim = cardims[paymentHelpers.cardType(number.value)]
+    if(cardim){
+        $('#card').style.opacity = 1
+        $('#card').style['background-image'] = 'url('+cardim+')'
+    }
+    else {
+        $('#card').style.opacity = 0
+    }
+})

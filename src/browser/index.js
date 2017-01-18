@@ -855,25 +855,49 @@ function paste(text, region = [selected_row, selected_col]){
 
 
 
+function insert_csv(data, row=0, col=0){
+	let lines = data.split(/\r\n|\r|\n/).map(line => line.split('\t'))
+
+	let region = [
+		row,
+		col,
+		row + lines.length,
+		col + Math.max(...lines.map(line => line.length))
+	]
+
+	add_undo_action(region)
+
+	paste(data, region)
+	auto_fill()	
+}
+
+window.insert_csv = insert_csv
+
+let exported;
+function save_csv(){
+    var data = new Blob([to_text([0,0,Infinity,Infinity])], {type: 'text/csv'});
+
+    // If we are replacing a previously generated file we need to
+    // manually revoke the object URL to avoid memory leaks.
+    if (exported !== null) window.URL.revokeObjectURL(exported);
+
+    exported = window.URL.createObjectURL(data);
+
+	let a = document.createElement('a')
+	a.style.display = 'none'
+    a.href = exported
+    a.download = sheetName + '.csv';
+	document.body.appendChild(a)
+	a.click()
+}
+
+window.save_csv = save_csv
 
 document.addEventListener('paste', function(e){
 	let data = e.clipboardData.getData('text/plain')
 	if(data.includes('\n') || data.includes('\t') || !is_typing()){
 		e.preventDefault()
-		let row = selected_row
-		let lines = data.split(/\r\n|\r|\n/).map(line => line.split('\t'))
-
-		let region = [
-			selected_row,
-			selected_col,
-			selected_row + lines.length,
-			selected_col + Math.max(...lines.map(line => line.length))
-		]
-
-		add_undo_action(region)
-
-		paste(data)
-		auto_fill()
+		insert_csv(data, selected_row, selected_col)
 	}
 })
 
