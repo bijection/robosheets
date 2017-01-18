@@ -6,3 +6,6 @@ handlers:
 - url: .*
   script: main.app
 
+libraries:
+- name: pycrypto
+  version: "2.6.1"
