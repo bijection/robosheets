@@ -31,14 +31,22 @@ salt = "I am Kanye, king of kings look on my works yeezy mighty and dispair"
 class HomeHandler(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
-        password = 'uSh{ei3aiV'
-        key = PBKDF2(password, salt, dkLen=32, count=5000)
-        self.response.write(base64.b64encode(key))
+
+        payload = {
+            'email': 'wayne.price@gmail.com'
+        }
+        token = jwt.encode(payload, salt, algorithm='HS256')
+        self.response.write(token)
+
+        
+        # password = 'uSh{ei3aiV'
+        # key = PBKDF2(password, salt, dkLen=32, count=5000)
+        # self.response.write(base64.b64encode(key))
 
 
 class EmailHandler(webapp2.RequestHandler):
-	def get(self):
-	   mail.send_mail(sender="noreply@robosheets.appspotmail.com",
+    def get(self):
+       mail.send_mail(sender="noreply@robosheets.appspotmail.com",
                    to="Wayne Price <admin@robosheets.com>",
                    subject="Your account has been approved",
                    body="""Dear Wayne:
@@ -51,7 +59,7 @@ Please let us know if you have any questions.
 
 The example.com Team
 """)
-	   self.response.write('chek yo inbox')
+       self.response.write('chek yo inbox')
 
 
 class Account(ndb.Model):
@@ -59,31 +67,43 @@ class Account(ndb.Model):
     customerId = ndb.StringProperty(indexed=False)
     password = ndb.StringProperty(indexed=False)
     date = ndb.DateTimeProperty(auto_now_add=True)
+    plan = ndb.StringProperty(indexed=False)
 
+    @classmethod
+    def jwt(cls, token):
+        payload = jwt.decode(token, salt, algorithms=['HS256'])
+        email = payload['email']
+        return cls.query(cls.email == email).get()
 
 # - POST /signup
 #    creates an accountid and sends a link to setup the account to the email (edited)
 #    params
 #        email
 #        token
+#        plan
 class SignupHandler(webapp2.RequestHandler):
-	def post(self):
-		email = self.request.get('email')
-		token = self.request.get('token')
-		self.response.write('signup')
+    def post(self):
+        email = self.request.get('email')
+        token = self.request.get('token')
+        plan = self.request.get('plan')
 
-		customer = stripe.Customer.create(email=email, source=token)
-		account = Account(email = email, customerId = customer.id)
-		account.put()
+        customer = stripe.Customer.create(email=email, source=token)
+        account = Account(email = email, customerId = customer.id, plan = plan)
+        account.put()
 
-		mail.send_mail(sender="noreply@robosheets.appspotmail.com",
+        mail.send_mail(sender="noreply@robosheets.appspotmail.com",
                    to=email,
                    subject="You signed up or something",
                    body="""Whup dawg:
 
-        
+You signed up for {plan}. 
 
-""")
+Continue your setup at this link...
+
+""".format(plan=plan))
+
+
+        self.response.write('chek yo mail dawg')
 
 
 
@@ -93,10 +113,10 @@ class SignupHandler(webapp2.RequestHandler):
 #        accountid
 #        password
 class SetupHandler(webapp2.RequestHandler):
-	def post(self):
-		account = self.request.get('account')
-		password = self.request.get('password')
-		self.response.write('setup')
+    def post(self):
+        account = self.request.get('account')
+        password = self.request.get('password')
+        self.response.write('setup')
 
 
 # - POST /login
@@ -105,49 +125,52 @@ class SetupHandler(webapp2.RequestHandler):
 #        email
 #        pass
 class LoginHandler(webapp2.RequestHandler):
-	def post(self):
-		email = self.request.get('email')
-		password = self.request.get('password')
-		self.response.write('login')
+    def post(self):
+        email = self.request.get('email')
+        password = self.request.get('password')
+        self.response.write('login')
 
 # - POST /subscription
+#    params
+#        jwt
+#        plan
+
+# - GET /subscription
 #    responds with a permission level
 #    params
 #        jwt
 class SubscriptionHandler(webapp2.RequestHandler):
-	def post(self):
-		jwt = self.request.get('jwt')
-		self.response.write('subscription')
+    def get(self):
+        user = Account.jwt(self.request.get('jwt'))
+        if user is None:
+            self.response.write('user not found')
+        else:
+            self.response.write(user.plan)
+            
 
-# - POST /upgrade
-#    params
-#        jwt
-#        new permission level
+    def post(self):
+        jwt = self.request.get('jwt')
+        plan = self.request.get('plan')
+        self.response.write('subscription')
 
-class UpgradeHandler(webapp2.RequestHandler):
-	def post(self):
-		jwt = self.request.get('jwt')
-		level = self.request.get('level')
-		self.response.write('upgrade')
 
 # - POST /unsubscribe
 #    params
 #        jwt
 class UnsubscribeHandler(webapp2.RequestHandler):
-	def post(self):
-		jwt = self.request.get('jwt')
-		self.response.write('unsubscribe')
+    def post(self):
+        jwt = self.request.get('jwt')
+        self.response.write('unsubscribe')
 
 
 app = webapp2.WSGIApplication([
-	('/', HomeHandler),
-	('/email', EmailHandler),
-	('/signup', SignupHandler),
-	('/setup', SetupHandler),
-	('/login', LoginHandler),
-	('/subscription', SubscriptionHandler),
-	('/upgrade', UpgradeHandler),
-	('/unsubscribe', UnsubscribeHandler)
+    ('/', HomeHandler),
+    ('/email', EmailHandler),
+    ('/signup', SignupHandler),
+    ('/setup', SetupHandler),
+    ('/login', LoginHandler),
+    ('/subscription', SubscriptionHandler),
+    ('/unsubscribe', UnsubscribeHandler)
 ], debug=True)
 
 
