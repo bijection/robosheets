@@ -11,7 +11,7 @@ module.exports = {
       './src/worker/index.js'
     ],
     gui: [
-      'webpack-hot-middleware/client',
+      // 'webpack-hot-middleware/client',
       './src/gui/index.js'
     ]
   },
