@@ -105,6 +105,7 @@ class SignupHandler(webapp2.RequestHandler):
         email = self.request.get('email')
         token = self.request.get('token')
         plan = self.request.get('plan')
+        host = self.request.get('host')
 
         customer = stripe.Customer.create(email=email, source=token)
         user = Account(
@@ -125,10 +126,9 @@ You signed up for {plan}.
 Continue your setup thingy here
 
 
-https://robosheets.appspot.com/auth/setup?token={reset}
+{host}/?action=setup&token={reset}&email={email}
 
-""".format(plan=plan, reset=user.reset_token))
-
+""".format(plan=plan, reset=user.reset_token, email=email, host=host))
 
         self.response.write('chek yo mail dawg')
 
