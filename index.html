@@ -14,7 +14,16 @@
 	<div id='chrome'>
 		<div id='nag'>
 			<div id='pricing'>Pricing</div>
-			<div id='login'>Login</div>
+			<div id='login'>
+				Log In
+				<div id='login-form'>
+					<div id='login-triangle'></div>
+					<div id='login-title'>Robosheets</div>
+					<input autofill='email' placeholder='email' id='login-email'></input>
+					<input autofill='password' type='password' placeholder='password'></input>					
+					<button>Log In</button>
+				</div>
+			</div>
 		</div>
 		<div id='tabs'>
  			<a id='new-sheet' class='tab'>+ New Sheet</a>
@@ -121,7 +130,7 @@
 				<!-- <div class='signup-label'>Where should we send your activation <b>email</b>?</div> -->
 				<div class='signup-label'><b class='selected-name'></b>, a great choice!</div>
 				<div class='signup-label'>What <b>email address</b> should we use to set up your account?</div>
-				<input class='signup-input' type='text' placeholder="iron@giant.com" autofill='email'></input>
+				<input class='signup-input' id='email' type='text' placeholder="iron@giant.com" autofill='email'></input>
 				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>
 			<div id='secure'>
@@ -166,13 +175,13 @@
 			</div>
 			<div class='signup-question secure'>
 				<div class='signup-label'>Your card's <b>expiration date</b>:</div>
-				<input class='signup-input' id='date' type='text' placeholder="MM/YY" data-stripe="exp_month" autofill='cc-exp-date'></input>
+				<input class='signup-input' id='date' type='text' placeholder="MM/YY" data-stripe="exp" autofill='cc-exp-date'></input>
 				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>
 			</div>		
 			<div class='signup-question'>
 				<div class='signup-label'>You're done!</div>
-				<div class='signup-label'>After you confirm, we'll email you a link to set up your <b class='selected-name'></b> account:</div>
+				<div class='signup-label'>After you confirm, we'll email a link to set up your <b class='selected-name'></b> account to <b class='summary-item' id='summary-email'>click here to set an email</b>:</div>
 				<div class='signup-label'>Charging <span class='selected-price'></span> a month to</div>
 				<div class='signup-label'>
 					<div id='summary'>
@@ -188,7 +197,7 @@
 				<div class='signup-label'></div>
 
 				<!-- <div class='signup-label'>Charge <b class='selected-price'></b> / month to</div> -->
-				<div id='signup-submit'>Confirm</div>
+				<button id='signup-submit'>Confirm</button>
 			</div>	
 		</form>
 		</div>

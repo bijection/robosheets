@@ -570,6 +570,9 @@ iframe {
     color: #fff;
     padding: 10px 20px;
     border-radius: 5px;
+    font-size: inherit;
+    border: 0;
+    cursor: pointer;
 }
 
 #pricing-x {
@@ -589,6 +592,7 @@ iframe {
     display: inline-block;
     position: relative;
     margin-bottom: 20px;
+    cursor: pointer;
 }
 
 .summary-item::after {
@@ -598,6 +602,11 @@ iframe {
     font-size: 10px;
     opacity: .8;    
 }
+
+.summary-item:hover:after {
+    content: "edit" !important;
+}
+
 
 #summary-number::after {
     content: 'card number';
@@ -658,4 +667,64 @@ iframe {
 
 #card-wrap {
     position: relative;
+}
+
+#login-form {
+    position: absolute;
+    right: 0;
+    background: #fff;
+    padding: 34px;
+    box-shadow: 0 8px 45px 0px rgba(0, 0, 0, 0.38);
+    border-radius: 3px;
+    top: 46px;
+    font-size: 15px;
+    cursor: default;
+    display: none;
+}
+
+#login-form input {
+    padding: 10px;
+    font-size: inherit;
+    margin-bottom: 10px;
+    outline: none;
+    border-radius: 3px;
+    border: 1px solid #d4d4d4;
+}
+
+#login-form input:focus {
+    border-color: #48f;
+}
+
+#login-form button {
+    /* color: red; */
+    width: 100%;
+    padding: 10px;
+    background: #48f;
+    border: 0;
+    border-radius: 3px;
+    color: #fff;
+    font-size: inherit;
+    outline: none;
+    cursor: pointer;
+}
+
+#login-form button:focus {
+    box-shadow: 0 0 0 1px #004eff, 0 0 10px #679eff;
+}
+
+#login-title {
+    font-family: Lobster;
+    color: #2675ff;
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 15px;
+    margin-top: -20px;
+}
+
+#login-triangle {
+    position: absolute;
+    bottom: 100%;
+    right: 25px;
+    border: 10px solid transparent;
+    border-bottom-color: #fff;
 }
