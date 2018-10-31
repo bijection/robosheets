@@ -21,8 +21,11 @@ const SELECTION_COLOR = '#48f'
 const CONTENT_FONT = DEFAULT_ROW_HEIGHT - 20 +'px Helvetica'
 const SCALE = 2
 
-let max_row = 50
-let max_col = 10
+// let max_row = 50
+// let max_col = 10
+
+let max_row = 1e10
+let max_col = 1e10
 
 let col_widths = {}
 let row_heights = {}
