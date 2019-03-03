@@ -18,10 +18,10 @@ const RESIZE_HANDLE_DRAWN_WIDTH = 4
 
 const SELECTION_COLOR = '#48f'
 
-const CONTENT_FONT = DEFAULT_ROW_HEIGHT - 20 +'px Helvetica'
+const CONTENT_FONT = DEFAULT_ROW_HEIGHT - 20 + 'px Helvetica'
 const SCALE = 2
 
-const CANT_COPY_MESSAGE = "Upgrade to paste outside of Robosheets!"
+const CANT_COPY_MESSAGE = 'Upgrade to paste outside of Robosheets!'
 
 let max_row = 50
 let max_col = 10
@@ -37,10 +37,10 @@ let row_heights = {}
 let selected_row = 0
 let selected_col = 0
 
-let selected_end_row;
-let selected_end_col;
+let selected_end_row
+let selected_end_col
 
-let command_down = false;
+let command_down = false
 
 let user_content = {}
 // let autofill_content = {}
@@ -60,41 +60,40 @@ let sheetName
 
 let paused = false
 
-function pause(){
-	paused = true;
+function pause() {
+	paused = true
 }
 
-function resume(){
-	paused = false;
+function resume() {
+	paused = false
 }
 
-function unlock(permission_level='walp'){
-
-	if(permission_level == 'asimo') {
+function unlock(permission_level = 'walp') {
+	if (permission_level == 'asimo') {
 		max_row = 1000
 		max_col = 200
 		can_copy = true
-	} else if(permission_level == 'roomba') {
+	} else if (permission_level == 'roomba') {
 		max_row = 200
 		max_col = 10
 		can_copy = true
-	} else { //(permission_level == 'walp') {
+	} else {
+		//(permission_level == 'walp') {
 		max_row = 50
 		max_col = 10
 		can_copy = false
 	}
-
 }
 window.unlock = unlock
 window.pause = pause
 window.resume = resume
 
-keygetter.style.display = 'none';
+keygetter.style.display = 'none'
 
 let worker = new Worker(window.workerpath)
 
-function getWorkerMessage({data}){
-	let {program, col} = data
+function getWorkerMessage({ data }) {
+	let { program, col } = data
 
 	console.log('got', col, program)
 
@@ -106,17 +105,15 @@ function getWorkerMessage({data}){
 
 worker.onmessage = getWorkerMessage
 
+function hydrate(frag) {
+	if (!defined(frag)) return
 
-function hydrate(frag){
-
-	if(!defined(frag)) return;
-
-	if(!frag.type) return frag
+	if (!frag.type) return frag
 
 	let greg = new language[frag.type]()
 
 	Object.keys(frag).forEach(key => {
-		if(Array.isArray(frag[key])) greg[key] = frag[key].map(hydrate)
+		if (Array.isArray(frag[key])) greg[key] = frag[key].map(hydrate)
 		else greg[key] = hydrate(frag[key])
 	})
 
@@ -124,14 +121,13 @@ function hydrate(frag){
 }
 
 function render() {
-
 	canvas.width = innerWidth * SCALE
 	canvas.height = innerHeight * SCALE
 
-	canvas.style.width = innerWidth+'px'
-	canvas.style.height = innerHeight+'px'
+	canvas.style.width = innerWidth + 'px'
+	canvas.style.height = innerHeight + 'px'
 
-	ctx.clearRect(0,0,canvas.width, canvas.height)
+	ctx.clearRect(0, 0, canvas.width, canvas.height)
 
 	draw_label_backgrounds()
 
@@ -140,22 +136,19 @@ function render() {
 
 	draw_hovered_divider()
 
-	if(!paused) draw_cells_text()
+	if (!paused) draw_cells_text()
 
 	draw_selected_cell()
 	draw_selection_region()
 
-	if(Math.random() < 1/60) save()
+	if (Math.random() < 1 / 60) save()
 
 	// ctx.fillStyle = 'rgba(0,0,0,.1)'
 	// if(row > 0) ctx.fillRect(LEFT_MARGIN, TOP_MARGIN, canvas.width, 10);
 	// if(col > 0) ctx.fillRect(LEFT_MARGIN, TOP_MARGIN, 10, canvas.height);
-
 }
 
-
-
-function save(){
+function save() {
 	localStorage[sheetName] = JSON.stringify({
 		user_content,
 		row,
@@ -166,22 +159,20 @@ function save(){
 		selected_col,
 		selected_end_row,
 		selected_end_col,
-		autofill_programs,
+		autofill_programs
 	})
 }
 window.save = save
 
-function clear(sn){
+function clear(sn) {
 	delete localStorage[sn]
 }
 window.clear = clear
 
-function load(sn){
-
+function load(sn) {
 	sheetName = sn
 
 	// if(!localStorage[sheetName]) return; //loadfake();
-
 	;({
 		user_content,
 		row,
@@ -192,19 +183,22 @@ function load(sn){
 		selected_col,
 		selected_end_row,
 		selected_end_col,
-		autofill_programs,
-	} = Object.assign({
-		user_content:{
-			"0,0": ""
+		autofill_programs
+	} = Object.assign(
+		{
+			user_content: {
+				'0,0': ''
+			},
+			row: 0,
+			col: 0,
+			col_widths: {},
+			row_heights: {},
+			selected_row: 0,
+			selected_col: 0,
+			autofill_programs: {}
 		},
-		row:0,
-		col:0,
-		col_widths:{},
-		row_heights:{},
-		selected_row:0,
-		selected_col:0,
-		autofill_programs:{}
-	}, JSON.parse(localStorage[sheetName] || '{}')))	
+		JSON.parse(localStorage[sheetName] || '{}')
+	))
 
 	Object.keys(autofill_programs).forEach(key => {
 		autofill_programs[key] = hydrate(autofill_programs[key])
@@ -214,7 +208,7 @@ function load(sn){
 
 window.load = load
 
-function loadfake(){
+function loadfake() {
 	let data = `Elsie	Graham	2/6/1986
 	Troy	Osborne	6/25/1967
 	Jared	King	2/14/1985
@@ -318,7 +312,7 @@ function loadfake(){
 	let row = 0
 	data.split('\n').forEach(line => {
 		let col = 0
-		let entries = line.split('\t');
+		let entries = line.split('\t')
 		entries.forEach(entry => {
 			user_content[[row, col]] = entry
 			col++
@@ -327,23 +321,20 @@ function loadfake(){
 	})
 }
 
-
-function draw_label_backgrounds(){
+function draw_label_backgrounds() {
 	ctx.save()
 	ctx.fillStyle = '#eee'
-	ctx.fillRect(0,0,canvas.width, TOP_MARGIN)
-	ctx.fillRect(0,0,LEFT_MARGIN, canvas.height)
+	ctx.fillRect(0, 0, canvas.width, TOP_MARGIN)
+	ctx.fillRect(0, 0, LEFT_MARGIN, canvas.height)
 	ctx.fillStyle = '#222'
 	ctx.restore()
 }
 
-
-
-function draw_hovered_divider(){
+function draw_hovered_divider() {
 	ctx.save()
 	ctx.fillStyle = SELECTION_COLOR
 
-	let col_divider = defined(dragging_col_divider) 
+	let col_divider = defined(dragging_col_divider)
 		? dragging_col_divider
 		: get_hovered_col_divider()
 	let row_divider = defined(dragging_row_divider)
@@ -352,25 +343,31 @@ function draw_hovered_divider(){
 
 	document.body.style.cursor = 'default'
 
-	if(defined(col_divider) && col_divider >= 0){
+	if (defined(col_divider) && col_divider >= 0) {
 		document.body.style.cursor = 'col-resize'
-		let [,x,width] = visible_col_n(col_divider)
-		ctx.fillRect(x + width - RESIZE_HANDLE_DRAWN_WIDTH / 2, 0, RESIZE_HANDLE_DRAWN_WIDTH, TOP_MARGIN)
+		let [, x, width] = visible_col_n(col_divider)
+		ctx.fillRect(
+			x + width - RESIZE_HANDLE_DRAWN_WIDTH / 2,
+			0,
+			RESIZE_HANDLE_DRAWN_WIDTH,
+			TOP_MARGIN
+		)
 	}
 
-	if(defined(row_divider) && row_divider >= 0){
+	if (defined(row_divider) && row_divider >= 0) {
 		document.body.style.cursor = 'row-resize'
-		let [,y, height] = visible_row_n(row_divider)
-		ctx.fillRect(0, y + height - RESIZE_HANDLE_DRAWN_WIDTH / 2, LEFT_MARGIN, RESIZE_HANDLE_DRAWN_WIDTH)
+		let [, y, height] = visible_row_n(row_divider)
+		ctx.fillRect(
+			0,
+			y + height - RESIZE_HANDLE_DRAWN_WIDTH / 2,
+			LEFT_MARGIN,
+			RESIZE_HANDLE_DRAWN_WIDTH
+		)
 	}
 	ctx.restore()
 }
 
-
-
-
-
-function draw_horizontal_lines_and_labels(){
+function draw_horizontal_lines_and_labels() {
 	ctx.save()
 
 	ctx.font = '20px Avenir'
@@ -379,11 +376,13 @@ function draw_horizontal_lines_and_labels(){
 	ctx.textAlign = 'right'
 	ctx.textBaseline = 'middle'
 
-	for(let [row, rendered_height, height] of visible_rows()){
-		if(row == selected_row || (
-			defined(selected_end_row)
-			&& row <= Math.max(selected_end_row, selected_row)
-			&& row >= Math.min(selected_end_row, selected_row))){
+	for (let [row, rendered_height, height] of visible_rows()) {
+		if (
+			row == selected_row ||
+			(defined(selected_end_row) &&
+				row <= Math.max(selected_end_row, selected_row) &&
+				row >= Math.min(selected_end_row, selected_row))
+		) {
 			ctx.fillStyle = '#ddd'
 			ctx.fillRect(0, rendered_height, LEFT_MARGIN, height)
 		}
@@ -399,34 +398,34 @@ function draw_horizontal_lines_and_labels(){
 	ctx.restore()
 }
 
+const colname = c =>
+	c
+		.toString(26)
+		.split('')
+		.map(
+			c =>
+				'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[
+					'0123456789abcdefghijklmnop'.indexOf(c)
+				]
+		)
+		.join('')
 
-
-
-
-
-
-
-
-
-
-
-const colname = c => c.toString(26).split('').map(c => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'['0123456789abcdefghijklmnop'.indexOf(c)]).join('')
-
-
-function draw_vertical_lines_and_labels(){
+function draw_vertical_lines_and_labels() {
 	ctx.save()
-	
+
 	ctx.font = '20px Avenir'
 	ctx.strokeStyle = '#ccc'
 	ctx.lineWidth = 1
 	ctx.textAlign = 'center'
 	ctx.textBaseline = 'middle'
 
-	for(let [col, rendered_width, width] of visible_cols()){
-		if(col == selected_col || (
-			defined(selected_end_col)
-			&& col <= Math.max(selected_end_col, selected_col)
-			&& col >= Math.min(selected_end_col, selected_col))){
+	for (let [col, rendered_width, width] of visible_cols()) {
+		if (
+			col == selected_col ||
+			(defined(selected_end_col) &&
+				col <= Math.max(selected_end_col, selected_col) &&
+				col >= Math.min(selected_end_col, selected_col))
+		) {
 			ctx.fillStyle = '#ddd'
 			ctx.fillRect(rendered_width, 0, width, TOP_MARGIN)
 		}
@@ -440,30 +439,17 @@ function draw_vertical_lines_and_labels(){
 		ctx.beginPath()
 		ctx.moveTo(rendered_width, 0)
 		ctx.lineTo(rendered_width, canvas.height)
-		ctx.stroke()		
+		ctx.stroke()
 	}
 
 	ctx.restore()
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 const cell_horizontal_padding = 6
 const cell_bottom_padding = 14
-let suggestion_color = '#08c773'//'hsl(134, 50%, 50%)'
+let suggestion_color = '#08c773' //'hsl(134, 50%, 50%)'
 
-
-function draw_cell_text(row, col){
+function draw_cell_text(row, col) {
 	ctx.save()
 
 	ctx.font = CONTENT_FONT
@@ -477,33 +463,33 @@ function draw_cell_text(row, col){
 
 	let drawing_suggestion_text = !user_content[[r, c]]
 	let text = cell_text(r, c)
-	
-	if(!text) return;
 
-	let editing_this_cell = is_typing() && selected_row == r && selected_col == c
+	if (!text) return
+
+	let editing_this_cell =
+		is_typing() && selected_row == r && selected_col == c
 	let [edit_width, display_width] = cell_text_display_width(r, c)
-	let cell_width = editing_this_cell
-		? edit_width
-		: display_width
+	let cell_width = editing_this_cell ? edit_width : display_width
 
-	ctx.clearRect(x+1, y+1, cell_width, height - 2)
+	ctx.clearRect(x + 1, y + 1, cell_width, height - 2)
 
-	let text_width = measure_text(text).width;
+	let text_width = measure_text(text).width
 
-	let result = evaluate(text);
+	let result = evaluate(text)
 	let drawing_result = result != text
 
 	let result_width = measure_text(result).width + cell_horizontal_padding * 2
 
-	let drawing_upgrade_text = !editable(r,c)
-	
-	function draw_normal_text(){
-		let cropped_text = text.slice(0, 5 + text.length * cell_width / text_width)
+	let drawing_upgrade_text = !editable(r, c)
+
+	function draw_normal_text() {
+		let cropped_text = text.slice(
+			0,
+			5 + (text.length * cell_width) / text_width
+		)
 		ctx.textAlign = 'start'
-		ctx.fillStyle = drawing_suggestion_text
-			? suggestion_color
-			: '#222'
-		ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height/2 )
+		ctx.fillStyle = drawing_suggestion_text ? suggestion_color : '#222'
+		ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height / 2)
 	}
 
 	// function draw_fancy_upgrade_text(){
@@ -519,7 +505,6 @@ function draw_cell_text(row, col){
 	// 	let d = Math.min(Math.max(dr,dc)/20, 1)
 	// 	let now = Date.now() / 500
 
-
 	// 	const perlin = (a,b) => {
 	// 		const rand = x => {
 	// 			for (let i = 0; i < 3; i++) x = (x * 16807 % 2147483647) - 1
@@ -533,13 +518,13 @@ function draw_cell_text(row, col){
 	// 			sum += rand(1/2 * (a+b) * (a+b+1) + b)
 	// 		}
 
-	// 		return sum / i	
+	// 		return sum / i
 	// 	}
 
 	// 	const blurlin = (a,b) => (perlin(a,b) +
-	// 					perlin(a+1,b) +  
-	// 					perlin(a,b+1) /2 +  
-	// 					perlin(a-1,b) +  
+	// 					perlin(a+1,b) +
+	// 					perlin(a,b+1) /2 +
+	// 					perlin(a-1,b) +
 	// 					perlin(a,b-1) /2 )/4
 
 	// 	let h = blurlin(r,c*5)
@@ -554,58 +539,65 @@ function draw_cell_text(row, col){
 	// 	let wavex = cell_horizontal_padding * Math.sin( now + r ) * d
 	// 	let wavey = cell_horizontal_padding * Math.cos( now + c ) * d
 	// 	ctx.fillText(
-	// 		cropped_text, 
+	// 		cropped_text,
 	// 		x + cell_horizontal_padding + wavex,
 	// 		y + height/2 + wavey
 	// 	)
 	// }
 
-
-
-	function draw_upgrade_text(){
-
+	function draw_upgrade_text() {
 		// if(r != selected_row || c != selected_col) return;
 
-		let cropped_text = text.slice(0, 5 + text.length * cell_width / text_width)
+		let cropped_text = text.slice(
+			0,
+			5 + (text.length * cell_width) / text_width
+		)
 		ctx.textAlign = 'start'
 		ctx.fillStyle = 'rgba(0,0,0,.05)'
 
-		ctx.fillRect(x+1, y+1, cell_width - 2, height - 2)
-		ctx.fillStyle =  'rgba(0,0,0,.3)'
+		ctx.fillRect(x + 1, y + 1, cell_width - 2, height - 2)
+		ctx.fillStyle = 'rgba(0,0,0,.3)'
 
-		ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height/2)
+		ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height / 2)
 	}
 
-	function draw_squished_text(){
-		let cropped_text = text.slice(-Math.floor(text.length * (cell_width - result_width) / text_width))
+	function draw_squished_text() {
+		let cropped_text = text.slice(
+			-Math.floor(
+				(text.length * (cell_width - result_width)) / text_width
+			)
+		)
 		ctx.textAlign = 'end'
 		ctx.fillStyle = drawing_suggestion_text ? suggestion_color : '#222'
 
+		var gradient = ctx.createLinearGradient(x, 0, x + 30, 0)
+		gradient.addColorStop(0.5, 'rgba(255, 255, 255, 1)')
+		gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
 
-		var gradient = ctx.createLinearGradient(x,0,x+30,0);
-		gradient.addColorStop(0.5,"rgba(255, 255, 255, 1)");
-		gradient.addColorStop(1,"rgba(255, 255, 255, 0)");
-
-		ctx.fillText(cropped_text, x+cell_horizontal_padding + cell_width - result_width, y + height/2 )
+		ctx.fillText(
+			cropped_text,
+			x + cell_horizontal_padding + cell_width - result_width,
+			y + height / 2
+		)
 
 		ctx.fillStyle = gradient
-		ctx.fillRect(x+1, y + 1, 30, height - 2);
+		ctx.fillRect(x + 1, y + 1, 30, height - 2)
 	}
 
-	function draw_result(){
+	function draw_result() {
 		// ctx.clearRect(x+1+cell_width - result_width, y+1, result_width, height - 2)
 		ctx.textAlign = 'end'
-		ctx.fillStyle = (result === 'ERROR') ? 'red' : '#007fff'
-		ctx.fillText(result, x + cell_width - cell_horizontal_padding, y + height / 2)
+		ctx.fillStyle = result === 'ERROR' ? 'red' : '#007fff'
+		ctx.fillText(
+			result,
+			x + cell_width - cell_horizontal_padding,
+			y + height / 2
+		)
 	}
 
-
-	if(drawing_upgrade_text){
-		
+	if (drawing_upgrade_text) {
 		draw_upgrade_text()
-
-	}else if(defined(loading_programs[c]) && drawing_suggestion_text){
-		
+	} else if (defined(loading_programs[c]) && drawing_suggestion_text) {
 		// console.log('asdf')
 		const now = (Date.now() / 100) % (Math.PI * 2)
 
@@ -613,71 +605,70 @@ function draw_cell_text(row, col){
 		ctx.beginPath()
 		ctx.lineWidth = 4
 		ctx.strokeStyle = '#48f'
-		ctx.arc(x + width / 2, y + height / 2, 10, now, now + Math.PI*2* 3/4)
+		ctx.arc(
+			x + width / 2,
+			y + height / 2,
+			10,
+			now,
+			now + (Math.PI * 2 * 3) / 4
+		)
 		ctx.stroke()
 		ctx.restore()
-
-	} else if(drawing_result){
+	} else if (drawing_result) {
 		// let selected = c == selected_col //&& r == selected_row
-		
-		// let region = get_selection_region()		
+
+		// let region = get_selection_region()
 		// if(region){
 		// 	let [ssrow, sscol, serow, secol] = region
-		// 	selected = selected || ssrow <= r && r <= serow 
+		// 	selected = selected || ssrow <= r && r <= serow
 		// 	        && sscol <= c && c <= secol
 		// }
 
 		draw_result()
-		if(result_width + text_width < cell_width){
+		if (result_width + text_width < cell_width) {
 			draw_normal_text()
-		}else{
+		} else {
 			draw_squished_text()
 		}
-	
 	} else {
 		draw_normal_text()
 	}
-	
 
 	ctx.beginPath()
 	ctx.moveTo(x + cell_width, y)
-	ctx.lineTo(x + cell_width, y+height)
+	ctx.lineTo(x + cell_width, y + height)
 	ctx.stroke()
-	
+
 	ctx.restore()
 }
 
-
-function evaluate(text){
+function evaluate(text) {
 	// prefix notation or suffix notation that is the question
-	if(text.trim().endsWith('=')){
-		
+	if (text.trim().endsWith('=')) {
 		try {
 			var result = eval(text.trim().replace(/=$/, ''))
-		} catch (err) { }
-		if(!defined(result)) result = 'ERROR';
+		} catch (err) {}
+		if (!defined(result)) result = 'ERROR'
 
 		return result + ''
 	}
 	return text
 }
 
-function draw_cells_text(){
-	for(let {row, col} of visible_cells()){
+function draw_cells_text() {
+	for (let { row, col } of visible_cells()) {
 		draw_cell_text(row, col)
 	}
 }
 
-
-
 function cell_text_display_width(r, c) {
 	ctx.font = CONTENT_FONT
 	let text = cell_text(r, c)
-	var desired_width = measure_text(text).width + cell_horizontal_padding;
+	var desired_width = measure_text(text).width + cell_horizontal_padding
 
 	let result = evaluate(text)
-	if(result != text){
-		text += result;
+	if (result != text) {
+		text += result
 		desired_width += measure_text(result).width + cell_horizontal_padding
 	}
 
@@ -685,32 +676,20 @@ function cell_text_display_width(r, c) {
 	let edit_width = display_width
 	let next_col = c + 1
 	let hit_filled_cell = false
-	while(edit_width < desired_width){
+	while (edit_width < desired_width) {
 		let next_col_width = col_width(next_col)
-	
-		if(!cell_text(r, next_col) && !hit_filled_cell) display_width += next_col_width
-		else hit_filled_cell = true;
+
+		if (!cell_text(r, next_col) && !hit_filled_cell)
+			display_width += next_col_width
+		else hit_filled_cell = true
 
 		edit_width += next_col_width
-		next_col ++
+		next_col++
 	}
 	return [edit_width, display_width]
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-function draw_selected_cell(){
-
+function draw_selected_cell() {
 	// if(defined(selected_end_col) || defined(selected_end_row)) return;
 
 	ctx.save()
@@ -718,14 +697,12 @@ function draw_selected_cell(){
 	let row = visible_row_n(selected_row),
 		col = visible_col_n(selected_col)
 
-	if(!row || !col) return;
+	if (!row || !col) return
 
-	if(is_typing()) draw_cell_text(row, col);
+	if (is_typing()) draw_cell_text(row, col)
 
 	let [edit_width] = cell_text_display_width(selected_row, selected_col)
-	let width = is_typing()
-		? edit_width
-		: col_width(selected_col)
+	let width = is_typing() ? edit_width : col_width(selected_col)
 
 	let height = row_heights[selected_row] || DEFAULT_ROW_HEIGHT
 	let [selected_x, selected_y] = cell_x_y(selected_row, selected_col)
@@ -737,64 +714,50 @@ function draw_selected_cell(){
 	// ctx.strokeStyle = '#fff'
 	// ctx.strokeRect(selected_x + width - 4, selected_y + height - 4, 8,8)
 	// ctx.fillRect(selected_x + width - 4, selected_y + height - 4, 8,8)
-	
+
 	ctx.restore()
 }
 
-
-
-function draw_selection_region(){
-
+function draw_selection_region() {
 	let region = get_selection_region()
-	if(region) draw_blue_box(...region)
-
+	if (region) draw_blue_box(...region)
 }
 
-
-function get_selection_region(){
-	if(defined(selected_end_row) && defined(selected_end_col)) return [
-		Math.min(selected_row, selected_end_row),
-		Math.min(selected_col, selected_end_col),
-		Math.max(selected_row, selected_end_row),
-		Math.max(selected_col, selected_end_col)
-	]
+function get_selection_region() {
+	if (defined(selected_end_row) && defined(selected_end_col))
+		return [
+			Math.min(selected_row, selected_end_row),
+			Math.min(selected_col, selected_end_col),
+			Math.max(selected_row, selected_end_row),
+			Math.max(selected_col, selected_end_col)
+		]
 }
-
-
 
 function draw_blue_box(start_row, start_col, end_row, end_col) {
 	ctx.save()
 
-	let [start_x, start_y] = cell_x_y(Math.max(start_row, row), Math.max(start_col, col))
+	let [start_x, start_y] = cell_x_y(
+		Math.max(start_row, row),
+		Math.max(start_col, col)
+	)
 
 	end_col = visible_col_n(Math.min(end_col, last_visible_col()[0]))
 	end_row = visible_row_n(Math.min(end_row, last_visible_row()[0]))
 
-	if(!end_row  || !end_col) return;
+	if (!end_row || !end_col) return
 
 	let [, x, width] = end_col
 	let [, y, height] = end_row
 
 	ctx.lineWidth = 1
 	ctx.strokeStyle = SELECTION_COLOR
-	ctx.strokeRect(start_x, start_y, x+width - start_x, y+height -start_y)
-	
+	ctx.strokeRect(start_x, start_y, x + width - start_x, y + height - start_y)
+
 	ctx.fillStyle = 'rgba(80, 150, 255, .1)'
-	ctx.fillRect(start_x, start_y, x+width - start_x, y+height -start_y)
-
-
+	ctx.fillRect(start_x, start_y, x + width - start_x, y + height - start_y)
 
 	ctx.restore()
 }
-
-
-
-
-
-
-
-
-
 
 /*\
 |*|
@@ -814,16 +777,6 @@ function draw_blue_box(start_row, start_col, end_row, end_col) {
 |*|
 \*/
 
-
-
-
-
-
-
-
-
-
-
 const x_speed = 4
 const y_speed = 4
 
@@ -834,53 +787,48 @@ canvas.addEventListener('wheel', e => {
 
 	keygetter.blur()
 
-	scrollX += e.deltaX *x_speed
-	scrollY += e.deltaY *y_speed
-	
+	scrollX += e.deltaX * x_speed
+	scrollY += e.deltaY * y_speed
+
 	let width = col_width(col)
 	let height = row_heights[row] || DEFAULT_ROW_HEIGHT
 	let prev_width = col_width(col - 1)
-	let prev_height = row_heights[row-1] || DEFAULT_ROW_HEIGHT
-	
-	while(scrollX > width){
-	 	scrollX -= width
-	 	col++
+	let prev_height = row_heights[row - 1] || DEFAULT_ROW_HEIGHT
+
+	while (scrollX > width) {
+		scrollX -= width
+		col++
 	}
-	while(scrollX < -prev_width){
-	 	scrollX += prev_width
-	 	col--
+	while (scrollX < -prev_width) {
+		scrollX += prev_width
+		col--
 	}
-	while(scrollY > height){
-	 	scrollY -= height
-	 	row++
+	while (scrollY > height) {
+		scrollY -= height
+		row++
 	}
-	while(scrollY < -prev_height){
-	 	scrollY += prev_height
-	 	row--
+	while (scrollY < -prev_height) {
+		scrollY += prev_height
+		row--
 	}
 
 	row = Math.max(row, 0)
 	col = Math.max(col, 0)
 })
 
-
-
-
-function paste(text, region = [selected_row, selected_col]){
+function paste(text, region = [selected_row, selected_col]) {
 	let row = region[0]
 	text.split(/\r\n|\r|\n/).forEach(line => {
 		let col = region[1]
 		line.split('\t').forEach(entry => {
-			if(editable(row, col)) user_content[[row, col]] = entry
+			if (editable(row, col)) user_content[[row, col]] = entry
 			col++
 		})
 		row++
 	})
 }
 
-
-
-function insert_csv(data, row=0, col=0){
+function insert_csv(data, row = 0, col = 0) {
 	let lines = data.split(/\r\n|\r|\n/).map(line => line.split('\t'))
 
 	let region = [
@@ -893,56 +841,56 @@ function insert_csv(data, row=0, col=0){
 	add_undo_action(region)
 
 	paste(data, region)
-	auto_fill()	
+	auto_fill()
 }
 
 window.insert_csv = insert_csv
 
-let exported;
-function save_csv(){
-    var data = new Blob([to_text([0,0,Infinity,Infinity])], {type: 'text/csv'});
+let exported
+function save_csv() {
+	var data = new Blob([to_text([0, 0, Infinity, Infinity])], {
+		type: 'text/csv'
+	})
 
-    // If we are replacing a previously generated file we need to
-    // manually revoke the object URL to avoid memory leaks.
-    if (exported !== null) window.URL.revokeObjectURL(exported);
+	// If we are replacing a previously generated file we need to
+	// manually revoke the object URL to avoid memory leaks.
+	if (exported !== null) window.URL.revokeObjectURL(exported)
 
-    exported = window.URL.createObjectURL(data);
+	exported = window.URL.createObjectURL(data)
 
 	let a = document.createElement('a')
 	a.style.display = 'none'
-    a.href = exported
-    a.download = sheetName + '.csv';
+	a.href = exported
+	a.download = sheetName + '.csv'
 	document.body.appendChild(a)
 	a.click()
 }
 
 window.save_csv = save_csv
 
-document.addEventListener('paste', function(e){
+document.addEventListener('paste', function(e) {
 	pasted_since_last_copy = true
 
 	let data = e.clipboardData.getData('text/plain')
-	if(data === CANT_COPY_MESSAGE) data = fake_clipboard
-	if(data.includes('\n') || data.includes('\t') || !is_typing()){
+	if (data === CANT_COPY_MESSAGE) data = fake_clipboard
+	if (data.includes('\n') || data.includes('\t') || !is_typing()) {
 		e.preventDefault()
 		insert_csv(data, selected_row, selected_col)
 	}
 })
 
-
-
-
-function filled_region(region){
+function filled_region(region) {
 	let [start_row, start_col, end_row, end_col] = region
 
-	if(end_row == Infinity){ // copy ot end of allowed region if finite
+	if (end_row == Infinity) {
+		// copy ot end of allowed region if finite
 		let finite_end_row = max_row == Infinity ? start_row : max_row
 		let finite_end_col = max_col == Infinity ? start_col : max_col
-		
+
 		Object.keys(user_content).forEach(k => {
 			let [r, c] = k.split(',')
-			finite_end_row = Math.max(finite_end_row, r);
-			finite_end_col = Math.max(finite_end_col, c);
+			finite_end_row = Math.max(finite_end_row, r)
+			finite_end_col = Math.max(finite_end_col, c)
 		})
 
 		end_row = finite_end_row
@@ -952,117 +900,121 @@ function filled_region(region){
 	return [start_row, start_col, end_row, end_col]
 }
 
-
-
-function to_text(region, method='computed'){
+function to_text(region, method = 'computed') {
 	let [start_row, start_col, end_row, end_col] = filled_region(region)
 
-	return _.range(start_row, end_row+1)
-	.map(row => _.range(start_col, end_col+1)
-	 			.map(col => {
-	 				if(method === 'computed') return evaluate(cell_text(row, col))
-	 				else if(method === 'autofilled') return cell_text(row, col)
-	 				else if(method === 'input') return user_content[[row, col]]
-	 				else throw 'on no!'
-	 			})
-	 			.join('\t'))
-	.join('\n')
+	return _.range(start_row, end_row + 1)
+		.map(row =>
+			_.range(start_col, end_col + 1)
+				.map(col => {
+					if (method === 'computed')
+						return evaluate(cell_text(row, col))
+					else if (method === 'autofilled') return cell_text(row, col)
+					else if (method === 'input') return user_content[[row, col]]
+					else throw 'on no!'
+				})
+				.join('\t')
+		)
+		.join('\n')
 }
 
-
-document.addEventListener('copy', function(e){
-
-	if(is_typing()) return;
+document.addEventListener('copy', function(e) {
+	if (is_typing()) return
 
 	e.preventDefault()
 
-	let region = get_selection_region() || [selected_row, selected_col, selected_row, selected_col]
-	let data = e.shiftKey ? to_text(region, 'autofilled') : to_text(region, 'computed')
+	let region = get_selection_region() || [
+		selected_row,
+		selected_col,
+		selected_row,
+		selected_col
+	]
+	let data = e.shiftKey
+		? to_text(region, 'autofilled')
+		: to_text(region, 'computed')
 
-	if(can_copy) {
-		e.clipboardData.setData('text/plain', data);
+	if (can_copy) {
+		e.clipboardData.setData('text/plain', data)
 	} else {
-		e.clipboardData.setData('text/plain', CANT_COPY_MESSAGE);
+		e.clipboardData.setData('text/plain', CANT_COPY_MESSAGE)
 		pasted_since_last_copy = false
 		last_copy = Date.now()
 		fake_clipboard = data
 	}
-
 })
 
-
 document.addEventListener('cut', e => {
-	if(is_typing()) return;
+	if (is_typing()) return
 	e.preventDefault()
 
-	let region = get_selection_region() || [selected_row, selected_col, selected_row, selected_col]
+	let region = get_selection_region() || [
+		selected_row,
+		selected_col,
+		selected_row,
+		selected_col
+	]
 
 	let data = to_text(region)
 	delete_region(region)
 
-	if(can_copy) {
-		e.clipboardData.setData('text/plain', data);
+	if (can_copy) {
+		e.clipboardData.setData('text/plain', data)
 	} else {
-		e.clipboardData.setData('text/plain', CANT_COPY_MESSAGE);
+		e.clipboardData.setData('text/plain', CANT_COPY_MESSAGE)
 		pasted_since_last_copy = false
 		last_copy = Date.now()
 		fake_clipboard = data
 	}
 })
 
-
-function delete_region(region){
+function delete_region(region) {
 	let [start_row, start_col, end_row, end_col] = filled_region(region)
 
 	add_undo_action(region)
 
-	_.range(start_row, end_row+1)
-	.forEach(row =>
-		_.range(start_col, end_col+1)
-		.forEach(col =>{
+	_.range(start_row, end_row + 1).forEach(row =>
+		_.range(start_col, end_col + 1).forEach(col => {
 			delete user_content[[row, col]]
-		}))
+		})
+	)
 
 	// delete all empty columns
 	// cleanup_autofill()
 	auto_fill()
-
 }
 
-
-keygetter.addEventListener('blur', e=> {
-	keygetter.style.display = 'none';
+keygetter.addEventListener('blur', e => {
+	keygetter.style.display = 'none'
 	auto_fill()
 	// if(user_content[[selected_row, selected_col]] && user_content[[selected_row, selected_col]].length === 0)
 	// 	delete user_content[[selected_row, selected_col]]
 })
 
-
 function sync_canvas_and_keygetter() {
 	ctx.save()
 	ctx.font = CONTENT_FONT
 	let desired_width = measure_text(keygetter.value).width
-	keygetter.style.width = (measure_text(keygetter.value).width + cell_horizontal_padding + 2) / SCALE
+	keygetter.style.width =
+		(measure_text(keygetter.value).width + cell_horizontal_padding + 2) /
+		SCALE
 	user_content[[selected_row, selected_col]] = keygetter.value
 	ctx.restore()
 }
 
-
 keygetter.addEventListener('input', sync_canvas_and_keygetter)
 
 let program_cache = new WeakMap()
-function apply_program(program, sigma){
-	if(!program) return '';
+function apply_program(program, sigma) {
+	if (!program) return ''
 
-	if(!program_cache.has(program)) program_cache.set(program, new Map())
-	
+	if (!program_cache.has(program)) program_cache.set(program, new Map())
+
 	let res = program_cache.get(program),
 		key = JSON.stringify(sigma)
 
-	if(res.has(key)) return res.get(key)
+	if (res.has(key)) return res.get(key)
 
 	try {
-
 		let val = program.apply(sigma)
 		res.set(key, val)
 
@@ -1074,13 +1026,13 @@ function apply_program(program, sigma){
 
 let resets = []
 
-function frame_memo(f){
+function frame_memo(f) {
 	let cache = {}
-	resets.push(() => cache = {})
+	resets.push(() => (cache = {}))
 	return (...args) => {
 		let a = JSON.stringify(args)
 
-		if(a in cache) return cache[a]
+		if (a in cache) return cache[a]
 
 		let b = f(...args)
 		cache[a] = b
@@ -1088,36 +1040,32 @@ function frame_memo(f){
 	}
 }
 
-function _get_sigma(row, col){
-	var sigma = _.range(+col)
-		.map(c => 
-			evaluate(cell_text(row, c)))
+function _get_sigma(row, col) {
+	var sigma = _.range(+col).map(c => evaluate(cell_text(row, c)))
 
 	let ret = [
-		+row+1 + '',
-		+row > 0 ? evaluate(cell_text(row-1, col)) : '',
-		+row > 1 ? evaluate(cell_text(row-2, col)) : ''
+		+row + 1 + '',
+		+row > 0 ? evaluate(cell_text(row - 1, col)) : '',
+		+row > 1 ? evaluate(cell_text(row - 2, col)) : ''
 	]
 
-	return ret.concat(sigma);
+	return ret.concat(sigma)
 }
 
 let get_sigma = frame_memo(_get_sigma)
 
-function cell_text(r, c){
-
-
-	let teaser = colname(c) + (r+1) + ': upgrade to unlock this cell! '
+function cell_text(r, c) {
+	let teaser = colname(c) + (r + 1) + ': upgrade to unlock this cell! '
 	// let t = Math.floor(Date.now()/1000 * r * c ) % teaser.length
 
-	if(r >= max_row || c >= max_col) return teaser//teaser.slice(t) + teaser.slice(0, t)
+	if (r >= max_row || c >= max_col) return teaser //teaser.slice(t) + teaser.slice(0, t)
 
-	if(user_content[[r, c]]){
-		return user_content[[r, c]];
+	if (user_content[[r, c]]) {
+		return user_content[[r, c]]
 	}
-	
-	if(autofill_programs[c]) {
-		let program = autofill_programs[c];
+
+	if (autofill_programs[c]) {
+		let program = autofill_programs[c]
 		// debugger
 		return apply_program(program, get_sigma(r, c))
 	}
@@ -1125,23 +1073,26 @@ function cell_text(r, c){
 	return ''
 }
 
-
-
-function numerical_simple(numsigma, numoutputs){
-	function train(x0, fn){
-		for(var col = 0; col < numsigma[0].length; col++){
+function numerical_simple(numsigma, numoutputs) {
+	function train(x0, fn) {
+		for (var col = 0; col < numsigma[0].length; col++) {
 			// try {
-				var result = minimize(function f(x){
-					return _.sum(numoutputs.map((k, i) => 
-						(fn([numsigma[i][col], ...x]) - k)**2))
-				}, x0)
+			var result = minimize(function f(x) {
+				return _.sum(
+					numoutputs.map(
+						(k, i) => (fn([numsigma[i][col], ...x]) - k) ** 2
+					)
+				)
+			}, x0)
 			// } catch (err) {
 			// 	console.log('failed', err, x0)
 			// }
-			if(result && result.f < 0.001){
-				var rounded = result.solution.map(k => Math.round(k * 1024) / 1024);
+			if (result && result.f < 0.001) {
+				var rounded = result.solution.map(
+					k => Math.round(k * 1024) / 1024
+				)
 
-				return function(sigma){
+				return function(sigma) {
 					return fn([sigma[col], ...rounded])
 				}
 				console.log(result.solution, 'solved')
@@ -1150,102 +1101,108 @@ function numerical_simple(numsigma, numoutputs){
 	}
 
 	var constant = train([1], ([x, p]) => p)
-	if(constant) return constant;
+	if (constant) return constant
 
 	var constant = train([1], ([x, p]) => x + p)
-	if(constant) return constant;
+	if (constant) return constant
 
 	var constant = train([1, 1], ([x, p, n]) => x * p + n)
-	if(constant) return constant;
+	if (constant) return constant
 
 	var constant = train([1], ([x, p]) => p ** x)
-	if(constant) return constant;
+	if (constant) return constant
 
 	var constant = train([1], ([x, p]) => x ** p)
-	if(constant) return constant;
-	
+	if (constant) return constant
+
 	var constant = train([1, 2], ([x, p, n]) => n * p ** x)
-	if(constant) return constant;
+	if (constant) return constant
 
 	var constant = train([2, 1], ([x, p, n]) => n * p ** (x + 1))
-	if(constant) return constant;
+	if (constant) return constant
 }
 
-
-function sample_program(examples){
+function sample_program(examples) {
 	var inputs = examples.map(k => k[0]),
 		outputs = examples.map(k => k[1])
 
 	// console.log(inputs, outputs)
-	if(outputs.every(output => output.match(/^\d+$/))){
+	if (outputs.every(output => output.match(/^\d+$/))) {
 		let input_to_vec = input_vec_transform(inputs),
 			numsigma = inputs.map(input_to_vec),
 			numoutputs = outputs.map(k => +k),
 			numexamples = _.zip(numsigma, numoutputs)
 
-		try{
-			var lp = numerical_simple(numsigma, numoutputs);
-			if(lp) return { apply: sigma => lp(input_to_vec(sigma)) + '' };				
-		} catch(e){}
+		try {
+			var lp = numerical_simple(numsigma, numoutputs)
+			if (lp) return { apply: sigma => lp(input_to_vec(sigma)) + '' }
+		} catch (e) {}
 
-		try{
+		try {
 			let wolo = regress(numsigma, numoutputs)
-			if(wolo) return { apply: sigma => wolo(input_to_vec(sigma)) + '' };
-		} catch(e){}
+			if (wolo) return { apply: sigma => wolo(input_to_vec(sigma)) + '' }
+		} catch (e) {}
 	}
 
-	var pset = lazy_generate_intersect_multidags(inputs, outputs);
-	
+	var pset = lazy_generate_intersect_multidags(inputs, outputs)
+
 	try {
 		var program = pset.sample()
-	} catch (err) { 
+	} catch (err) {
 		console.log('sample error', pset, err)
 	}
-	
+
 	console.log(inputs, outputs, pset, program)
 
-	return program;
+	return program
 }
 
-
-function auto_fill(){
-
+function auto_fill() {
 	cleanup_autofill()
 
-	var nonempty = Object.keys(user_content).filter(k => user_content[k]);
-	var cols  = _.groupBy(nonempty, k => k.split(',')[1]);
-	var col_ids = _.sortBy(Object.keys(cols), k => +k);
+	var nonempty = Object.keys(user_content).filter(k => user_content[k])
+	var cols = _.groupBy(nonempty, k => k.split(',')[1])
+	var col_ids = _.sortBy(Object.keys(cols), k => +k)
 
-	for(var i = 0; i < col_ids.length; i++){
-		let col = col_ids[i];
-		let row_ids = cols[col];
+	for (var i = 0; i < col_ids.length; i++) {
+		let col = col_ids[i]
+		let row_ids = cols[col]
 
-		let max_col_height = _.max(col_ids.slice(0, i).map(k => 
-			_.max(_.flatten(cols[k].map(e => +e.split(',')[0])))))
+		let max_col_height = _.max(
+			col_ids
+				.slice(0, i)
+				.map(k => _.max(_.flatten(cols[k].map(e => +e.split(',')[0]))))
+		)
 
-		if(max_col_height && cols[col].length >= max_col_height) continue;
+		if (max_col_height && cols[col].length >= max_col_height) continue
 
 		// TODO: make sure most recently edited thing is part of the sample
-		// alternatively, don't sample and use everything... 
-		// if we can make intersect_lazy_whatever_generate_something 
+		// alternatively, don't sample and use everything...
+		// if we can make intersect_lazy_whatever_generate_something
 		// sufficiently speedy
 
-		const is_formula = r => cell_text(+r, col).trim().endsWith('=')
+		const is_formula = r =>
+			cell_text(+r, col)
+				.trim()
+				.endsWith('=')
 
 		let _examples = _.sampleSize(row_ids, 5)
-		
+
 		let has_formula = _examples.some(e => is_formula(e.split(',')[0]))
 
-		let examples = _examples.map(k => {
-			var row_prefix = k.split(',')[0];
-			// ignore non-formula inputs
-			if(!has_formula || is_formula(row_prefix)) return [get_sigma(row_prefix, col), user_content[k]]
-		}).filter(x=>x)
+		let examples = _examples
+			.map(k => {
+				var row_prefix = k.split(',')[0]
+				// ignore non-formula inputs
+				if (!has_formula || is_formula(row_prefix))
+					return [get_sigma(row_prefix, col), user_content[k]]
+			})
+			.filter(x => x)
 
 		// if the previously cached program still works, use that
 		// and don't do the expensive recomputation
 
-		worker.postMessage({examples, col})
+		worker.postMessage({ examples, col })
 		// console.log('filling', col)
 		loading_programs[col] = setTimeout(() => {
 			// console.log('killing worker due to timeout')
@@ -1259,7 +1216,7 @@ function auto_fill(){
 
 		// let cached_program = autofill_programs[col]
 		// if(cached_program){
-		// 	if(_.every(examples.map(([sigma, out]) => 
+		// 	if(_.every(examples.map(([sigma, out]) =>
 		// 		apply_program(cached_program, sigma) == out))){
 		// 		continue
 		// 	}
@@ -1272,75 +1229,85 @@ function auto_fill(){
 		// }else{
 		// 	delete autofill_programs[col]
 		// }
-
 	}
 }
 
-
-let handle_keydown = e=> {
-	if(e.keyCode == 9) {
+let handle_keydown = e => {
+	if (e.keyCode == 9) {
 		e.preventDefault()
 		// auto_fill()
-		e.shiftKey
-			? bump_selected(0, -1)
-			: bump_selected(0, 1)
+		e.shiftKey ? bump_selected(0, -1) : bump_selected(0, 1)
 	}
-	
-	if(e.keyCode == 13 && is_typing()){
+
+	if (e.keyCode == 13 && is_typing()) {
 		// auto_fill()
 		bump_selected(1, 0)
-	} else if(e.keyCode == 13 && !is_typing()) start_typing()
-	
+	} else if (e.keyCode == 13 && !is_typing()) start_typing()
+
 	var bump = e.shiftKey ? bump_selected_end : bump_selected
-	if(e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0 )) bump(0, -1)
-	if(e.keyCode == 38) bump(-1, 0)
-	if(e.keyCode == 39 && (!is_typing() || keygetter.selectionEnd === keygetter.value.length)) bump(0, 1)
-	if(e.keyCode == 40) bump( 1, 0)
+	if (e.keyCode == 37 && (!is_typing() || keygetter.selectionStart === 0))
+		bump(0, -1)
+	if (e.keyCode == 38) bump(-1, 0)
+	if (
+		e.keyCode == 39 &&
+		(!is_typing() || keygetter.selectionEnd === keygetter.value.length)
+	)
+		bump(0, 1)
+	if (e.keyCode == 40) bump(1, 0)
 
-
-	if((e.keyCode == 8 || e.keyCode == 46) && !is_typing()) {
-		let region = get_selection_region() || [selected_row, selected_col, selected_row, selected_col]
+	if ((e.keyCode == 8 || e.keyCode == 46) && !is_typing()) {
+		let region = get_selection_region() || [
+			selected_row,
+			selected_col,
+			selected_row,
+			selected_col
+		]
 		delete_region(region)
 	}
 
-	if([17, 91].includes(e.keyCode)) command_down = true
+	if ([17, 91].includes(e.keyCode)) command_down = true
 
 	// console.log(e.keyCode)
-	if(e.keyCode == 67 && command_down && !is_typing()){ //z
+	if (e.keyCode == 67 && command_down && !is_typing()) {
+		//z
 		console.log('asdf')
 	}
 
-
-	if(e.keyCode == 90 && command_down && !is_typing()){ //z
+	if (e.keyCode == 90 && command_down && !is_typing()) {
+		//z
 		e.preventDefault()
-		if(e.shiftKey) redo()
+		if (e.shiftKey) redo()
 		else undo()
 		auto_fill()
 	}
-	if(e.keyCode == 65 && command_down && !is_typing()){ //a
-		set_selected(0,0)
+	if (e.keyCode == 65 && command_down && !is_typing()) {
+		//a
+		set_selected(0, 0)
 		selected_end_row = Infinity
 		selected_end_col = Infinity
 	}
 }
 
 document.addEventListener('keyup', e => {
-	if([17, 91].includes(e.keyCode)) command_down = false
+	if ([17, 91].includes(e.keyCode)) command_down = false
 })
 
-function cleanup_autofill(){
+function cleanup_autofill() {
 	var nonempty_columns = _.uniq(
 		Object.keys(user_content)
-		.filter(k => user_content[k])
-		.map(k => k.split(',')[1]));
+			.filter(k => user_content[k])
+			.map(k => k.split(',')[1])
+	)
 
-	_.difference(Object.keys(autofill_programs), nonempty_columns).forEach(col => {
-		delete autofill_programs[col]
-	})
+	_.difference(Object.keys(autofill_programs), nonempty_columns).forEach(
+		col => {
+			delete autofill_programs[col]
+		}
+	)
 }
 
-let handle_keypress = e=> {
-	if(!is_typing() && e.keyCode != 13) {
+let handle_keypress = e => {
+	if (!is_typing() && e.keyCode != 13) {
 		// console.log(String.fromCharCode(e.keyCode)
 		user_content[[selected_row, selected_col]] = ''
 		start_typing()
@@ -1350,14 +1317,12 @@ let handle_keypress = e=> {
 document.addEventListener('keydown', handle_keydown)
 document.addEventListener('keypress', handle_keypress)
 
-
 document.addEventListener('mousemove', e => {
 	mouse_x = e.clientX * SCALE
 	mouse_y = e.clientY * SCALE
 })
 
 canvas.addEventListener('mousedown', e => {
-
 	let start_x = e.clientX * SCALE
 	let start_y = e.clientY * SCALE
 
@@ -1367,19 +1332,24 @@ canvas.addEventListener('mousedown', e => {
 
 	var move, up
 
-	if(defined(clicked_row) && defined(clicked_col)){
-		if(e.shiftKey){
+	if (defined(clicked_row) && defined(clicked_col)) {
+		if (e.shiftKey) {
 			selected_end_row = clicked_row
 			selected_end_col = clicked_col
 		} else {
-			set_selected(clicked_row,clicked_col)
+			set_selected(clicked_row, clicked_col)
 		}
 
 		move = function() {
 			scroll_into_view(selected_end_row, selected_end_col)
-			;[selected_end_row, selected_end_col] = cell_row_col(mouse_x, mouse_y)
-			if(!defined(selected_end_row)) selected_end_row = Math.max(row - 1, 0)
-			if(!defined(selected_end_col)) selected_end_col = Math.max(col - 1, 0)
+			;[selected_end_row, selected_end_col] = cell_row_col(
+				mouse_x,
+				mouse_y
+			)
+			if (!defined(selected_end_row))
+				selected_end_row = Math.max(row - 1, 0)
+			if (!defined(selected_end_col))
+				selected_end_col = Math.max(col - 1, 0)
 		}
 
 		let int = setInterval(move, 30)
@@ -1387,48 +1357,49 @@ canvas.addEventListener('mousedown', e => {
 		up = function() {
 			clearInterval(int)
 		}
-
-	} else if(defined(clicked_row) && defined(row_divider)){
-
+	} else if (defined(clicked_row) && defined(row_divider)) {
 		let start_row_height = row_heights[row_divider] || DEFAULT_ROW_HEIGHT
 		dragging_row_divider = row_divider
 
-		move = function(e){
+		move = function(e) {
 			let dy = e.clientY * SCALE - start_y
-			row_heights[row_divider] = Math.max(start_row_height + dy, DEFAULT_ROW_HEIGHT)
+			row_heights[row_divider] = Math.max(
+				start_row_height + dy,
+				DEFAULT_ROW_HEIGHT
+			)
 		}
 
 		up = function() {
 			dragging_row_divider = undefined
 		}
-
-	} else if(defined(clicked_col) && defined(col_divider)){
-
+	} else if (defined(clicked_col) && defined(col_divider)) {
 		let start_col_width = col_width(col_divider)
 		dragging_col_divider = col_divider
 
-		move = function(e){
+		move = function(e) {
 			let dx = e.clientX * SCALE - start_x
-			col_widths[col_divider] = Math.max(start_col_width + dx, DEFAULT_COL_WIDTH)
+			col_widths[col_divider] = Math.max(
+				start_col_width + dx,
+				DEFAULT_COL_WIDTH
+			)
 		}
 
 		up = function() {
 			dragging_col_divider = undefined
 		}
-
-	} else if(defined(clicked_col)){
-
+	} else if (defined(clicked_col)) {
 		selected_row = 0
 		selected_col = clicked_col
 
 		selected_end_col = undefined
 		selected_end_row = undefined
 
-		move = function(e){
+		move = function(e) {
 			scroll_into_view(undefined, selected_end_col)
 			selected_end_row = Infinity
-			;[,selected_end_col] = cell_row_col(mouse_x, mouse_y)
-			if(!defined(selected_end_col)) selected_end_col = Math.max(col - 1, 0)
+			;[, selected_end_col] = cell_row_col(mouse_x, mouse_y)
+			if (!defined(selected_end_col))
+				selected_end_col = Math.max(col - 1, 0)
 		}
 
 		let int = setInterval(move, 30)
@@ -1436,20 +1407,19 @@ canvas.addEventListener('mousedown', e => {
 		up = function() {
 			clearInterval(int)
 		}
-
-	} else if(defined(clicked_row)){
-
+	} else if (defined(clicked_row)) {
 		selected_col = 0
 		selected_row = clicked_row
 
 		selected_end_col = undefined
 		selected_end_row = undefined
 
-		move = function(e){
+		move = function(e) {
 			scroll_into_view(selected_end_row, undefined)
 			selected_end_col = Infinity
 			;[selected_end_row] = cell_row_col(mouse_x, mouse_y)
-			if(!defined(selected_end_row)) selected_end_row = Math.max(row - 1, 0)
+			if (!defined(selected_end_row))
+				selected_end_row = Math.max(row - 1, 0)
 		}
 
 		let int = setInterval(move, 30)
@@ -1457,7 +1427,6 @@ canvas.addEventListener('mousedown', e => {
 		up = function() {
 			clearInterval(int)
 		}
-
 	}
 
 	function onup() {
@@ -1468,75 +1437,62 @@ canvas.addEventListener('mousedown', e => {
 
 	document.addEventListener('mousemove', move)
 	document.addEventListener('mouseup', onup)
-
 })
 
-
-document.addEventListener('dblclick', function(e){
+document.addEventListener('dblclick', function(e) {
 	ctx.save()
 	ctx.font = CONTENT_FONT
 
-	let [row, col] = cell_row_col(
-		e.clientX * SCALE, 
-		e.clientY * SCALE)
-	
+	let [row, col] = cell_row_col(e.clientX * SCALE, e.clientY * SCALE)
+
 	let col_divider = get_hovered_col_divider()
 
-	if(defined(row) && defined(col) && !is_typing()){
+	if (defined(row) && defined(col) && !is_typing()) {
 		start_typing()
-	} else if(defined(col_divider)) {
+	} else if (defined(col_divider)) {
 		let max_width = DEFAULT_COL_WIDTH - cell_horizontal_padding * 2
-		let max_row = Math.max(...Object.keys(user_content).map(k => +k.split(',')[0]), last_visible_row()[0])
-		
-		for(var r = 0; r < max_row; r++){
+		let max_row = Math.max(
+			...Object.keys(user_content).map(k => +k.split(',')[0]),
+			last_visible_row()[0]
+		)
+
+		for (var r = 0; r < max_row; r++) {
 			let text = cell_text(r, col_divider)
 			let result = evaluate(text)
-			let combined = (text == result) ? text : (text + ' ' + result);
-			if(combined.length > 1){
+			let combined = text == result ? text : text + ' ' + result
+			if (combined.length > 1) {
 				max_width = Math.max(max_width, measure_text(combined).width)
 			}
 		}
 		col_widths[col_divider] = max_width + cell_horizontal_padding * 2
-	} 
+	}
 
 	ctx.restore()
 })
 
-
-
-
-
-function get_hovered_col_divider(){
+function get_hovered_col_divider() {
 	let [row, col] = cell_row_col(mouse_x, mouse_y)
 
-	if(!defined(row) && defined(col)){
-		
-		let [,prev_x,width] = visible_col_n(col)
+	if (!defined(row) && defined(col)) {
+		let [, prev_x, width] = visible_col_n(col)
 		let next_x = prev_x + width
 
-		if(mouse_x - prev_x <= RESIZE_HANDLE_WIDTH / 2) return col - 1
-		if(next_x - mouse_x <= RESIZE_HANDLE_WIDTH / 2) return col
-
+		if (mouse_x - prev_x <= RESIZE_HANDLE_WIDTH / 2) return col - 1
+		if (next_x - mouse_x <= RESIZE_HANDLE_WIDTH / 2) return col
 	}
 }
 
-function get_hovered_row_divider(){
+function get_hovered_row_divider() {
 	let [row, col] = cell_row_col(mouse_x, mouse_y)
 
-	if(!defined(col) && defined(row)){
-		
-		let [,prev_y,height] = visible_row_n(row)
+	if (!defined(col) && defined(row)) {
+		let [, prev_y, height] = visible_row_n(row)
 		let next_y = prev_y + height
 
-		if(mouse_y - prev_y <= RESIZE_HANDLE_WIDTH / 2) return row - 1
-		if(next_y - mouse_y <= RESIZE_HANDLE_WIDTH / 2) return row
-
+		if (mouse_y - prev_y <= RESIZE_HANDLE_WIDTH / 2) return row - 1
+		if (next_y - mouse_y <= RESIZE_HANDLE_WIDTH / 2) return row
 	}
 }
-
-
-
-
 
 /*\
 |*|
@@ -1563,96 +1519,95 @@ function is_typing() {
 	return document.activeElement === keygetter
 }
 
-function *visible_cols(){
+function* visible_cols() {
 	let rendered_width = LEFT_MARGIN
 	let cur_col = col
-	while(rendered_width <= canvas.width){
+	while (rendered_width <= canvas.width) {
 		let width = col_width(cur_col)
 		yield [cur_col++, rendered_width, width]
 		rendered_width += width
 	}
 }
 
-function *visible_rows(){
+function* visible_rows() {
 	let rendered_height = TOP_MARGIN
 	let cur_row = row
-	while(rendered_height <= canvas.height){
+	while (rendered_height <= canvas.height) {
 		let height = row_heights[cur_row] || DEFAULT_ROW_HEIGHT
-		yield [cur_row ++, rendered_height, height]
+		yield [cur_row++, rendered_height, height]
 		rendered_height += height
 	}
 }
 
-function *visible_cells(){
-	for(let row of visible_rows())
-	for(let col of visible_cols()){
-		yield {row, col}
-	}
+function* visible_cells() {
+	for (let row of visible_rows())
+		for (let col of visible_cols()) {
+			yield { row, col }
+		}
 }
 
 function visible_row_n(r) {
 	let row
-	for(row of visible_rows()) if (row[0] === r) return row
+	for (row of visible_rows()) if (row[0] === r) return row
 }
 
 function visible_col_n(c) {
 	let col
-	for(col of visible_cols()) if (col[0] === c) return col
+	for (col of visible_cols()) if (col[0] === c) return col
 }
 
 function last_visible_row() {
 	let row
-	for(row of visible_rows());
+	for (row of visible_rows());
 	return row
 }
 
 function last_visible_col() {
 	let col
-	for(col of visible_cols());
+	for (col of visible_cols());
 	return col
 }
 
-function cell_x_y(row, col){
-	let cy, cx;
-	for (let [r, y, height] of visible_rows()){
-		if(r === row) cy = y;
+function cell_x_y(row, col) {
+	let cy, cx
+	for (let [r, y, height] of visible_rows()) {
+		if (r === row) cy = y
 	}
-	for (let [c, x, width] of visible_cols()){
-		if(c === col) cx = x;
+	for (let [c, x, width] of visible_cols()) {
+		if (c === col) cx = x
 	}
 	return [cx, cy]
 }
 
-function cell_row_col(x, y){
-	let r, c;
-	for (let [row, cy] of visible_rows()){
-		if(cy > y) break;
+function cell_row_col(x, y) {
+	let r, c
+	for (let [row, cy] of visible_rows()) {
+		if (cy > y) break
 		r = row
 	}
-	for (let [col, cx] of visible_cols()){
-		if(cx > x) break;
+	for (let [col, cx] of visible_cols()) {
+		if (cx > x) break
 		c = col
 	}
 	return [r, c]
 }
 
-function display_help_message(message){
+function display_help_message(message) {
 	// window.parent.$crisp.debug.Trigger.__action_message({}, {default: message})
 }
 
 let warned = false
 
-function set_selected(row, col){
-
+function set_selected(row, col) {
 	let old_text = cell_text(selected_row, selected_col)
-	if(old_text.startsWith('=')){
-
+	if (old_text.startsWith('=')) {
 		console.log(old_text)
-		if(!warned) {
+		if (!warned) {
 			warned = true
-			display_help_message('Sorry! Robosheets doesn\'t support excel-style formulas.')
+			display_help_message(
+				"Sorry! Robosheets doesn't support excel-style formulas."
+			)
 		}
-
 	}
 
 	row = Math.max(row, 0)
@@ -1668,8 +1623,7 @@ function set_selected(row, col){
 	scroll_into_view(row, col)
 }
 
-
-function set_selected_end(row, col){
+function set_selected_end(row, col) {
 	row = Math.max(row, 0)
 	col = Math.max(col, 0)
 
@@ -1683,40 +1637,38 @@ function set_selected_end(row, col){
 	scroll_into_view(row, col)
 }
 
-
-function bump_selected_end(rows, cols){
+function bump_selected_end(rows, cols) {
 	set_selected_end(
-		_.defaultTo(selected_end_row, selected_row) + rows, 
-		_.defaultTo(selected_end_col, selected_col) + cols)
+		_.defaultTo(selected_end_row, selected_row) + rows,
+		_.defaultTo(selected_end_col, selected_col) + cols
+	)
 }
 
 function bump_selected(rows, cols) {
-	set_selected(selected_row + rows, selected_col+cols)
+	set_selected(selected_row + rows, selected_col + cols)
 }
 
-function scroll_into_view(r, c){
-	if(defined(r) && r < row) row = r;
-	if(defined(c) && c < col) col = c;
+function scroll_into_view(r, c) {
+	if (defined(r) && r < row) row = r
+	if (defined(c) && c < col) col = c
 
 	let [last_row] = last_visible_row()
 	let [last_col] = last_visible_col()
 
-	if(defined(r) && r > last_row - 1) row += r - last_row + 1
-	if(defined(c) && c > last_col - 1) col += c - last_col + 1
+	if (defined(r) && r > last_row - 1) row += r - last_row + 1
+	if (defined(c) && c > last_col - 1) col += c - last_col + 1
 }
 
-
-
-function start_typing(){
+function start_typing() {
 	// console.log('start typing')
 
-	if(!editable(selected_row, selected_col)) return
+	if (!editable(selected_row, selected_col)) return
 
 	add_undo_action([selected_row, selected_col, selected_row, selected_col])
 
 	selected_end_col = undefined
 	selected_end_row = undefined
-	
+
 	keygetter.style.display = 'initial'
 	keygetter.focus()
 	keygetter.value = user_content[[selected_row, selected_col]] || ''
@@ -1724,70 +1676,73 @@ function start_typing(){
 	keygetter.style.top = y / SCALE + 'px'
 	keygetter.style.left = x / SCALE + 'px'
 	keygetter.style['padding-left'] = cell_horizontal_padding / SCALE + 'px'
-	keygetter.style.height = (row_heights[selected_row] || DEFAULT_ROW_HEIGHT) / SCALE + 'px'
-	keygetter.style['font-size'] = (DEFAULT_ROW_HEIGHT - 20) / SCALE +'px'
+	keygetter.style.height =
+		(row_heights[selected_row] || DEFAULT_ROW_HEIGHT) / SCALE + 'px'
+	keygetter.style['font-size'] = (DEFAULT_ROW_HEIGHT - 20) / SCALE + 'px'
 	sync_canvas_and_keygetter()
 }
 
 let measure_text_cache = {}
-function measure_text(text){
-	
-	if(! measure_text_cache[text]){
+function measure_text(text) {
+	if (!measure_text_cache[text]) {
 		ctx.save()
 		ctx.font = CONTENT_FONT
 		measure_text_cache[text] = ctx.measureText(text)
-		ctx.restore()		
+		ctx.restore()
 	}
 
 	return measure_text_cache[text]
-
 }
 
-
-function defined(x){
+function defined(x) {
 	return typeof x != 'undefined'
 }
 
 const action = region => ({
 	region,
 	data: to_text(region, 'input'),
-	row, col,
-	selected_row, selected_col, 
-	selected_end_row, selected_end_col
-}) 
+	row,
+	col,
+	selected_row,
+	selected_col,
+	selected_end_row,
+	selected_end_col
+})
 
-function add_undo_action(region, clear_redo = true){
-	if(clear_redo) redo_actions = []
+function add_undo_action(region, clear_redo = true) {
+	if (clear_redo) redo_actions = []
 	undo_actions.push(action(region))
 }
 
-function add_redo_action(region){
+function add_redo_action(region) {
 	redo_actions.push(action(region))
 }
 
-function execute(action){
+function execute(action) {
 	;({
-		row, col,
-		selected_row, selected_col, 
-		selected_end_row, selected_end_col
+		row,
+		col,
+		selected_row,
+		selected_col,
+		selected_end_row,
+		selected_end_col
 	} = action)
 	paste(action.data, action.region)
 	// auto_fill()
 }
 
-function undo(){
+function undo() {
 	let action = undo_actions.pop()
-	if(!action) return;
+	if (!action) return
 
 	add_redo_action(action.region)
 	execute(action)
 }
 
-
-function redo(){
+function redo() {
 	let action = redo_actions.pop()
 
-	if(!action) return;
+	if (!action) return
 
 	add_undo_action(action.region, false)
 	execute(action)
