@@ -10,8 +10,13 @@ const $ = selector => selector.startsWith('#')
 
 const first_sheet_name = 'Sheet1'
 
+let max_sheets = 3
+
 function addSheet(name){
     let s = sheets()
+
+    if(s.length === max_sheets) return show_pricing("Get up to <b>8</b> sheets at time!")
+
     let n = s.length+1
     let newsheetname = name || 'Sheet' + n
     if(!name) while(s.indexOf(newsheetname) >=0) newsheetname = 'Sheet' + n++
@@ -95,26 +100,27 @@ window.addEventListener("load", focussheet)
 window.CRISP_READY_TRIGGER = function() {
     $crisp.on("chat:closed", focussheet)
 };
-const show_pricing = () => {
+function show_pricing(message="Message us for custom plans!") {
     $('#app').style.filter = 'blur(5px)';
     $('#pricing-modal-wrap').style.display = 'flex';
+    $('#sign-up').innerHTML = message
     $('#spreadsheet')
     .contentWindow
     .pause()
 }
-$('#pricing').addEventListener('click', show_pricing)
-// $('#export').addEventListener('click', show_pricing)
+window.show_pricing = show_pricing
+$('#pricing').addEventListener('click', e => show_pricing())
 
 
-function hidemodals(){
+function hide_pricing(){
     $('#app').style.filter = '';
     $('#pricing-modal-wrap').style.display = 'none';
     $('#spreadsheet')
     .contentWindow
     .resume()       
 }
-$('#pricing-modal-plan-free').addEventListener('click', hidemodals)
-$('#pricing-x').addEventListener('click', hidemodals)
+$('#pricing-modal-plan-free').addEventListener('click', hide_pricing)
+$('#pricing-x').addEventListener('click', hide_pricing)
 
 
 let signup_inputs = $('.signup-input')
@@ -158,7 +164,7 @@ function ungray_question(i){
 }
 
 function activate_input(i){
-    if( i < 0 ||  i > signup_questions.length - 1) return;
+    if( !signup_questions[i] ) return;
 
     let q = signup_questions[i],
         rect = q.getBoundingClientRect(),
@@ -172,8 +178,7 @@ function activate_input(i){
     scrollTo(pm, pm.scrollTop + rect.top - innerHeight / 2 + rect.height / 2, 300, () => {
         if(input
             && input.getBoundingClientRect().bottom < innerHeight
-            && input.getBoundingClientRect().top > 0
-            ){
+            && input.getBoundingClientRect().top > 0){
             input.focus()
         }
         else q.focus()
@@ -181,10 +186,14 @@ function activate_input(i){
 
 }
 
+let selected_name;
+
 function select_plan(el){
 
     let name = el.querySelector('.plan-name').firstChild.wholeText.trim()
     let price = el.querySelector('.plan-price').firstChild.wholeText.trim()
+
+    selected_name = name
 
     ;[].slice.call(document.querySelectorAll('.selected-name')).forEach(b => b.innerHTML = name)
     ;[].slice.call(document.querySelectorAll('.selected-price')).forEach(b => b.innerHTML = price)
@@ -206,6 +215,12 @@ let basic = $('.basic')[0],
 // let plans = [].slice.call(document.querySelectorAll('.plan'))
 basic.addEventListener('click', e => select_plan(basic))
 advanced.addEventListener('click', e => select_plan(advanced))
+
+$('.enterprise')[0].addEventListener('click', e => {
+    $('.crisp-client textarea')[0].spellcheck = false
+    $crisp.do("chat:open")
+    $crisp.set("message:text", "Hey Robosheets! What cost structures do you offer for the Gundam plan?")
+})
 
 window.addEventListener('wheel', e => cancelAnimationFrame(current_animation))
 
@@ -242,10 +257,55 @@ function scrollTo(el, scrollTop, time, each){
     })
 }
 
+
+function toFormData(object) {
+    const formData = new FormData();
+    Object.keys(object).forEach(key => formData.append(key, object[key]));
+    return formData;
+}
+
+function toQueryString(object) {
+    return Object.keys(object)
+        .map(key => key + '=' + object[key])
+        .join('&')
+}
+
+
+
+function post(path, obj, cb){
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", 'https://robosheets.appspot.com/' + path, true);
+    xhr.onload = e => cb(JSON.parse(xhr.responseText))
+    xhr.send(toFormData(obj)); 
+}
+
+function get(path, obj, cb){
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", 'https://robosheets.appspot.com/' + path + '?' + toQueryString(obj), true);
+    xhr.onload = e => cb(JSON.parse(xhr.responseText))
+    xhr.send();
+}
+
+
 Stripe.setPublishableKey('pk_test_6Eg7yBirVyhF6YvwDKhiPoPj');
-$('#signup-submit').addEventListener('click', e => {
+
+$('#signup').addEventListener('submit', e => {
+    e.preventDefault()
     Stripe.card.createToken($('#signup'), (status, response) => {
+
         console.log(status, response)
+        if(status != 200) return;
+
+        post("auth/signup", {
+            token: response.id,
+            email: $('#email').value,
+            plan: selected_name.toLowerCase(),
+            host: location.host === "www.robosheets.com" ? "https://robosheets.appspot.com" : location.origin,
+        }, res => {
+            if(!res.success) return console.warn(res);
+            hide_pricing()
+        })
+
     });
 })
 
@@ -278,10 +338,11 @@ $('#hidden-picker').addEventListener('change', e => {
     reader.readAsBinaryString(f);
 });
 
+let can_export = false
 
 $('#export').addEventListener('click', e => {
-    // show_pricing()
-    $('#spreadsheet').contentWindow.save_csv()
+    if(can_export) $('#spreadsheet').contentWindow.save_csv()
+    else show_pricing("Export your work and more!")
 })
 
 
@@ -290,10 +351,13 @@ payment.formatCardCVC($('#cvc'))
 payment.formatCardExpiry($('#date'))
 
 
-;['number', 'cvc', 'date', 'name'].forEach(field => {
+;['number', 'cvc', 'date', 'name', 'email'].forEach(field => {
     let def = $('#summary-'+field).innerHTML
     $('#'+field).addEventListener('blur', e => {
         $('#summary-'+field).innerHTML = e.target.value || def
+    })
+    $('#summary-'+field).addEventListener('click', e => {
+        activate_input(signup_inputs.indexOf($('#'+field)))
     })
 })
 
@@ -330,3 +394,121 @@ addChangeListener($('#number'), e => {
         $('#card').style.opacity = 0
     }
 })
+
+
+let query = {}
+window.location.search
+.substring(1)
+.split('&')
+.map(pair => pair.split('='))
+.forEach(([k,v]) => query[k] = v)
+
+let hide_form = e => {
+    if(e.target === $('#login-form')
+        || e.target.parentElement === $('#login-form')
+        || e.target === $('#login')) return;
+    $('#login-form').style.display = 'none'
+}
+
+let form_hider_initted = false
+
+$('#login').addEventListener('click', e => {
+    if(e.target === $('#login')){
+        $('#login-form').style.display = 'initial'
+        $('#login-email').focus()
+        if(!form_hider_initted){
+            form_hider_initted = true
+            $('#spreadsheet').contentWindow.onclick =  hide_form
+            document.body.addEventListener('click', hide_form)
+        }
+    }
+})
+
+
+if(query.action === 'setup') $('#password-setup-wrap').style.display = 'flex'
+
+$('#password-setup').addEventListener('submit', e => {
+    e.preventDefault()
+    if($('#new-password').value != $('#new-password-confirm').value) return;
+
+    post("auth/setup", {
+        reset: query.token,
+        password: $('#new-password').value,
+    }, res => {
+        if(!res.success) return console.warn(res);
+        localStorage.user = res.message
+        $('#password-setup-wrap').style.display = 'none'
+        history.replaceState({}, '', "/")
+    })
+})
+
+
+$('#login-form').addEventListener('submit', e => {
+    e.preventDefault()
+    post("auth/login", {
+        email: $('#login-email').value,
+        password: $('#login-password').value,
+    }, res => {
+        if(!res.success) return console.warn(res);
+        localStorage.user = res.message
+        $('#login-form').style.display = 'none'
+    })
+})
+
+let lastEnter = ""
+
+document.addEventListener('mouseleave', e=> {
+
+    let dirty = !$('#spreadsheet').contentWindow.pasted_since_last_copy
+    let recent = Date.now() - $('#spreadsheet').contentWindow.last_copy < 3000
+    let exit = JSON.stringify([e.clientX, e.clientY])
+
+    // console.log('left', dirty, recent, exit != lastEnter, exit, lastEnter)
+
+    if( dirty && recent && exit != lastEnter) {
+
+        // console.log('starting')
+
+        var handle = setTimeout( function(e) {
+            // console.log('doing it', Date.now())
+            window.parent.show_pricing("Paste outside of Robosheets!")
+            $('#spreadsheet').contentWindow.pasted_since_last_copy = true
+            cancel()
+        }, 2000)
+
+        function cancel(e) {
+            if(e) lastEnter = JSON.stringify([e.clientX, e.clientY])
+            // console.log('cancelling', e)
+            clearTimeout(handle)
+            document.removeEventListener('mouseenter', cancel)
+        }
+        document.addEventListener('mouseenter', cancel)
+    }
+})
+
+
+let plan_sheets_nums = {
+    asimo: 8,
+    roomba: 5
+}
+
+function unlock(){
+    if(localStorage.user) get("user/subscription", {
+        jwt: localStorage.user
+    }, res => {
+        if(!res.success){
+            $('#spreadsheet').contentWindow.unlock('walp')
+            max_sheets = 3
+            can_export = false
+        } else {
+            $('#spreadsheet').contentWindow.unlock(res.message)
+            max_sheets = plan_sheets_nums[res.message]
+            can_export = true
+        } 
+    })
+}
+
+
+unlock()
+
+window.unlock = unlock

@@ -21,8 +21,15 @@ const SELECTION_COLOR = '#48f'
 const CONTENT_FONT = DEFAULT_ROW_HEIGHT - 20 +'px Helvetica'
 const SCALE = 2
 
+const CANT_COPY_MESSAGE = "Upgrade to paste outside of Robosheets!"
+
 let max_row = 50
 let max_col = 10
+let can_copy = false
+window.pasted_since_last_copy = true
+window.last_copy = Date.now()
+
+let fake_clipboard
 
 let col_widths = {}
 let row_heights = {}
@@ -61,6 +68,24 @@ function resume(){
 	paused = false;
 }
 
+function unlock(permission_level='walp'){
+
+	if(permission_level == 'asimo') {
+		max_row = 1000
+		max_col = 200
+		can_copy = true
+	} else if(permission_level == 'roomba') {
+		max_row = 200
+		max_col = 10
+		can_copy = true
+	} else { //(permission_level == 'walp') {
+		max_row = 50
+		max_col = 10
+		can_copy = false
+	}
+
+}
+window.unlock = unlock
 window.pause = pause
 window.resume = resume
 
@@ -894,13 +919,15 @@ function save_csv(){
 window.save_csv = save_csv
 
 document.addEventListener('paste', function(e){
+	pasted_since_last_copy = true
+
 	let data = e.clipboardData.getData('text/plain')
+	if(data === CANT_COPY_MESSAGE) data = fake_clipboard
 	if(data.includes('\n') || data.includes('\t') || !is_typing()){
 		e.preventDefault()
 		insert_csv(data, selected_row, selected_col)
 	}
 })
-
 
 
 
@@ -952,7 +979,14 @@ document.addEventListener('copy', function(e){
 	let region = get_selection_region() || [selected_row, selected_col, selected_row, selected_col]
 	let data = e.shiftKey ? to_text(region, 'autofilled') : to_text(region, 'computed')
 
-	e.clipboardData.setData('text/plain', data);
+	if(can_copy) {
+		e.clipboardData.setData('text/plain', data);
+	} else {
+		e.clipboardData.setData('text/plain', CANT_COPY_MESSAGE);
+		pasted_since_last_copy = false
+		last_copy = Date.now()
+		fake_clipboard = data
+	}
 
 })
 
@@ -966,7 +1000,14 @@ document.addEventListener('cut', e => {
 	let data = to_text(region)
 	delete_region(region)
 
-	e.clipboardData.setData('text/plain', data);
+	if(can_copy) {
+		e.clipboardData.setData('text/plain', data);
+	} else {
+		e.clipboardData.setData('text/plain', CANT_COPY_MESSAGE);
+		pasted_since_last_copy = false
+		last_copy = Date.now()
+		fake_clipboard = data
+	}
 })
 
 
@@ -1596,7 +1637,7 @@ function cell_row_col(x, y){
 }
 
 function display_help_message(message){
-	window.parent.$crisp.debug.Trigger.__action_message({}, {default: message})
+	// window.parent.$crisp.debug.Trigger.__action_message({}, {default: message})
 }
 
 let warned = false

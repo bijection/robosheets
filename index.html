@@ -12,9 +12,30 @@
 </head>
 <div id='app'>
 	<div id='chrome'>
+		<div id='password-setup-wrap'>
+			<form action='/' id='password-setup' class='form'>
+				<div id='welcome'>Welcome to</div>
+				<div class='login-title'>Robosheets</div>
+				<div>Please pick a password to finish setting up.</div>
+				<input id='new-password' autofill='password' type='password' placeholder='password'></input>
+				<input id='new-password-confirm' autofill='off' type='password' placeholder='confirm password'></input>
+				<input type='submit' value='Finish'></input>
+			</form>
+		</div>
 		<div id='nag'>
+			<!-- <div id='settings'>Account Settings</div> -->
 			<div id='pricing'>Pricing</div>
-			<div id='login'>Login</div>
+			<div id='login'>
+				Log In
+				<form action='/' id='login-form' class='form'>
+					<div id='login-triangle-shadow'></div>
+					<div id='login-triangle'></div>
+					<div class='login-title'>Robosheets</div>
+					<input autofill='email' placeholder='email' id='login-email'></input>
+					<input autofill='password' type='password' placeholder='password' id='login-password'></input>
+					<input type='submit' value='Log In'></input>
+				</form>
+			</div>
 		</div>
 		<div id='tabs'>
  			<a id='new-sheet' class='tab'>+ New Sheet</a>
@@ -49,7 +70,7 @@
 		<div id='pricing-title'>Pricing</div>
 		<div id='pricing-intro'>
 			<!-- <div>We're glad you like robosheets!</div> -->
-			<div id='sign-up'>Sign up to export your work!</div>
+			<div id='sign-up'>Export your work and more!</div>
 
 		</div>
 		<div id='pricing-modal-plans'>
@@ -69,7 +90,7 @@
 				<div class="plan-desc">
 					<div class='plan-desc-item'>Paste into other spreadsheets</div>
 					<div class='plan-desc-item'>Up to <b>3</b> sheets at a time</div>
-					<div class='plan-desc-item'>Up to <b>1000</b> rows per sheet</div>
+					<div class='plan-desc-item'>Up to <b>200</b> rows per sheet</div>
 				</div>	
 				<div class='plan-price'>$4.58<span class='mo'>/mo</span>
 				</div>
@@ -93,14 +114,14 @@
 			<div class='plan enterprise'>
 				<div class='plan-name'>
 					Gundam
-					<div class='plan-name-sub'>Unlimited Seats</div>
+					<div class='plan-name-sub'>Multiple Seats</div>
 				</div>
 				<div class="plan-desc">
 					<div class='plan-desc-item'>Paste into other spreadsheets</div>
-					<div class='plan-desc-item'><b>Unlimited</b> sheets</div>
-					<div class='plan-desc-item'><b>Unlimited</b> rows per sheet</div>
-					<div class='plan-desc-item'><b>Unlimited</b> columns per sheet</div>
-					<div class='plan-desc-item'>Custom Subdomain</div>
+					<div class='plan-desc-item'>up to <b>Unlimited</b> sheets</div>
+					<div class='plan-desc-item'>up to <b>Unlimited</b> rows per sheet</div>
+					<div class='plan-desc-item'>up to <b>Unlimited</b> columns per sheet</div>
+					<div class='plan-desc-item'>Custom Subdomain or White Label Hosting</div>
 				</div>
 				<div class='plan-price'>Contact Us!</div>
 			</div>
@@ -121,7 +142,7 @@
 				<!-- <div class='signup-label'>Where should we send your activation <b>email</b>?</div> -->
 				<div class='signup-label'><b class='selected-name'></b>, a great choice!</div>
 				<div class='signup-label'>What <b>email address</b> should we use to set up your account?</div>
-				<input class='signup-input' type='text' placeholder="iron@giant.com" autofill='email'></input>
+				<input class='signup-input' id='email' type='text' placeholder="iron@giant.com" autofill='email'></input>
 				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>
 			<div id='secure'>
@@ -151,6 +172,7 @@
 				<div id='card-wrap'>
 					<div id='card'></div>
 					<input class='signup-input' id='number' type='text' placeholder="•••• •••• •••• ••••" data-stripe="number" autofill='cc-number'></input>
+					<div>Your card was broke</div>
 					<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>					
 				</div>
 			</div>
@@ -166,13 +188,13 @@
 			</div>
 			<div class='signup-question secure'>
 				<div class='signup-label'>Your card's <b>expiration date</b>:</div>
-				<input class='signup-input' id='date' type='text' placeholder="MM/YY" data-stripe="exp_month" autofill='cc-exp-date'></input>
+				<input class='signup-input' id='date' type='text' placeholder="MM/YY" data-stripe="exp" autofill='cc-exp-date'></input>
 				<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>
 			</div>
 			</div>		
 			<div class='signup-question'>
 				<div class='signup-label'>You're done!</div>
-				<div class='signup-label'>After you confirm, we'll email you a link to set up your <b class='selected-name'></b> account:</div>
+				<div class='signup-label'>After you confirm, we'll email a link to set up your <b class='selected-name'></b> account to <b class='summary-item' id='summary-email'>click here to set an email</b>:</div>
 				<div class='signup-label'>Charging <span class='selected-price'></span> a month to</div>
 				<div class='signup-label'>
 					<div id='summary'>
@@ -188,7 +210,7 @@
 				<div class='signup-label'></div>
 
 				<!-- <div class='signup-label'>Charge <b class='selected-price'></b> / month to</div> -->
-				<div id='signup-submit'>Confirm</div>
+				<input type='submit' value='Confirm' id='signup-submit'></input>
 			</div>	
 		</form>
 		</div>

@@ -40,18 +40,34 @@ Some reddits:
 	https://www.reddit.com/r/promote/
 
 UI
+    implement permission levels
+    x    rows and columns change
+    x    number of sheets changes
+    x    export changes
+    x    copy paste changes
+    hook up to api
+    x    sign up submission
+        sign up validation
+            invalid email
+            already in use email
+    x    set password submission
+        set password validation
+        reset password submission
+        reset password validation
+        log out submission
+        upgrade submission
+    make account dashboard
+        place to add seats
     finish instructions
         write more
+        add key commands
         make final gifs
-    implement permission levels
-    hook up to api
-    make account dashboard
 
 Logic
-    compatibility
-        build system
-        make import
-        make export
+    xcompatibility
+    x    build system
+    x    make import
+    x    make export
 
 External
-    enable stripe
+    xenable stripe

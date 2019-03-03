@@ -15,6 +15,8 @@ import time
 from google.appengine.api import mail
 from google.appengine.ext import ndb
 
+import json
+
 salt = "I am Kanye, king of kings look on my works yeezy mighty and dispair"
 
 
@@ -50,6 +52,22 @@ class Endpoint(webapp2.RequestHandler):
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         super(Endpoint, self).dispatch()
 
+    def succeed(self, message):
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps({
+            'success': True,
+            'message': message
+        }))
+
+    def fail(self, message):
+        self.response.headers['Content-Type'] = 'application/json'
+        # self.response.set_status(400)  
+        self.response.write(json.dumps({
+            'success': False,
+            'message': message
+        }))
+
+
 class HomeHandler(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
@@ -80,19 +98,29 @@ class SignupHandler(Endpoint):
         plan = self.request.get('plan')
         host = self.request.get('host')
 
+        user = Account.lookup(email)
+
+        # Overwrite users with same email. Should not be released like this.
+        # if user is not None:
+        #     self.fail('email is already in use')
+        #     return
+        if user is None:
+            user = Account(email = email)
+
+
         customer = stripe.Customer.create(email=email, source=token)
         subscription = stripe.Subscription.create(
             customer=customer.id,
             plan=plan,
         )
-        user = Account(
-            email = email, 
-            customerId = customer.id, 
-            subId = subscription.id,
-            reset_token = randstr(),
-            reset_expire = datetime.now() + timedelta(days=365)
-        )
+
+        user.customerId = customer.id
+        user.subId = subscription.id
+        user.reset_token = randstr()
+        user.reset_expire = datetime.now() + timedelta(days=365)
+
         user.put()
+
         mail.send_mail(sender="noreply@robosheets.appspotmail.com",
                    to=email,
                    subject="You signed up or something",
@@ -108,7 +136,7 @@ This is just some sample form stuff for debugging.
 
 """.format(plan=plan, reset=user.reset_token, email=email, host=host))
 
-        self.response.write('chek yo mail dawg')
+        self.succeed('check yo email')
 
     def get(self):
         self.response.write("""
@@ -136,20 +164,21 @@ class PasswordSetupHandler(Endpoint):
 
         reset = self.request.get('reset')
         if len(reset) < 2:
-            self.response.write('reset token is required')
+            self.fail('reset token is required')
             return
+
         user = Account.lookup_reset(reset)
         if user is None:
-            self.response.write('invalid reset token')
+            self.fail('invalid reset token')
             return
 
         if user.reset_expire < datetime.now():
-            self.response.write('password reset token has already expired')
+            self.fail('password reset token has already expired')
             return
 
         password = self.request.get('password').strip()
         if len(password) < 3:
-            self.response.write('password must be at least 3 letters')
+            self.fail('password must be at least 3 letters')
             return
 
         key = base64.b64encode(PBKDF2(password, salt, dkLen=32, count=5000))
@@ -158,7 +187,11 @@ class PasswordSetupHandler(Endpoint):
         user.password = key
         user.put()
 
-        self.response.write('changed password')
+        payload = {
+            'email': user.email
+        }
+        token = jwt.encode(payload, salt, algorithm='HS256')
+        self.succeed(token)
 
     def get(self):
         self.response.write("""
@@ -179,21 +212,21 @@ class LoginHandler(Endpoint):
         email = self.request.get('email')
         user = Account.lookup(email)
         if user is None:
-            self.response.write('could not find user account')
+            self.fail('could not find user account')
             return
         password = self.request.get('password')
 
         key = base64.b64encode(PBKDF2(password, salt, dkLen=32, count=5000))
 
         if user.password != key:
-            self.response.write('wrong password')
+            self.fail('wrong password')
             return
 
         payload = {
             'email': user.email
         }
         token = jwt.encode(payload, salt, algorithm='HS256')
-        self.response.write(token)
+        self.succeed(token)
     
     def get(self):
         self.response.write("""
@@ -217,25 +250,25 @@ class SubscriptionHandler(Endpoint):
     def get(self):
         user = Account.jwt(self.request.get('jwt'))
         if user is None:
-            self.response.write('user not found')
+            self.fail('user not found: ' + str(user) + ' ' + self.request.get('jwt'))
             return
 
         subscription = stripe.Subscription.retrieve(user.subId)
-        self.response.write(subscription.plan.id)
+        self.succeed(subscription.plan.id)
             
 
     def post(self):
         plan = self.request.get('plan')
         user = Account.jwt(self.request.get('jwt'))
         if user is None:
-            self.response.write('user not found')
+            self.fail('user not found')
             return
 
         subscription = stripe.Subscription.retrieve(user.subId)
         subscription.plan = plan
         subscription.save()
         
-        self.response.write('updated subscription')
+        self.succeed('updated subscription')
 
 
 
@@ -244,7 +277,7 @@ class PasswordResetHandler(Endpoint):
         email = self.request.get('email')
         user = Account.lookup(email)
         if user is None:
-            self.response.write('no account exists with this email')
+            self.fail('no account exists with this email')
             return
         
         user.reset = randstr()
@@ -258,7 +291,7 @@ class PasswordResetHandler(Endpoint):
 Here's your password reset token or something {reset}
 
 """.format(reset=user.reset))
-        self.response.write('chek yo inbox')
+        self.succeed('chek yo inbox')
 
 
 app = webapp2.WSGIApplication([
