@@ -1,4 +1,5 @@
-body, #app {
+body,
+#app {
     position: absolute;
     margin: 0;
     width: 100%;
@@ -23,7 +24,7 @@ iframe {
 }
 #buttons {
     background: #f7f7f7;
-    border-top: 1px solid #ddd; 
+    border-top: 1px solid #ddd;
     padding: 0 10px;
     flex: 1;
     display: flex;
@@ -37,16 +38,19 @@ iframe {
     margin-right: 10px;
     user-select: none;
 }
-#import, #export {
+#import,
+#export {
     color: #1a6dff;
     border: 1px solid #4488ff;
     cursor: pointer;
     background: #ecf2ff;
 }
-#import:hover, #export:hover {
+#import:hover,
+#export:hover {
     background: #b3cdff;
 }
-#copy, #paste{
+#copy,
+#paste {
     color: #888;
     /*box-shadow: 0 2px 10px -4px;*/
     font-size: 12px;
@@ -71,12 +75,12 @@ iframe {
     margin-right: 4px;
     border-radius: 3px 3px 0 0;
     text-shadow: 0 1px 0 white;
-    opacity: .7;
+    opacity: 0.7;
     user-select: none;
 
     /*transition: .2s;*/
 }
-.tab:hover{
+.tab:hover {
     opacity: 1;
     color: #888;
 }
@@ -86,7 +90,7 @@ iframe {
     position: relative;
     left: 6px;
     text-align: center;
-    opacity: .5;
+    opacity: 0.5;
 }
 .tab-after:hover {
     opacity: 1;
@@ -102,13 +106,13 @@ iframe {
 #new-sheet {
     border: 0;
     padding: 5px;
-    color: #888
+    color: #888;
 }
 #instructions-wrap {
     /*flex: 1;*/
     text-align: right;
 }
-#instructions  {
+#instructions {
     background: #ecfff7;
     color: #00775e;
     border: 1px solid #28c5a3;
@@ -123,12 +127,13 @@ iframe {
     align-items: center;
     right: 10px;
     user-select: none;
-    background: linear-gradient(90deg,
-        rgba(255, 255, 255, 0), #ffffff 15%);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), #ffffff 15%);
     z-index: 2;
     padding-left: 20px;
 }
-#pricing, #login {
+#follow,
+#pricing,
+#login {
     padding: 10px;
     cursor: pointer;
 }
@@ -154,7 +159,7 @@ iframe {
     display: flex;
     justify-content: space-around;
     align-items: flex-end;
-     max-width: 900px;
+    max-width: 900px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -162,7 +167,7 @@ iframe {
     /*width: 200px;*/
     /*height: 500px;*/
     background: #fff;
-    box-shadow: 0 1px 10px rgba(0,0,0,.2);
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
     /*border: 1px solid #eee;*/
     border-radius: 3px;
     text-align: center;
@@ -170,18 +175,16 @@ iframe {
     color: #fff;
     overflow: hidden;
     cursor: pointer;
-    transition: .5s;
+    transition: 0.5s;
     position: relative;
     /*padding: 10px;*/
 }
 .plan:hover {
-    box-shadow: 0 1px 10px rgba(0,0,0,.6),
-        0 0 0 1px #000;
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.6), 0 0 0 1px #000;
     /*box-shadow: 0 10px 40px rgba(0,0,0,.4);*/
 }
 .plan.selected {
-    box-shadow: 0 1px 10px rgba(0,0,0,.2),
-        0 0 0 5px #91fb9e
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 0 0 5px #91fb9e;
 }
 .plan-name {
     margin: 0;
@@ -207,7 +210,8 @@ iframe {
     width: 20px;
     position: absolute;
 }
-*/  .plan-price {
+*/
+.plan-price {
     font-size: 30px;
     /* margin: 10px; */
     padding: 20px;
@@ -217,16 +221,16 @@ iframe {
     /* border-radius: 3px; */
 }
 .basic {
-    background: #7caafb
+    background: #7caafb;
 }
 .advanced {
     background: #48f;
     /*border: 1px solid #ffb100;*/
 }
 .enterprise {
-    background: #2053ad
+    background: #2053ad;
 }
-#pricing-modal-plan-free  {
+#pricing-modal-plan-free {
     text-align: center;
     margin: 20px auto;
     color: rgba(0, 0, 0, 0.41);
@@ -263,7 +267,7 @@ iframe {
 .mo {
     font-size: 60%;
     display: inline-block;
-    opacity: .6;
+    opacity: 0.6;
     margin-left: 2px;
     /*width: 0;*/
 }
@@ -276,9 +280,10 @@ iframe {
 #hidden-picker {
     display: none;
 }
-@media (max-width: 500px){
-    #copy, #paste {
-        display: none
+@media (max-width: 500px) {
+    #copy,
+    #paste {
+        display: none;
     }
 }
 
@@ -297,13 +302,12 @@ iframe {
     display: none !important;
 }*/
 
-
 #instructions-modal:hover {
     opacity: 1;
     pointer-events: initial;
 }
 
-#instructions-wrap:hover #instructions-modal  {
+#instructions-wrap:hover #instructions-modal {
     pointer-events: initial;
 }
 
@@ -329,7 +333,7 @@ iframe {
     border-radius: 3px;
     overflow: hidden;
     opacity: 0;
-    transition: .2s;
+    transition: 0.2s;
     background: #fff;
     /*background: #b1ffde;*/
 }
@@ -340,11 +344,11 @@ iframe {
 }
 
 .signup-question.gray {
-    opacity: .3;
+    opacity: 0.3;
 }
 
 .signup-question.gray:hover {
-    opacity: .5;
+    opacity: 0.5;
 }
 
 .signup-question {
@@ -388,9 +392,9 @@ iframe {
     border-radius: 5px;
     overflow: hidden;
     /*height: 282px;*/
-    color: rgba(0,0,0,.4);
+    color: rgba(0, 0, 0, 0.4);
     padding: 0 30px;
-    transition: .2s;
+    transition: 0.2s;
 }
 
 #secure-title {
@@ -398,7 +402,6 @@ iframe {
     font-size: 60px;
     position: relative;
 }
-
 
 #secure.expanded {
     background: rgb(74, 91, 115);
@@ -408,7 +411,7 @@ iframe {
 
 #secured-by {
     padding: 6px 10px;
-    opacity: .2;
+    opacity: 0.2;
     margin-right: 5px;
     border: 1px solid rgb(0, 0, 0);
     border-radius: 3px;
@@ -439,11 +442,11 @@ iframe {
 }
 
 #secure.expanded .signup-input {
-    color: rgba(255,255,255, .9);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 #secure.expanded .signup-confirm {
-    color: rgba(255,255,255, .4);
+    color: rgba(255, 255, 255, 0.4);
 }
 
 #secure.expanded .signup-ok {
@@ -488,7 +491,7 @@ iframe {
 }
 
 .signup-input:focus ~ .signup-confirm {
-    opacity: 1
+    opacity: 1;
 }
 
 .signup-confirm {
@@ -512,7 +515,7 @@ iframe {
     padding-right: 10px;
     border-radius: 5px;
     background: rgba(0, 0, 0, 0.06);
-    color: rgba(0, 0, 0, 0.48);     
+    color: rgba(0, 0, 0, 0.48);
 }
 
 .signup-ok {
@@ -553,7 +556,7 @@ iframe {
     font-size: 20px;
     z-index: 2;
     opacity: 0;
-    transition: .5s;
+    transition: 0.5s;
 }
 
 #signup-header {
@@ -580,12 +583,12 @@ iframe {
     top: 20px;
     right: 20px;
     font-size: 40px;
-    opacity: .2;
+    opacity: 0.2;
     cursor: pointer;
 }
 
 #pricing-x:hover {
-    opacity: .4;
+    opacity: 0.4;
 }
 
 .summary-item {
@@ -600,19 +603,19 @@ iframe {
     left: 0;
     top: 25px;
     font-size: 10px;
-    opacity: .8;    
+    opacity: 0.8;
 }
 
 .summary-item:hover:after {
-    content: "edit" !important;
+    content: 'edit' !important;
 }
-
 
 #summary-number::after {
     content: 'card number';
 }
 
-#summary-cvc, #summary-date {
+#summary-cvc,
+#summary-date {
     margin-left: 20px;
 }
 
@@ -625,8 +628,8 @@ iframe {
 }
 
 #summary-name::after {
-    content: 'name'
-} 
+    content: 'name';
+}
 
 #summary-month {
     margin-left: 20px;
@@ -641,7 +644,7 @@ iframe {
     margin-right: 20px;
     color: #fff;
     background: rgb(74, 91, 115);
-    transition: .2s;
+    transition: 0.2s;
 }
 
 .signup-question.gray #summary {
@@ -658,7 +661,7 @@ iframe {
     background-repeat: no-repeat;
     right: 22px;
     top: 11px;
-    transition: .2s;
+    transition: 0.2s;
     opacity: 0;
     box-shadow: 0 2px 20px 1px rgba(0, 0, 0, 0.2);
     border-radius: 3px;
@@ -698,7 +701,7 @@ iframe {
     border-color: #48f;
 }
 
-.form input[type=submit] {
+.form input[type='submit'] {
     /* color: red; */
     width: 100%;
     padding: 10px;
@@ -712,7 +715,7 @@ iframe {
     margin-bottom: 0;
 }
 
-.form input[type=submit]:focus {
+.form input[type='submit']:focus {
     box-shadow: 0 0 0 1px #004eff, 0 0 10px #679eff;
 }
 
@@ -725,7 +728,8 @@ iframe {
     margin-top: -20px;
 }
 
-#login-triangle, #login-triangle-shadow {
+#login-triangle,
+#login-triangle-shadow {
     position: absolute;
     bottom: 100%;
     right: 25px;
@@ -758,16 +762,28 @@ iframe {
 }
 
 @-moz-keyframes spin {
-    from { -moz-transform: rotate(0deg); }
-    to { -moz-transform: rotate(360deg); }
+    from {
+        -moz-transform: rotate(0deg);
+    }
+    to {
+        -moz-transform: rotate(360deg);
+    }
 }
 @-webkit-keyframes spin {
-    from { -webkit-transform: rotate(0deg); }
-    to { -webkit-transform: rotate(360deg); }
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+    }
 }
 @keyframes spin {
-    from {transform:rotate(0deg);}
-    to {transform:rotate(360deg);}
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 #welcome {
