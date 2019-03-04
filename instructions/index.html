@@ -2,6 +2,10 @@
 	body {
 		margin: 0;
 		font-family: Avenir;
+		font-size: 18px;
+	}
+	h2 {
+		font-weight: normal;
 	}
 	.section-title {
 		font-size: 40px;
@@ -9,9 +13,10 @@
 	.section-part {
 		margin-left: auto;
 		margin-right: auto;
-		/*display: flex;*/
+		display: flex;
 		align-items: stretch;
 		max-width: 900px;
+		margin-bottom: 50px;
 	}
 	.section-text {
 		padding: 10px 30px;
@@ -30,19 +35,20 @@
 		box-shadow: 0 1px 10px rgba(0, 0, 0, 0.38);
 	}
 	#nav {
-		display: flex;
+		/*display: flex;*/
 		justify-content: space-around;
 		padding: 20px 0;
 		flex: 1;
 	}
 	#nav > div {
-		padding: 5px
+		padding: 5px 0;
 	}
-	#nav #pop-out {
+	#pop-out {
+		font-size: 18px;
 		background-repeat: no-repeat;
 		background-position: center right;
 		padding-right: 15px;
-		/*display: inline-block;*/
+		display: inline-block;
 		right: 10px;
 		background-image: linear-gradient(transparent,transparent),url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%20standalone%3D%22no%22%3F%3E%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%3E%3Cpath%20fill%3D%22%23fff%22%20stroke%3D%22%2306c%22%20d%3D%22M1.5%204.518h5.982V10.5H1.5z%22%2F%3E%3Cpath%20d%3D%22M5.765%201H11v5.39L9.427%207.937l-1.31-1.31L5.393%209.35l-2.69-2.688%202.81-2.808L4.2%202.544z%22%20fill%3D%22%2306f%22%2F%3E%3Cpath%20d%3D%22M9.995%202.004l.022%204.885L8.2%205.07%205.32%207.95%204.09%206.723l2.882-2.88-1.85-1.852z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E)
 	}
@@ -51,7 +57,13 @@
 		text-decoration: none;
 	}
 	#header {
-		display: flex;
+		/*display: flex;*/
+	}
+
+	@media(max-width: 700px){
+		.section-part {
+			display: block;
+		}
 	}
 </style>
 
@@ -59,27 +71,21 @@
 
 <div class='section-part'>
 	<div class='section-text'>
-	<div id='header'>
-		<div class='section-title'>Instructions</div>
-		<div id='nav'>
-			<div><a href='#basic'>Basic Use</a></div>
-			<div><a href='#calc'>Calculations</a></div>
-			<div><a href='#'>More Examples</a></div>
-			<div><a href='#' onclick="window.parent.$crisp.do('chat:open')">Ask us a Question</a></div>
-			<div id='pop-out'><a href="" target='_blank'>Pop Out</a></div>
-		</div>		
-	</div>
-		<div>RoboSheets automatically finishes repetitive row-by-row tasks on your spreadsheet data.</div>
+		<div id='header'>
+			<div class='section-title'>Instructions <div id='pop-out'><a href="" target='_blank'>Open in new Window</a></div></div>
+			<h2>RoboSheets automatically finishes repetitive row-by-row tasks on your spreadsheet data.</h2>
+			<div id='nav'>
+				Jump to:
+				<div><a href='#general'>General Use</a></div>
+				<div><a href='#calc'>Calculations</a></div>
+				<!-- <div><a href='#' onclick="window.parent.$crisp.do('chat:open')">Ask us a Question</a></div> -->
+			</div>		
+			<div class='section-title' id='general'>General Use</div>
+		</div>
 	</div>
 	<div class='section-pics'></div>
-
 </div>
 
-<div class='section-part' id='basic'>
-	<div class='section-text'><div class='section-title'>Basic Use</div></div>
-	<div class='section-pics'></div>
-
-</div>
 <div class='section-part'>
 	<div class='section-text'>1. Import or paste your data into RoboSheets.</div>
 	<div class='section-pics'>
@@ -88,7 +94,7 @@
 </div>
 
 <div class='section-part'>
-	<div class='section-text'>2. Begin performing your task in any <b>empty</b> column to the right of your data. Robosheets will try to finish your task. RoboSheets' attempts are shown in green text.</div>
+	<div class='section-text'>2. Begin performing your task in any <b>empty</b> column to the right of your data. Robosheets will try to finish your task. <br/><br/>RoboSheets' attempts are shown in green text.</div>
 	<div class='section-pics'>
 		<div><img src="roughbdaystart.gif"></div>		
 	</div>
@@ -102,7 +108,7 @@
 </div>
 
 <div class='section-part'>
-	<div class='section-text'>4. Copy your data and paste it in Excel / Google Sheets / etc, or click 'Export' to Export your data. All green text will be black when you paste it or export it.</div>
+	<div class='section-text'>4. Copy your data and paste it in Excel / Google Sheets / etc, or click 'Export' to Export your data.<br/><br/>All green text will be black when you paste it or export it.</div>
 	<div class='section-pics'>
 		<div><img src="roughexport.gif"></div>		
 	</div>
@@ -114,26 +120,30 @@
 </div>
 
 <div class='section-part'>
-	<div class='section-text'>If you add an equals sign at the end of a cell, RoboSheets automatically evaluates it as a mathematical expression. Supported operators are + - *, and /.</div>
+	<div class='section-text'>If you add an equals sign at the end of a cell, RoboSheets automatically evaluates it as a mathematical expression.
+	<br/><br/>
+	The basic math operators are + - *, and /. For more advanced expressions, Robosheets supports writing <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math#Properties">arbitrary Javasript</a>. For example, you might write `Math.sqrt(5)=` to get the square root of five.
+	<br/><br/>
+	When you copy a math cell, Robosheets only copies the value it computed.
+	</div>
 	<div class='section-pics'>
 		<div><img src="roughoneplusone.gif"></div>		
-		<div>(10 + 15) / 2=</div>			
 	</div>
 </div>
 
-<div class='section-part'>
+<!-- <div class='section-part'>
 	<div class='section-text'>When you copy a math cell, robosheets only copies the values. </div>
 	<div class='section-pics'>
 		<div>copy paste gif</div>
 	</div>
 </div>
-
-<div class='section-part'>
+ -->
+<!-- <div class='section-part'>
 	<div class='section-text'>Here are some examples of ways you might use math cells.</div>
 	<div class='section-pics'>
 		<div>adding month and year gif</div>
 		<div>???</div>
 	</div>
 </div>
-
+ -->
 </div>

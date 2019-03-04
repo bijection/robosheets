@@ -12,18 +12,32 @@
 </head>
 <div id='app'>
 	<div id='chrome'>
+		<div id='password-setup-wrap'>
+			<form action='/' id='password-setup' class='form'>
+				<div id='welcome'>Welcome to</div>
+				<div class='login-title'>Robosheets</div>
+				<div>Please pick a password to finish setting up.</div>
+				<input id='new-password' autofill='password' type='password' placeholder='password'></input>
+				<input id='new-password-confirm' autofill='off' type='password' placeholder='confirm password'></input>
+				<input type='submit' value='Finish'></input>
+			</form>
+		</div>
 		<div id='nag'>
-			<div id='pricing'>Pricing</div>
+			Made by @biject
+			<a id='follow' href="https://twitter.com/intent/follow?user_id=4033676687">Follow me on Twitter</a>
+			<!-- <div id='settings'>Account Settings</div> -->
+			<!-- <div id='pricing'>Pricing</div>
 			<div id='login'>
 				Log In
-				<div id='login-form'>
+				<form action='/' id='login-form' class='form'>
+					<div id='login-triangle-shadow'></div>
 					<div id='login-triangle'></div>
-					<div id='login-title'>Robosheets</div>
+					<div class='login-title'>Robosheets</div>
 					<input autofill='email' placeholder='email' id='login-email'></input>
-					<input autofill='password' type='password' placeholder='password'></input>					
-					<button>Log In</button>
-				</div>
-			</div>
+					<input autofill='password' type='password' placeholder='password' id='login-password'></input>
+					<input type='submit' value='Log In'></input>
+				</form>
+			</div> -->
 		</div>
 		<div id='tabs'>
  			<a id='new-sheet' class='tab'>+ New Sheet</a>
@@ -39,7 +53,7 @@
 				<div class="button" id='instructions'>Instructions</div>
 				<div id='instructions-modal-wrap'>
 					<div id='instructions-modal'>
-						<iframe src="/instructions/index.html"></iframe>
+						<iframe src="./instructions/index.html"></iframe>
 					</div>
 				</div>
 			</div>
@@ -58,7 +72,7 @@
 		<div id='pricing-title'>Pricing</div>
 		<div id='pricing-intro'>
 			<!-- <div>We're glad you like robosheets!</div> -->
-			<div id='sign-up'>Sign up to export your work!</div>
+			<div id='sign-up'>Export your work and more!</div>
 
 		</div>
 		<div id='pricing-modal-plans'>
@@ -78,7 +92,7 @@
 				<div class="plan-desc">
 					<div class='plan-desc-item'>Paste into other spreadsheets</div>
 					<div class='plan-desc-item'>Up to <b>3</b> sheets at a time</div>
-					<div class='plan-desc-item'>Up to <b>1000</b> rows per sheet</div>
+					<div class='plan-desc-item'>Up to <b>200</b> rows per sheet</div>
 				</div>	
 				<div class='plan-price'>$4.58<span class='mo'>/mo</span>
 				</div>
@@ -102,14 +116,14 @@
 			<div class='plan enterprise'>
 				<div class='plan-name'>
 					Gundam
-					<div class='plan-name-sub'>Unlimited Seats</div>
+					<div class='plan-name-sub'>Multiple Seats</div>
 				</div>
 				<div class="plan-desc">
 					<div class='plan-desc-item'>Paste into other spreadsheets</div>
-					<div class='plan-desc-item'><b>Unlimited</b> sheets</div>
-					<div class='plan-desc-item'><b>Unlimited</b> rows per sheet</div>
-					<div class='plan-desc-item'><b>Unlimited</b> columns per sheet</div>
-					<div class='plan-desc-item'>Custom Subdomain</div>
+					<div class='plan-desc-item'>up to <b>Unlimited</b> sheets</div>
+					<div class='plan-desc-item'>up to <b>Unlimited</b> rows per sheet</div>
+					<div class='plan-desc-item'>up to <b>Unlimited</b> columns per sheet</div>
+					<div class='plan-desc-item'>Custom Subdomain or White Label Hosting</div>
 				</div>
 				<div class='plan-price'>Contact Us!</div>
 			</div>
@@ -160,6 +174,7 @@
 				<div id='card-wrap'>
 					<div id='card'></div>
 					<input class='signup-input' id='number' type='text' placeholder="•••• •••• •••• ••••" data-stripe="number" autofill='cc-number'></input>
+					<div>Your card was broke</div>
 					<div class='signup-confirm'><div class='signup-ok'>Ok</div>or press <b>ENTER</b></div>					
 				</div>
 			</div>
@@ -197,7 +212,7 @@
 				<div class='signup-label'></div>
 
 				<!-- <div class='signup-label'>Charge <b class='selected-price'></b> / month to</div> -->
-				<button id='signup-submit'>Confirm</button>
+				<input type='submit' value='Confirm' id='signup-submit'></input>
 			</div>	
 		</form>
 		</div>
