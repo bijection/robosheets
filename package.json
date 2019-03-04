@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "node devServer.js",
-    "build": "webpack --config webpack.config.prod.js && gh-pages -d web"
+    "deploy": "webpack --config webpack.config.prod.js && gh-pages -d web"
   },
   "author": "bijection",
   "license": "ISC",
