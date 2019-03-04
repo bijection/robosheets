@@ -11,6 +11,7 @@ config.entry.gui.unshift(
 var compiler = webpack(config)
 var server = new WebpackDevServer(compiler, {
 	noInfo: true,
+	contentBase: 'web',
 	publicPath: config.output.publicPath
 })
 
