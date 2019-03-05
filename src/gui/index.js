@@ -300,7 +300,24 @@ function get(path, obj, cb) {
     xhr.send()
 }
 
-Stripe.setPublishableKey('pk_test_6Eg7yBirVyhF6YvwDKhiPoPj')
+
+$('#instructions').onclick = () => {
+    $('#instructions-modal-wrap').classList.toggle('open')
+}
+
+window.closeInstructions = () => {
+    localStorage.instructionsShown = true;
+    $('#instructions-modal-wrap').classList.remove('open')
+}
+
+if(!localStorage.instructionsShown){
+    $('#instructions-modal-wrap').classList.add('open')
+}
+
+
+if(window.Stripe){
+    Stripe.setPublishableKey('pk_test_6Eg7yBirVyhF6YvwDKhiPoPj');    
+}
 
 $('#signup').addEventListener('submit', e => {
     e.preventDefault()
@@ -458,6 +475,7 @@ $('#password-setup').addEventListener('submit', e => {
         }
     )
 })
+
 
 // $('#login-form').addEventListener('submit', e => {
 //     e.preventDefault()

@@ -65,7 +65,34 @@
 			display: block;
 		}
 	}
+
+
+	.close {
+		background: gray;
+		border: 0;
+		font-size: 20px;
+		color: white;
+		border-radius: 20px;
+		float: right;
+		margin: 20px;
+		cursor: pointer;
+		transition: all 0.05s linear;
+	}
+	.close:hover {
+		background: maroon;
+	}
 </style>
+
+<button title="Close" class="close" style="display: none">&times;</button>
+
+<script type="text/javascript">
+	if(window.top !== window){
+		document.querySelector('.close').style.display = ''
+		document.querySelector('.close').onclick = () => {
+			window.top.closeInstructions()
+		}
+	}
+</script>
 
 <div>
 

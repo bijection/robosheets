@@ -303,7 +303,7 @@ iframe {
     display: none !important;
 }*/
 
-#instructions-modal:hover {
+/*#instructions-modal:hover {
     opacity: 1;
     pointer-events: initial;
 }
@@ -311,6 +311,14 @@ iframe {
 #instructions-wrap:hover #instructions-modal {
     pointer-events: initial;
 }
+*/
+
+
+#instructions-modal-wrap.open #instructions-modal {
+    opacity: 1;
+    pointer-events: initial;
+}
+
 
 #instructions-modal-wrap {
     pointer-events: none;
