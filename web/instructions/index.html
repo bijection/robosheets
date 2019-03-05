@@ -7,6 +7,10 @@
 	}
 	h2 {
 		font-weight: normal;
+		margin-top: 20px;
+		margin-bottom: 0;
+		opacity: .8;
+
 	}
 	.section-title {
 		font-size: 40px;
@@ -36,21 +40,34 @@
 		box-shadow: 0 1px 10px rgba(0, 0, 0, 0.38);
 	}
 	#nav {
-		/*display: flex;*/
-		justify-content: space-around;
-		padding: 20px 0;
-		flex: 1;
+		background: #f6f9ff;
+	    display: inline-block;
+	    margin: 30px 0;
 	}
-	#nav > div {
-		padding: 5px 0;
+	ol {
+	    padding: 10px 30px;
+	    margin: 0;
 	}
 	#pop-out {
-		font-size: 18px;
-		background-repeat: no-repeat;
-		background-position: center right;
-		padding-right: 15px;
+		font-size: 14px;
 		display: inline-block;
+		vertical-align: middle;
 		right: 10px;
+		
+	    color: #1a6dff;
+	    /*border: 1px solid #4488ff;*/
+	    cursor: pointer;
+	    /*background-color: #ecf2ff;*/
+		background-repeat: no-repeat;
+		background-position: 98% center;
+
+	    padding: 5px 0;
+	    border-radius: 3px;
+	    margin-right: 10px;
+	    user-select: none;
+		padding-right: 20px;
+
+
 		background-image: linear-gradient(transparent,transparent),url(data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%20standalone%3D%22no%22%3F%3E%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%3E%3Cpath%20fill%3D%22%23fff%22%20stroke%3D%22%2306c%22%20d%3D%22M1.5%204.518h5.982V10.5H1.5z%22%2F%3E%3Cpath%20d%3D%22M5.765%201H11v5.39L9.427%207.937l-1.31-1.31L5.393%209.35l-2.69-2.688%202.81-2.808L4.2%202.544z%22%20fill%3D%22%2306f%22%2F%3E%3Cpath%20d%3D%22M9.995%202.004l.022%204.885L8.2%205.07%205.32%207.95%204.09%206.723l2.882-2.88-1.85-1.852z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E)
 	}
 	a {
@@ -58,7 +75,8 @@
 		text-decoration: none;
 	}
 	#header {
-		/*display: flex;*/
+		margin-bottom: 0;
+		margin-top: 20px;
 	}
 
 	@media(max-width: 700px){
@@ -74,7 +92,8 @@
 		font-size: 20px;
 		color: white;
 		border-radius: 20px;
-		float: right;
+		right: 0;
+		position: fixed;
 		margin: 20px;
 		cursor: pointer;
 		transition: all 0.05s linear;
@@ -97,20 +116,20 @@
 
 <div>
 
-<div class='section-part'>
+<div class='section-part' id='header'>
 	<div class='section-text'>
-		<div id='header'>
-			<div class='section-title'>Instructions <div id='pop-out'><a href="" target='_blank'>Open in new Window</a></div></div>
-			<h2>RoboSheets automatically finishes repetitive row-by-row tasks on your spreadsheet data.</h2>
-			<div id='nav'>
-				Jump to:
-				<div><a href='#general'>General Use</a></div>
-				<div><a href='#calc'>Calculations</a></div>
-				<div><a href='#features'>More Help & Feature Requests</a></div>
-				<!-- <div><a href='#' onclick="window.parent.$crisp.do('chat:open')">Ask us a Question</a></div> -->
-			</div>		
-			<div class='section-title' id='general'>General Use</div>
-		</div>
+		<div class='section-title'>Robosheets Instructions (and welcome page!)</div>
+		<a id='pop-out' href="" target='_blank'>View in new window</a>
+		<h2>Robosheets automatically finishes repetitive row-by-row tasks on your spreadsheet data.</h2>
+		<div id='nav'>
+			<ol>
+				<li><a href='#general'>General Use</a></li>
+				<li><a href='#calc'>Calculations</a></li>
+				<li><a href='#features'>More Help & Feature Requests</a></li>					
+			</ol>
+			<!-- <div><a href='#' onclick="window.parent.$crisp.do('chat:open')">Ask us a Question</a></div> -->
+		</div>		
+		<div class='section-title' id='general'>General Use</div>
 	</div>
 	<div class='section-pics'></div>
 </div>

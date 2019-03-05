@@ -483,26 +483,55 @@ function draw_cell_text(row, col) {
 
     let drawing_upgrade_text = !editable(r, c)
 
-    function draw_normal_text() {
-        let cropped_text = text.slice(
-            0,
-            5 + (text.length * cell_width) / text_width
-        )
+    if (drawing_upgrade_text) {
+        draw_upgrade_text()
+    } else if (defined(loading_programs[c]) && drawing_suggestion_text) {
+        // console.log('asdf')
+        const now = (Date.now() / 100) % (Math.PI * 2)
 
-        // if (text_image_cache[cropped_text]) {
-        //     return ctx.putImageData(text_image_cache[cropped_text], x, y)
+        ctx.save()
+        ctx.beginPath()
+        ctx.lineWidth = 4
+        ctx.strokeStyle = '#48f'
+        ctx.arc(
+            x + width / 2,
+            y + height / 2,
+            10,
+            now,
+            now + (Math.PI * 2 * 3) / 4
+        )
+        ctx.stroke()
+        ctx.restore()
+    } else if (drawing_result) {
+        // let selected = c == selected_col //&& r == selected_row
+
+        // let region = get_selection_region()
+        // if(region){
+        //  let [ssrow, sscol, serow, secol] = region
+        //  selected = selected || ssrow <= r && r <= serow
+        //          && sscol <= c && c <= secol
         // }
 
-        ctx.textAlign = 'start'
-        ctx.fillStyle = drawing_suggestion_text ? suggestion_color : '#222'
-        ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height / 2)
-        // text_image_cache[cropped_text] = ctx.getImageData(
-        //     x,
-        //     y,
-        //     text_width,
-        //     height
-        // )
+        draw_result()
+        if (result_width + text_width < cell_width) {
+            draw_normal_text()
+        } else {
+            draw_squished_text()
+        }
+    } else {
+        draw_normal_text()
     }
+
+    ctx.beginPath()
+    ctx.moveTo(x + cell_width, y)
+    ctx.lineTo(x + cell_width, y + height)
+    ctx.stroke()
+
+    ctx.restore()
+
+    /*\
+    |*| hoisted function definitions follow
+    \*/
 
     // function draw_fancy_upgrade_text() {
     //     let cropped_text = text.slice(
@@ -562,6 +591,17 @@ function draw_cell_text(row, col) {
     //     )
     // }
 
+    function draw_normal_text() {
+        let cropped_text = text.slice(
+            0,
+            5 + (text.length * cell_width) / text_width
+        )
+
+        ctx.textAlign = 'start'
+        ctx.fillStyle = drawing_suggestion_text ? suggestion_color : '#222'
+        ctx.fillText(cropped_text, x + cell_horizontal_padding, y + height / 2)
+    }
+
     function draw_upgrade_text() {
         // if(r != selected_row || c != selected_col) return;
 
@@ -611,52 +651,6 @@ function draw_cell_text(row, col) {
             y + height / 2
         )
     }
-
-    if (drawing_upgrade_text) {
-        draw_upgrade_text()
-    } else if (defined(loading_programs[c]) && drawing_suggestion_text) {
-        // console.log('asdf')
-        const now = (Date.now() / 100) % (Math.PI * 2)
-
-        ctx.save()
-        ctx.beginPath()
-        ctx.lineWidth = 4
-        ctx.strokeStyle = '#48f'
-        ctx.arc(
-            x + width / 2,
-            y + height / 2,
-            10,
-            now,
-            now + (Math.PI * 2 * 3) / 4
-        )
-        ctx.stroke()
-        ctx.restore()
-    } else if (drawing_result) {
-        // let selected = c == selected_col //&& r == selected_row
-
-        // let region = get_selection_region()
-        // if(region){
-        //  let [ssrow, sscol, serow, secol] = region
-        //  selected = selected || ssrow <= r && r <= serow
-        //          && sscol <= c && c <= secol
-        // }
-
-        draw_result()
-        if (result_width + text_width < cell_width) {
-            draw_normal_text()
-        } else {
-            draw_squished_text()
-        }
-    } else {
-        draw_normal_text()
-    }
-
-    ctx.beginPath()
-    ctx.moveTo(x + cell_width, y)
-    ctx.lineTo(x + cell_width, y + height)
-    ctx.stroke()
-
-    ctx.restore()
 }
 
 function evaluate(text) {
@@ -1690,7 +1684,8 @@ function start_typing() {
     keygetter.focus()
     keygetter.value = user_content[[selected_row, selected_col]] || ''
     let [x, y] = cell_x_y(selected_row, selected_col)
-    keygetter.style.top = y / SCALE + 'px'
+    // TODO why does this -1 fix stuff
+    keygetter.style.top = y / SCALE - 1 + 'px'
     keygetter.style.left = x / SCALE + 'px'
     keygetter.style['padding-left'] = cell_horizontal_padding / SCALE + 'px'
     keygetter.style.height =

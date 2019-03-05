@@ -132,7 +132,7 @@ iframe {
     z-index: 2;
     padding-left: 20px;
 }
-#follow,
+.follow,
 #pricing,
 #login {
     padding: 10px;

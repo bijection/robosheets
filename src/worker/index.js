@@ -3,7 +3,6 @@ import 'babel-polyfill'
 
 import lazy_generate_intersect_multidags from './generate'
 
-
 // importScripts(
 // 	// '../lib/lodash.js',
 // 	'./utils.js',
@@ -21,18 +20,17 @@ var autofill_programs = {}
 
 let program_cache = new WeakMap()
 
-function apply_program(program, sigma){
-	if(!program) return '';
+function apply_program(program, sigma) {
+	if (!program) return ''
 
-	if(!program_cache.has(program)) program_cache.set(program, new Map())
+	if (!program_cache.has(program)) program_cache.set(program, new Map())
 
 	let res = program_cache.get(program),
 		key = JSON.stringify(sigma)
 
-	if(res.has(key)) return res.get(key)
+	if (res.has(key)) return res.get(key)
 
 	try {
-
 		let val = program.apply(sigma)
 		res.set(key, val)
 
@@ -47,7 +45,7 @@ function apply_program(program, sigma){
 // 		for(var col = 0; col < numsigma[0].length; col++){
 // 			// try {
 // 				var result = minimize(function f(x){
-// 					return _.sum(numoutputs.map((k, i) => 
+// 					return _.sum(numoutputs.map((k, i) =>
 // 						(fn([numsigma[i][col], ...x]) - k)**2))
 // 				}, x0)
 // 			// } catch (err) {
@@ -78,7 +76,7 @@ function apply_program(program, sigma){
 
 // 	var constant = train([1], ([x, p]) => x ** p)
 // 	if(constant) return constant;
-	
+
 // 	var constant = train([1, 2], ([x, p, n]) => n * p ** x)
 // 	if(constant) return constant;
 
@@ -86,7 +84,7 @@ function apply_program(program, sigma){
 // 	if(constant) return constant;
 // }
 
-function sample_program(examples){
+function sample_program(examples) {
 	var inputs = examples.map(k => k[0]),
 		outputs = examples.map(k => k[1])
 
@@ -104,52 +102,58 @@ function sample_program(examples){
 	// 	if(wolo) return { apply: sigma => wolo(input_to_vec(sigma)) + '' };
 	// }
 
-	var pset = lazy_generate_intersect_multidags(inputs, outputs);
-	
+	var pset = lazy_generate_intersect_multidags(inputs, outputs)
+
 	try {
 		var program = pset.sample()
-	} catch (err) { 
+	} catch (err) {
 		console.log('sample error', pset, err)
 	}
-	
+
 	// console.log(inputs, outputs, pset, program)
 
-	return program;
+	return program
 }
 
-function pm(m){
+function pm(m) {
 	postMessage(m)
 	// setTimeout(() => postMessage(m), 500)
 }
 
-onmessage = function onmessage(message){
-	let {data} = message
+onmessage = function onmessage(message) {
+	let { data } = message
 
-	let {examples, col} = data
+	let { examples, col } = data
 
-	// console.log(JSON.stringify(examples), col)
+	console.log(JSON.stringify(examples), col)
 
 	let cached_program = autofill_programs[col]
-	if(cached_program){
-		if(_.every(examples.map(([sigma, out]) => 
-			apply_program(cached_program, sigma) == out))){
-			return pm({program: cached_program, col})
+	if (cached_program) {
+		if (
+			_.every(
+				examples.map(
+					([sigma, out]) =>
+						apply_program(cached_program, sigma) == out
+				)
+			)
+		) {
+			return pm({ program: cached_program, col })
 		}
 	}
 
-	if(examples.length > 3) {
-		let program = sample_program(examples.slice(0, 3));
-		if(!program){
+	if (examples.length > 3) {
+		let program = sample_program(examples.slice(0, 3))
+		if (!program) {
 			delete autofill_programs[col]
-			return pm({program, col})
-		} 
+			return pm({ program, col })
+		}
 	}
 
-	let program = sample_program(examples);
-	if(program){
-		autofill_programs[col] = program;
-	}else{
+	let program = sample_program(examples)
+	if (program) {
+		autofill_programs[col] = program
+	} else {
 		delete autofill_programs[col]
 	}
-	pm({program, col})
+	pm({ program, col })
 }
