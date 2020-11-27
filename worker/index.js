@@ -125,7 +125,7 @@ onmessage = function onmessage(message) {
 
 	let { examples, col } = data
 
-	console.log(JSON.stringify(examples), col)
+	console.log(examples, col)
 
 	let cached_program = autofill_programs[col]
 	if (cached_program) {

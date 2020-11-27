@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "node devServer.js",
+    "dev": "parcel index.html",
     "deploy": "rm -r dist && parcel build index.html && echo robosheets.com > dist/CNAME && gh-pages -d dist"
   },
   "author": "bijection",

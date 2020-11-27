@@ -1163,9 +1163,9 @@ function auto_fill() {
         worker.postMessage({ examples, col })
         // console.log('filling', col)
         loading_programs[col] = setTimeout(() => {
-            // console.log('killing worker due to timeout')
-            // worker.terminate()
-            // worker = new Worker('../magic/worker.js')
+            console.log('killing worker due to timeout')
+            worker.terminate()
+            worker = new Worker('../worker/index.js')
             // worker.onmessage = getWorkerMessage
 
             clearTimeout(loading_programs[col])
